@@ -1,6 +1,8 @@
 export const endpoints = {
   auth: {
     login: "/api/auth/login",
+    logout: "/api/auth/logout",
+
     profile: "/api/auth/profile",
     users: "/api/auth/users",
     password: "/api/auth/user/password",

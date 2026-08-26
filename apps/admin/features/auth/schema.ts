@@ -11,21 +11,114 @@ export const adminLoginSchema = z.object({
   password: z.string().min(1),
 });
 
-export const companyRegisterSchema = z.object({
-  companyName: z.string().trim().min(2, "Enter the registered company name.").max(120, "Company name must be 120 characters or fewer."),
-  companyCode: z.string().trim().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{1,19}$/, "Use 2-20 letters, numbers, hyphens, or underscores."),
-  companyEmail: z.string().trim().email("Enter a valid company email address.").max(160, "Email must be 160 characters or fewer."),
-  gstNo: z.string().trim().toUpperCase().regex(/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Enter a valid 15-character GSTIN, for example 24ABCDE1234F1Z5."),
-  phone: z.string().trim().regex(/^(?:\+91[ -]?)?[6-9]\d{9}$/, "Enter a valid Indian mobile number with 10 digits."),
-  address: z.string().trim().min(10, "Enter the complete registered address.").max(250, "Address must be 250 characters or fewer."),
-  subscriptionPlanId: z.coerce.number().int().min(1).max(4, "Select a valid subscription plan."),
-  superAdminFirstName: z.string().trim().regex(/^[A-Za-z][A-Za-z '\u002D]{1,49}$/, "Use 2-50 letters, spaces, apostrophes, or hyphens."),
-  superAdminLastName: z.string().trim().regex(/^[A-Za-z][A-Za-z '\u002D]{1,49}$/, "Use 2-50 letters, spaces, apostrophes, or hyphens."),
-  superAdminEmail: z.string().trim().email("Enter a valid super admin email address.").max(160, "Email must be 160 characters or fewer."),
-  superAdminPhone: z.string().trim().regex(/^(?:\+91[ -]?)?[6-9]\d{9}$/, "Enter a valid Indian mobile number with 10 digits."),
-  superAdminPassword: z.string().min(8, "Use at least 8 characters.").max(72, "Password must be 72 characters or fewer.").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/, "Use uppercase, lowercase, number, and special character."),
-  db_name: z.string().trim().regex(/^[a-z][a-z0-9_]{2,62}$/, "Use 3-63 lowercase letters, numbers, or underscores; start with a letter."),
-});
+// ─── Regexes per spec §1.3 ───────────────────────────────────────────────────
+const companyNameRegex = /^[A-Za-z0-9&.,'\-\s]{3,100}$/;
+const companyCodeRegex = /^[A-Z0-9]{2,10}$/;
+const gstNoRegex =
+  /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const indianPhoneRegex = /^[6-9]\d{9}$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const nameRegex = /^[A-Za-z][A-Za-z'\-\s]{1,49}$/;
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}])[A-Za-z\d!@#$%^&*()_+\-=\[\]{}]{8,64}$/;
+const dbNameRegex = /^[a-z][a-z0-9_]{2,62}$/;
+
+export const companyRegisterSchema = z
+  .object({
+    // Section 1 — Company Details
+    companyName: z
+      .string()
+      .trim()
+      .regex(
+        companyNameRegex,
+        "Company name must be 3–100 characters and can only include letters, numbers, spaces, and & . , ' -",
+      ),
+    companyCode: z
+      .string()
+      .trim()
+      .regex(
+        companyCodeRegex,
+        "Company code must be 2–10 uppercase letters/numbers only (lowercase is auto-converted)",
+      ),
+    gstNo: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(gstNoRegex, "Enter a valid 15-character GSTIN, e.g. 22AAAAA0000A1Z5"),
+    address: z
+      .string()
+      .trim()
+      .regex(/^.{10,250}$/, "Address must be 10–250 characters"),
+
+    // Section 2 — Contact Details
+    phone: z
+      .string()
+      .trim()
+      .regex(
+        indianPhoneRegex,
+        "Enter a valid 10-digit mobile number starting with 6–9",
+      ),
+    companyEmail: z
+      .string()
+      .trim()
+      .regex(emailRegex, "Enter a valid email address")
+      .email("Enter a valid email address"),
+
+    // Section 3 — Subscription Plan (only plan 1 selectable currently)
+    subscriptionPlanId: z
+      .number({
+        required_error: "Select a subscription plan",
+        invalid_type_error: "Select a subscription plan",
+      })
+      .int()
+      .min(1, "Select a subscription plan"),
+
+    // Section 4 — Super Admin & Database
+    superAdminFirstName: z
+      .string()
+      .trim()
+      .regex(
+        nameRegex,
+        "Must be 2–50 characters, starting with a letter (letters, spaces, apostrophes, hyphens only)",
+      ),
+    superAdminLastName: z
+      .string()
+      .trim()
+      .regex(
+        nameRegex,
+        "Must be 2–50 characters, starting with a letter (letters, spaces, apostrophes, hyphens only)",
+      ),
+    superAdminEmail: z
+      .string()
+      .trim()
+      .regex(emailRegex, "Enter a valid email address")
+      .email("Enter a valid email address"),
+    superAdminPhone: z
+      .string()
+      .trim()
+      .regex(
+        indianPhoneRegex,
+        "Enter a valid 10-digit mobile number starting with 6–9",
+      ),
+    superAdminPassword: z
+      .string()
+      .regex(
+        passwordRegex,
+        "Password needs 8–64 characters with uppercase, lowercase, a number, and a special character",
+      ),
+    confirmPassword: z.string().min(1, "Passwords don't match"),
+    db_name: z
+      .string()
+      .trim()
+      .regex(
+        dbNameRegex,
+        "Database name must start with a lowercase letter and contain only lowercase letters, numbers, or underscores (max 63 characters)",
+      ),
+  })
+  .refine((data) => data.superAdminPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export type AdminRegisterValues = z.infer<typeof adminRegisterSchema>;
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;

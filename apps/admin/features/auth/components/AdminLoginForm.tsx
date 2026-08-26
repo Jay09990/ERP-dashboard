@@ -22,9 +22,7 @@ export function AdminLoginForm() {
       await apiClient.post(endpoints.admin.login, values);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(
-        next?.startsWith("/") && !next.startsWith("//")
-          ? next
-          : "/company-register",
+        next?.startsWith("/") && !next.startsWith("//") ? next : "/",
       );
     } catch (error) {
       setServerError(

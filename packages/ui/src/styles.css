@@ -16,8 +16,9 @@
 }
 .altrex-button-neutral {
   background: var(--altrex-surface, #fffdf9);
-  color: #30302d;
-  border: 1px solid #c9c9c5;
+  /* Fixed: was hardcoded #30302d / #c9c9c5 — now uses theme tokens */
+  color: var(--altrex-text, #1c1c1b);
+  border: 1px solid var(--altrex-border, #c9c9c5);
 }
 .altrex-table-wrap {
   overflow-x: auto;
@@ -131,11 +132,13 @@
 }
 .altrex-form-error {
   margin: 0;
-  color: #7a3028;
+  /* Fixed: was hardcoded #7a3028 — now uses danger-text token that flips in dark mode */
+  color: var(--altrex-danger-text, #7a3028);
   font-size: 12px;
 }
 .altrex-auth-link {
-  color: #4869a3;
+  /* Fixed: was hardcoded blue/500 — now uses link token that maps to blue/300 in dark mode */
+  color: var(--altrex-link, #4869a3);
   font-size: 12px;
   text-align: center;
 }

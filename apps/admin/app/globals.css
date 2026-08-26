@@ -1,33 +1,109 @@
 @import "tailwindcss";
 @import "@altrex/ui/styles.css";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — light mode (:root) and dark mode ([data-theme="dark"])
+   All component selectors below must reference these variables, never
+   hardcoded hex values.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #fffbf4;
-  --foreground: #1c1c1b;
-  --altrex-canvas: #fffbf4;
+  /* Surface scale */
+  --altrex-canvas:  #fffbf4;
   --altrex-surface: #fffdf9;
-  --altrex-raised: #fffefc;
-  --altrex-text: #1c1c1b;
-  --altrex-muted: #5e5e5a;
+  --altrex-raised:  #fffefc;
+
+  /* Text */
+  --altrex-text:   #1c1c1b;
+  --altrex-muted:  #5e5e5a;
+
+  /* Borders / lines */
   --altrex-border: #c9c9c5;
-  --altrex-line: #ebebe9;
-  --altrex-hover: #f5f7fa;
+  --altrex-line:   #ebebe9;
+
+  /* Interactive states */
+  --altrex-hover:     #ebeef5;   /* blue/50 — neutral hover for sidebar + icon buttons */
   --altrex-on-accent: #fffefc;
+
+  /* Action / link tokens (per colorSystem.md §6) */
+  --altrex-primary:       #3a5788;   /* blue/600 */
+  --altrex-primary-hover: #2e446b;   /* blue/700 */
+  --altrex-link:          #4869a3;   /* blue/500 — link text light */
+
+  /* Status / danger */
+  --altrex-danger-text: #7a3028;   /* danger foreground on light surface */
+
+  /* shadcn CSS variable bridge — only variables the installed components reference */
+  --background:           var(--altrex-canvas);
+  --foreground:           var(--altrex-text);
+  --card:                 var(--altrex-surface);
+  --card-foreground:      var(--altrex-text);
+  --primary:              var(--altrex-primary);
+  --primary-foreground:   var(--altrex-on-accent);
+  --secondary:            var(--altrex-surface);
+  --secondary-foreground: var(--altrex-text);
+  --muted:                var(--altrex-surface);
+  --muted-foreground:     var(--altrex-muted);
+  --accent:               var(--altrex-hover);
+  --accent-foreground:    var(--altrex-text);
+  --destructive:          #b91c1c;
+  --destructive-foreground: #fffefc;
+  --border:               var(--altrex-border);
+  --input:                var(--altrex-border);
+  --ring:                 var(--altrex-primary);
 }
 
 [data-theme="dark"] {
-  --background: #121211;
-  --foreground: #f5f5f4;
-  --altrex-canvas: #121211;
+  /* Surface scale */
+  --altrex-canvas:  #121211;
   --altrex-surface: #1c1c1b;
-  --altrex-raised: #30302d;
-  --altrex-text: #f5f5f4;
+  --altrex-raised:  #30302d;
+
+  /* Text */
+  --altrex-text:  #f5f5f4;
   --altrex-muted: #c9c9c5;
+
+  /* Borders / lines */
   --altrex-border: #454541;
-  --altrex-line: #30302d;
-  --altrex-hover: #243552;
+  --altrex-line:   #30302d;
+
+  /* Interactive states
+     Fixed: was #243552 (blue/800 = nav/active-bg) — caused hover ≡ active in sidebar.
+     Now: #2a2a27 — a neutral dark-ink hover tone, visually distinct from active. */
+  --altrex-hover:     #2a2a27;
   --altrex-on-accent: #fffefc;
+
+  /* Action / link (per colorSystem.md §6 dark column) */
+  --altrex-primary:       #8ca3ca;   /* blue/300 */
+  --altrex-primary-hover: #b3c2db;   /* blue/200 */
+  --altrex-link:          #8ca3ca;   /* blue/300 — link text dark */
+
+  /* Status / danger on dark surface */
+  --altrex-danger-text: #f4b8b2;   /* light rose — readable on dark surface */
+
+  /* shadcn bridge — dark overrides */
+  --background:           var(--altrex-canvas);
+  --foreground:           var(--altrex-text);
+  --card:                 var(--altrex-surface);
+  --card-foreground:      var(--altrex-text);
+  --primary:              var(--altrex-primary);
+  --primary-foreground:   #1c1c1b;
+  --secondary:            var(--altrex-raised);
+  --secondary-foreground: var(--altrex-text);
+  --muted:                var(--altrex-raised);
+  --muted-foreground:     var(--altrex-muted);
+  --accent:               var(--altrex-hover);
+  --accent-foreground:    var(--altrex-text);
+  --destructive:          #991b1b;
+  --destructive-foreground: #fffefc;
+  --border:               var(--altrex-border);
+  --input:                var(--altrex-border);
+  --ring:                 var(--altrex-primary);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 body {
   background: var(--altrex-canvas);
@@ -36,26 +112,390 @@ body {
   font-family: Manrope, sans-serif;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .altrex-shell { display: flex; min-height: 100vh; }
-.altrex-sidebar { width: 264px; flex: 0 0 264px; border-right: 1px solid var(--altrex-border); background: var(--altrex-surface); transition: width 150ms ease-out; }
+
+/* ── Sidebar ── */
+.altrex-sidebar {
+  width: 264px;
+  flex: 0 0 264px;
+  border-right: 1px solid var(--altrex-border);
+  background: var(--altrex-surface);
+  transition: width 150ms ease-out;
+}
 .altrex-shell-collapsed .altrex-sidebar { width: 72px; flex-basis: 72px; }
-.altrex-brand { display: flex; height: 64px; align-items: center; gap: 8px; padding: 0 24px; border-bottom: 1px solid #EBEBE9; font-weight: 800; }
+
+/* ── Brand bar ── */
+.altrex-brand {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  /* Fixed: was hardcoded #EBEBE9 — now uses the line token */
+  border-bottom: 1px solid var(--altrex-line);
+  font-weight: 800;
+}
 .altrex-shell-collapsed .altrex-brand { justify-content: center; padding: 0; }
-.altrex-brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: #3A5788; color: var(--altrex-on-accent); }
+.altrex-brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--altrex-primary);
+  color: var(--altrex-on-accent);
+}
+
+/* ── Nav links ── */
 .altrex-sidebar nav { display: grid; gap: 4px; padding: 24px 16px; }
-.altrex-nav-link { min-height: 40px; display: flex; align-items: center; border-radius: 8px; padding: 0 8px; color: #454541; text-decoration: none; }
-.altrex-nav-link:hover { background: #F5F7FA; color: #2E446B; }
+.altrex-nav-link {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 0 8px;
+  /* Fixed: was hardcoded #454541 */
+  color: var(--altrex-muted);
+  text-decoration: none;
+  transition: background 120ms ease-out, color 120ms ease-out;
+}
+.altrex-nav-link:hover {
+  /* Fixed: was hardcoded #F5F7FA / #2E446B */
+  background: var(--altrex-hover);
+  color: var(--altrex-text);
+}
+
+/* ── Main / Topbar ── */
 .altrex-main { min-width: 0; flex: 1; }
-.altrex-topbar { display: flex; height: 64px; align-items: center; gap: 16px; border-bottom: 1px solid var(--altrex-border); background: var(--altrex-surface); padding: 0 24px; }
-.altrex-icon-button { display: grid; min-width: 40px; min-height: 40px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #454541; cursor: pointer; }
+.altrex-topbar {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--altrex-border);
+  background: var(--altrex-surface);
+  padding: 0 24px;
+}
+.altrex-icon-button {
+  display: grid;
+  min-width: 40px;
+  min-height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  /* Fixed: was hardcoded #454541 */
+  color: var(--altrex-muted);
+  cursor: pointer;
+  transition: background 120ms ease-out;
+}
 .altrex-icon-button:hover { background: var(--altrex-hover); }
-.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; }
+.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; margin-right: auto; }
+.altrex-topbar-end { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+
+
+/* ── Content area ── */
 .altrex-content { padding: 24px; }
 .altrex-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
 .altrex-eyebrow { color: var(--altrex-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
 h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 28px; }
 .altrex-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 32px; }
-.altrex-input { min-height: 40px; min-width: 240px; border: 1px solid var(--altrex-border); border-radius: 8px; padding: 0 12px; background: var(--altrex-raised); color: var(--altrex-text); }
+.altrex-input {
+  min-height: 40px;
+  min-width: 240px;
+  border: 1px solid var(--altrex-border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--altrex-raised);
+  color: var(--altrex-text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.altrex-input:focus { outline: 2px solid var(--altrex-primary); outline-offset: 1px; }
+.altrex-textarea {
+  min-height: 80px;
+  padding: 8px 12px;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
 .altrex-filter-bar { margin-bottom: 16px; }
-@media (max-width: 1024px) { .altrex-stat-grid { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .altrex-sidebar { width: 72px; flex-basis: 72px; } .altrex-brand { justify-content: center; padding: 0; } .altrex-brand span:last-child, .altrex-nav-link { font-size: 0; justify-content: center; } .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; } .altrex-page-header { align-items: flex-start; flex-direction: column; } .altrex-input { width: 100%; min-width: 0; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPANY REGISTRATION WIZARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Page scroll variant — the wide wizard may overflow on short viewports */
+.altrex-auth-page-scroll {
+  align-items: flex-start;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+/* ── Step indicator ── */
+.altrex-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.altrex-step-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
+}
+/* Explicit connector line — replaces the broken ::before approach */
+.altrex-step-line {
+  flex: 1;
+  height: 2px;
+  min-width: 20px;
+  max-width: 40px;
+  background: var(--altrex-line);
+  transition: background 300ms ease-out;
+}
+.altrex-step-line-done {
+  background: var(--altrex-primary);
+}
+.altrex-step-done {
+  background: var(--altrex-primary);
+  color: var(--altrex-on-accent);
+}
+.altrex-step-active {
+  background: var(--altrex-primary);
+  color: var(--altrex-on-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--altrex-primary) 20%, transparent);
+}
+.altrex-step-upcoming {
+  background: var(--altrex-line);
+  color: var(--altrex-muted);
+}
+
+.altrex-step-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--altrex-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 20px;
+}
+
+/* ── Step panel (animated container) ── */
+.altrex-step-panel {
+  min-height: 200px;
+}
+
+/* ── Two-column form grid ── */
+.altrex-company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── Step navigation (Back / Next) ── */
+.altrex-step-nav {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--altrex-line);
+}
+.altrex-step-next { min-width: 120px; }
+
+/* ── Phone input with prefix ── */
+.altrex-phone-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--altrex-border);
+  border-radius: 8px;
+  background: var(--altrex-raised);
+  overflow: hidden;
+}
+.altrex-phone-row:focus-within { outline: 2px solid var(--altrex-primary); outline-offset: 1px; }
+.altrex-phone-prefix {
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--altrex-muted);
+  background: var(--altrex-surface);
+  border-right: 1px solid var(--altrex-border);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.altrex-input-phone {
+  border: 0;
+  border-radius: 0;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+.altrex-input-phone:focus { outline: none; }
+
+/* ── Password row with show/hide toggle ── */
+.altrex-password-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.altrex-password-row .altrex-input {
+  flex: 1;
+  padding-right: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.altrex-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  color: var(--altrex-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.altrex-password-toggle:hover { color: var(--altrex-text); }
+
+/* ── Password strength meter ── */
+.altrex-strength-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.altrex-strength-bar {
+  height: 4px;
+  border-radius: 9999px;
+  transition: width 200ms ease-out, background 200ms ease-out;
+  max-width: 160px;
+}
+.altrex-strength-weak   { background: #b91c1c; }
+.altrex-strength-medium { background: #a16207; }
+.altrex-strength-strong { background: #15803d; }
+.altrex-strength-label { font-size: 11px; font-weight: 700; }
+.altrex-strength-label-weak   { color: #b91c1c; }
+.altrex-strength-label-medium { color: #a16207; }
+.altrex-strength-label-strong { color: #15803d; }
+
+/* ── Subscription plan cards ── */
+.altrex-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.altrex-plan-card {
+  border: 2px solid var(--altrex-border);
+  border-radius: 12px;
+  padding: 0;
+  background: var(--altrex-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  display: flex;
+  flex-direction: column;
+}
+.altrex-plan-card:not(.altrex-plan-card-disabled):hover {
+  border-color: var(--altrex-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--altrex-primary) 15%, transparent);
+}
+.altrex-plan-card-selected {
+  border-color: var(--altrex-primary);
+  background: color-mix(in srgb, var(--altrex-primary) 6%, var(--altrex-surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--altrex-primary) 18%, transparent);
+}
+.altrex-plan-card-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.altrex-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
+}
+.altrex-plan-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--altrex-text);
+}
+.altrex-plan-selected-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--altrex-primary);
+  color: var(--altrex-on-accent);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.altrex-plan-body { flex: 1; padding: 0 16px 8px; }
+.altrex-plan-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.altrex-plan-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--altrex-text);
+}
+.altrex-plan-feature svg { color: var(--altrex-primary); flex-shrink: 0; }
+.altrex-plan-coming-soon {
+  font-size: 13px;
+  color: var(--altrex-muted);
+  text-align: center;
+  padding: 24px 0;
+  margin: 0;
+}
+.altrex-plan-footer { padding: 12px 16px 16px; }
+.altrex-plan-btn {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--altrex-primary);
+  padding: 6px 0;
+  border-top: 1px solid var(--altrex-line);
+}
+.altrex-plan-btn-disabled { color: var(--altrex-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .altrex-stat-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .altrex-sidebar { width: 72px; flex-basis: 72px; }
+  .altrex-brand { justify-content: center; padding: 0; }
+  .altrex-brand span:last-child, .altrex-nav-link { font-size: 0; justify-content: center; }
+  .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; }
+  .altrex-page-header { align-items: flex-start; flex-direction: column; }
+  .altrex-input { width: 100%; min-width: 0; }
+  .altrex-company-grid { grid-template-columns: 1fr; }
+  .altrex-plan-grid { grid-template-columns: 1fr; }
+}

@@ -1,33 +1,109 @@
 @import "tailwindcss";
 @import "@altrex/ui/styles.css";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — light mode (:root) and dark mode ([data-theme="dark"])
+   All component selectors below must reference these variables, never
+   hardcoded hex values.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #fffbf4;
-  --foreground: #1c1c1b;
-  --altrex-canvas: #fffbf4;
+  /* Surface scale */
+  --altrex-canvas:  #fffbf4;
   --altrex-surface: #fffdf9;
-  --altrex-raised: #fffefc;
-  --altrex-text: #1c1c1b;
+  --altrex-raised:  #fffefc;
+
+  /* Text */
+  --altrex-text:  #1c1c1b;
   --altrex-muted: #5e5e5a;
+
+  /* Borders / lines */
   --altrex-border: #c9c9c5;
-  --altrex-line: #ebebe9;
-  --altrex-hover: #f5f7fa;
+  --altrex-line:   #ebebe9;
+
+  /* Interactive states */
+  --altrex-hover:     #ebeef5;   /* blue/50 — neutral hover for sidebar + icon buttons */
   --altrex-on-accent: #fffefc;
+
+  /* Action / link tokens (per colorSystem.md §6) */
+  --altrex-primary:       #3a5788;   /* blue/600 */
+  --altrex-primary-hover: #2e446b;   /* blue/700 */
+  --altrex-link:          #4869a3;   /* blue/500 — link text light */
+
+  /* Status / danger */
+  --altrex-danger-text: #7a3028;   /* danger foreground on light surface */
+
+  /* shadcn CSS variable bridge */
+  --background:           var(--altrex-canvas);
+  --foreground:           var(--altrex-text);
+  --card:                 var(--altrex-surface);
+  --card-foreground:      var(--altrex-text);
+  --primary:              var(--altrex-primary);
+  --primary-foreground:   var(--altrex-on-accent);
+  --secondary:            var(--altrex-surface);
+  --secondary-foreground: var(--altrex-text);
+  --muted:                var(--altrex-surface);
+  --muted-foreground:     var(--altrex-muted);
+  --accent:               var(--altrex-hover);
+  --accent-foreground:    var(--altrex-text);
+  --destructive:          #b91c1c;
+  --destructive-foreground: #fffefc;
+  --border:               var(--altrex-border);
+  --input:                var(--altrex-border);
+  --ring:                 var(--altrex-primary);
 }
 
 [data-theme="dark"] {
-  --background: #121211;
-  --foreground: #f5f5f4;
-  --altrex-canvas: #121211;
+  /* Surface scale */
+  --altrex-canvas:  #121211;
   --altrex-surface: #1c1c1b;
-  --altrex-raised: #30302d;
-  --altrex-text: #f5f5f4;
+  --altrex-raised:  #30302d;
+
+  /* Text */
+  --altrex-text:  #f5f5f4;
   --altrex-muted: #c9c9c5;
+
+  /* Borders / lines */
   --altrex-border: #454541;
-  --altrex-line: #30302d;
-  --altrex-hover: #243552;
+  --altrex-line:   #30302d;
+
+  /* Interactive states
+     Fixed: was #243552 (blue/800 = nav/active-bg) — caused hover ≡ active in sidebar.
+     Now: #2a2a27 — a neutral dark-ink hover tone, visually distinct from active. */
+  --altrex-hover:     #2a2a27;
   --altrex-on-accent: #fffefc;
+
+  /* Action / link (per colorSystem.md §6 dark column) */
+  --altrex-primary:       #8ca3ca;   /* blue/300 */
+  --altrex-primary-hover: #b3c2db;   /* blue/200 */
+  --altrex-link:          #8ca3ca;   /* blue/300 — link text dark */
+
+  /* Status / danger on dark surface */
+  --altrex-danger-text: #f4b8b2;   /* light rose — readable on dark surface */
+
+  /* shadcn bridge — dark overrides */
+  --background:           var(--altrex-canvas);
+  --foreground:           var(--altrex-text);
+  --card:                 var(--altrex-surface);
+  --card-foreground:      var(--altrex-text);
+  --primary:              var(--altrex-primary);
+  --primary-foreground:   #1c1c1b;
+  --secondary:            var(--altrex-raised);
+  --secondary-foreground: var(--altrex-text);
+  --muted:                var(--altrex-raised);
+  --muted-foreground:     var(--altrex-muted);
+  --accent:               var(--altrex-hover);
+  --accent-foreground:    var(--altrex-text);
+  --destructive:          #991b1b;
+  --destructive-foreground: #fffefc;
+  --border:               var(--altrex-border);
+  --input:                var(--altrex-border);
+  --ring:                 var(--altrex-primary);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 body {
   background: var(--altrex-canvas);
@@ -36,26 +112,125 @@ body {
   font-family: Manrope, sans-serif;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .altrex-shell { display: flex; min-height: 100vh; }
-.altrex-sidebar { width: 264px; flex: 0 0 264px; border-right: 1px solid var(--altrex-border); background: var(--altrex-surface); transition: width 150ms ease-out; }
+
+/* ── Sidebar ── */
+.altrex-sidebar {
+  width: 264px;
+  flex: 0 0 264px;
+  border-right: 1px solid var(--altrex-border);
+  background: var(--altrex-surface);
+  transition: width 150ms ease-out;
+}
 .altrex-shell-collapsed .altrex-sidebar { width: 72px; flex-basis: 72px; }
-.altrex-brand { display: flex; height: 64px; align-items: center; gap: 8px; padding: 0 24px; border-bottom: 1px solid #EBEBE9; font-weight: 800; }
+
+/* ── Brand bar ── */
+.altrex-brand {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  /* Fixed: was hardcoded #EBEBE9 — now uses the line token */
+  border-bottom: 1px solid var(--altrex-line);
+  font-weight: 800;
+}
 .altrex-shell-collapsed .altrex-brand { justify-content: center; padding: 0; }
-.altrex-brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: #3A5788; color: var(--altrex-on-accent); }
+.altrex-brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--altrex-primary);
+  color: var(--altrex-on-accent);
+}
+
+/* ── Nav links ── */
 .altrex-sidebar nav { display: grid; gap: 4px; padding: 24px 16px; }
-.altrex-nav-link { min-height: 40px; display: flex; align-items: center; border-radius: 8px; padding: 0 8px; color: #454541; text-decoration: none; }
-.altrex-nav-link:hover { background: #F5F7FA; color: #2E446B; }
+.altrex-nav-link {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 0 8px;
+  /* Fixed: was hardcoded #454541 */
+  color: var(--altrex-muted);
+  text-decoration: none;
+  transition: background 120ms ease-out, color 120ms ease-out;
+}
+.altrex-nav-link:hover {
+  /* Fixed: was hardcoded #F5F7FA / #2E446B */
+  background: var(--altrex-hover);
+  color: var(--altrex-text);
+}
+
+/* ── Main / Topbar ── */
 .altrex-main { min-width: 0; flex: 1; }
-.altrex-topbar { display: flex; height: 64px; align-items: center; gap: 16px; border-bottom: 1px solid var(--altrex-border); background: var(--altrex-surface); padding: 0 24px; }
-.altrex-icon-button { display: grid; min-width: 40px; min-height: 40px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #454541; cursor: pointer; }
+.altrex-topbar {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--altrex-border);
+  background: var(--altrex-surface);
+  padding: 0 24px;
+}
+.altrex-icon-button {
+  display: grid;
+  min-width: 40px;
+  min-height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  /* Fixed: was hardcoded #454541 */
+  color: var(--altrex-muted);
+  cursor: pointer;
+  transition: background 120ms ease-out;
+}
 .altrex-icon-button:hover { background: var(--altrex-hover); }
-.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; }
+.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; margin-right: auto; }
+.altrex-topbar-end { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+
+
+/* ── Content area ── */
 .altrex-content { padding: 24px; }
 .altrex-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
 .altrex-eyebrow { color: var(--altrex-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
 h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 28px; }
 .altrex-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 32px; }
-.altrex-input { min-height: 40px; min-width: 240px; border: 1px solid var(--altrex-border); border-radius: 8px; padding: 0 12px; background: var(--altrex-raised); color: var(--altrex-text); }
+.altrex-input {
+  min-height: 40px;
+  min-width: 240px;
+  border: 1px solid var(--altrex-border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--altrex-raised);
+  color: var(--altrex-text);
+  font-family: inherit;
+  font-size: 14px;
+}
+.altrex-input:focus { outline: 2px solid var(--altrex-primary); outline-offset: 1px; }
 .altrex-filter-bar { margin-bottom: 16px; }
-@media (max-width: 1024px) { .altrex-stat-grid { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .altrex-sidebar { width: 72px; flex-basis: 72px; } .altrex-brand { justify-content: center; padding: 0; } .altrex-brand span:last-child, .altrex-nav-link { font-size: 0; justify-content: center; } .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; } .altrex-page-header { align-items: flex-start; flex-direction: column; } .altrex-input { width: 100%; min-width: 0; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .altrex-stat-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .altrex-sidebar { width: 72px; flex-basis: 72px; }
+  .altrex-brand { justify-content: center; padding: 0; }
+  .altrex-brand span:last-child, .altrex-nav-link { font-size: 0; justify-content: center; }
+  .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; }
+  .altrex-page-header { align-items: flex-start; flex-direction: column; }
+  .altrex-input { width: 100%; min-width: 0; }
+}
