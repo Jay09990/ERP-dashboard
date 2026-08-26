@@ -1,0 +1,19 @@
+{
+  "name": "@altrex/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.59.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "altrex",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --recursive build",
+    "dev": "pnpm --filter @altrex/erp dev",
+    "format": "biome check --write .",
+    "lint": "biome check .",
+    "typecheck": "pnpm --recursive typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "eslint": "^9",
+    "eslint-config-next": "catalog:",
+    "typescript": "catalog:"
+  }
+}
