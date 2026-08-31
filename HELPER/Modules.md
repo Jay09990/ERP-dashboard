@@ -2,7 +2,7 @@
 
 > Source of truth for what exists, what each module needs, and its build status. Every field name, endpoint, and payload shape below is taken directly from the backend's documented API — do not invent or rename fields when implementing a feature; if a needed field isn't listed here, check with the backend developer before guessing.
 
-**Status legend:** ✅ Built (backend confirmed working) · 🚧 Planned (endpoint documented but not yet confirmed live) · 🔮 Future (mentioned as later scope, no endpoint yet)
+**Status legend:** ✅ Built and documented (safe to build against) · ⚠️ Marked complete by the backend checklist but payload/endpoint not yet shared — do not build against a guess · 🔮 Future (no endpoint yet, not on the current checklist)
 
 ---
 
@@ -98,20 +98,30 @@
 
 ## 6. Sales Documents
 
-All six modules below (5 sales + this section is split from purchase in §7) share **the master document-form template** defined in `design.md` §7 and `architecture_doc.md` §3. Each has: header record + `itemsDetails[]` (line items) + `taxDetails[]` (per-line, per-tax-type breakdown supporting simultaneous CGST+SGST+IGST).
+All modules below share **the master document-form template** defined in `design.md` §7 and `architecture_doc.md` §3. Each has: header record + `itemsDetails[]` (line items) + `taxDetails[]` (which taxes apply to which line).
 
 | Module | Status | Create endpoint | Notes |
 |---|---|---|---|
 | Quotation | ✅ | `POST /api/quotation` | `valid_until`, no payment fields |
 | Sales Order | ✅ | `POST /api/sales_order` | Can reference a `quotation_id`/`quotation_no`; adds `customer_po_no`, `customer_po_date`, `expected_delivery_date`, `shipping_charges`, `paid_amount`, `payment_term_id` |
-| Proforma | 🚧 | `POST /api/proforma` | Payload documented, backend build not yet confirmed complete per checklist |
-| Delivery Challan | 🔮 | not yet built | — |
-| Sales Invoice | ✅ | `POST /api/invoice` | Adds `po_no`, `po_date`, `due_date`; on update, `invoice_item_id`/`tax_detail_id` required per line |
-| Credit Notes | 🔮 | not yet built | — |
+| Proforma | ✅ | `POST /api/proforma` | Same shape as Quotation |
+| Delivery Challan | ✅ | `POST /api/delivery_challan` | New since the last doc update — `delivery_date`, `expected_delivery_date`, no pricing-payment fields (it's a dispatch document, not a billing one), but still carries the full line-item + tax shape |
+| Sales Invoice | ✅ | `POST /api/invoice` | Adds `po_no`, `po_date`, `due_date` |
+| Credit Notes | ⚠️ | not documented | Checklist marks this complete, but **no endpoint/payload has been shared yet.** Do not build against a guessed shape — confirm with the backend developer before starting this module, per `agent-loop.md` §1 ("new module appeared that isn't in modules.md yet") |
 
-**Update-payload rule (applies to ALL six document modules, sales and purchase):** on PUT, every existing line item carries its `<module>_item_id` and every existing tax row carries its `tax_detail_id`. New lines added during an edit omit these IDs. The frontend must track this per-row (new vs. existing) — do not regenerate all line items as "new" on every save, that will orphan data server-side.
+### ⚠️ Architecturally significant change — tax calculation moved server-side
 
-**Line-item index vs. ID:** on CREATE, tax rows reference their parent line by `<module>_item_index` (a 0-based array position). On UPDATE, they reference by the real `<module>_item_id`. This distinction matters for how the line-items table component computes what payload shape to send — check whether the form is in create or edit mode before building the `taxDetails` array.
+Earlier versions of this API had the frontend compute and submit `tax_percent`/`tax_amount` on each line item, and `taxable_amount`/`tax_percentage`/`tax_amount` on each tax row. **That is gone.** The current payload shape sends only raw pricing on line items (`quantity, unit_rate, discount_percent, discount_flat` — no tax fields at all), and each tax row is now just a **link, not a calculation**: `{ <module>_item_index or <module>_item_id, tax_id }`. The backend now owns 100% of the tax math — taxable amount, percentage snapshot, and computed tax amount are all derived and stored server-side.
+
+**What this changes for the frontend:**
+1. **The `taxDetails[]` array the form submits is now trivial** — for each line item, it's just the set of `tax_id`s the user selected for that line (e.g., both CGST and SGST checked → two rows, each just `{ item_index, tax_id }`). No amount math goes into this payload at all.
+2. **The line-items table still needs a client-side computed preview** for UX — a person filling out a Quotation still needs to see a running subtotal/tax/total as they type, before they save. This preview is **display-only and never submitted** — it's a local calculation in the form component (the `useDocumentTotals`-style hook mentioned in `architecture_doc.md` §3) purely so the screen doesn't look broken while they work. The authoritative numbers come back from the server on save/fetch.
+3. **Detail/view screens must read amounts from the GET response, not recompute them.** Once a document is saved, `taxable_amount`, `tax_percentage`, and `tax_amount` on each tax row come from the backend's stored values — the detail view renders what the server says, it does not re-derive it client-side. This avoids any drift between what was actually charged/recorded and what the UI displays.
+4. **This removes a meaningful chunk of frontend complexity** originally scoped for Phase 8 in `implementationplan.md` — the "layer document-specific tax-computation logic on top" work is now much lighter (preview-only math, not submission-critical math). Update effort estimates for that phase accordingly.
+
+**Update-payload rule (applies to ALL document modules, sales and purchase):** on PUT, every existing line item carries its `<module>_item_id` and every existing tax-link row carries its `tax_detail_id`. New lines/tax-links added during an edit omit these IDs. The frontend must track this per-row (new vs. existing) — do not regenerate all line items as "new" on every save, that will orphan data server-side.
+
+**Line-item index vs. ID:** on CREATE, tax rows reference their parent line by `<module>_item_index` (a 0-based array position). On UPDATE, they reference by the real `<module>_item_id`. Check whether the form is in create or edit mode before building the `taxDetails` array.
 
 ---
 
@@ -119,9 +129,9 @@ All six modules below (5 sales + this section is split from purchase in §7) sha
 
 | Module | Status | Create endpoint | Notes |
 |---|---|---|---|
-| Purchase Order | ✅ | `POST /api/purchase_order` | Same shape as Sales Order, mirrored for the vendor side |
-| Purchase Invoice | ✅ | `POST /api/purchase_invoice` | Adds `pi_date` distinct from `invoice_date`; update payload includes explicit `is_deleted` flags per line/tax row rather than omission |
-| Debit Notes | 🔮 | not yet built | — |
+| Purchase Order | ✅ | `POST /api/purchase_order` | Same shape as Sales Order, mirrored for the vendor side; same server-side tax model per §6 |
+| Purchase Invoice | ✅ | `POST /api/purchase_invoice` | Adds `pi_date` distinct from `invoice_date`. **Flagged inconsistency:** the latest documented PUT payload for this module drops the per-row `is_deleted` flags and the item-level linkage on tax rows that every other document module still uses (its `taxDetails[]` now shows only `{ tax_detail_id, tax_id, tax_percentage }` with no `purchase_invoice_item_id`). This looks like it may be a documentation gap rather than an intentional divergence — **confirm the real shape with the backend developer before building this module's edit flow**, don't assume it's correct as written just because it's newest. Logged in `implementationplan.md` §5. |
+| Debit Notes | ⚠️ | not documented | Same as Credit Notes above — checklist says complete, no payload shared. Confirm before building. |
 
 ---
 
@@ -149,6 +159,7 @@ All of the following follow the **Master CRUD pattern** from `design.md` §7 (li
 
 ## 9. Cross-Cutting Notes for Every Module
 
+0. **Tax math is entirely server-owned as of the latest backend update** — see §6 for the full explanation. This applies uniformly to every document module (Quotation, SO, Proforma, Delivery Challan, Invoice, PO, Purchase Invoice, and Credit/Debit Notes once documented). Never submit computed tax amounts; only submit which `tax_id`s apply to which line.
 1. **Audit logging is automatic server-side** — the frontend does not need to build any audit UI beyond a read-only Activity Log viewer (per `architecture_doc.md`/`design.md`), which can be a shared component consuming `company.audit_logs`.
 2. **Permission gating applies to every module above** — every Add/Edit/Delete action must check the current user's permission for that `module:action` key before rendering, not just before allowing the API call to succeed.
 3. **When a 🔮/🚧 module moves to ✅,** update this table's status column and add its payload shape here before writing any feature code against it — this file must stay the single source of truth, not the backend developer's Slack message.

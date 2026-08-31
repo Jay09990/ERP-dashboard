@@ -13,10 +13,24 @@ import { type CompanyRegisterValues, companyRegisterSchema } from "../schema";
 type StepDef = { label: string; fields: (keyof CompanyRegisterValues)[] };
 
 const STEPS: StepDef[] = [
-  { label: "Company Details", fields: ["companyName", "companyCode", "gstNo", "address"] },
+  {
+    label: "Company Details",
+    fields: ["companyName", "companyCode", "gstNo", "address"],
+  },
   { label: "Contact Details", fields: ["phone", "companyEmail"] },
   { label: "Subscription Plan", fields: ["subscriptionPlanId"] },
-  { label: "Admin & Database", fields: ["superAdminFirstName", "superAdminLastName", "superAdminEmail", "superAdminPhone", "superAdminPassword", "confirmPassword", "db_name"] },
+  {
+    label: "Admin & Database",
+    fields: [
+      "superAdminFirstName",
+      "superAdminLastName",
+      "superAdminEmail",
+      "superAdminPhone",
+      "superAdminPassword",
+      "confirmPassword",
+      "db_name",
+    ],
+  },
 ];
 
 // ─── Plan cards data ──────────────────────────────────────────────────────────
@@ -26,7 +40,14 @@ const PLANS = [
     id: 1,
     name: "Base",
     available: true,
-    features: ["Parties", "Item Master", "Sales", "Purchase", "Masters", "Administration"],
+    features: [
+      "Parties",
+      "Item Master",
+      "Sales",
+      "Purchase",
+      "Masters",
+      "Administration",
+    ],
   },
   { id: 2, name: "Standard", available: false, features: [] },
   { id: 3, name: "Premium", available: false, features: [] },
@@ -35,7 +56,10 @@ const PLANS = [
 
 // ─── Password strength ────────────────────────────────────────────────────────
 
-function getPasswordStrength(password: string): { level: "weak" | "medium" | "strong"; value: number } {
+function getPasswordStrength(password: string): {
+  level: "weak" | "medium" | "strong";
+  value: number;
+} {
   if (!password) return { level: "weak", value: 0 };
   let score = 0;
   if (password.length >= 8) score++;
@@ -73,7 +97,11 @@ function Field({
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="altrex-step-indicator" role="list" aria-label={`Step ${current + 1} of ${total}`}>
+    <div
+      className="altrex-step-indicator"
+      role="list"
+      aria-label={`Step ${current + 1} of ${total}`}
+    >
       {Array.from({ length: total }).map((_, i) => (
         <React.Fragment key={i}>
           {/* Connector line before every dot except the first */}
@@ -97,8 +125,20 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
           >
             {i < current ? (
               /* Completed — show checkmark only */
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-label={`Step ${i + 1} complete`}>
-                <path d="M2 6l2.8 3L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                aria-label={`Step ${i + 1} complete`}
+              >
+                <path
+                  d="M2 6l2.8 3L10 3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ) : (
               /* Active or upcoming — show number only */
@@ -111,7 +151,6 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
   );
 }
 
-
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 export function CompanyRegisterForm() {
@@ -119,6 +158,7 @@ export function CompanyRegisterForm() {
   const [step, setStep] = useState(0);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<CompanyRegisterValues>({
@@ -179,7 +219,9 @@ export function CompanyRegisterForm() {
       router.push("/");
     } catch (error) {
       setServerError(
-        String((error as { message?: string }).message ?? "Company creation failed"),
+        String(
+          (error as { message?: string }).message ?? "Company creation failed",
+        ),
       );
     }
   };
@@ -198,7 +240,6 @@ export function CompanyRegisterForm() {
 
         <form onSubmit={form.handleSubmit(submit)} noValidate>
           <div className="altrex-step-panel" ref={panelRef}>
-
             {/* ── Step 1: Company Details ── */}
             {step === 0 && (
               <div className="altrex-company-grid">
@@ -328,9 +369,14 @@ export function CompanyRegisterForm() {
                         aria-pressed={isSelected}
                       >
                         <div className="altrex-plan-header">
-                          <strong className="altrex-plan-name">{plan.name}</strong>
+                          <strong className="altrex-plan-name">
+                            {plan.name}
+                          </strong>
                           {isSelected && (
-                            <span className="altrex-plan-selected-mark" aria-label="Selected">
+                            <span
+                              className="altrex-plan-selected-mark"
+                              aria-label="Selected"
+                            >
                               ✓
                             </span>
                           )}
@@ -340,20 +386,38 @@ export function CompanyRegisterForm() {
                             <ul className="altrex-plan-features">
                               {plan.features.map((f) => (
                                 <li key={f} className="altrex-plan-feature">
-                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                                    <path d="M2.5 7l3 3L11.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 14 14"
+                                    fill="none"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      d="M2.5 7l3 3L11.5 4"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
                                   </svg>
                                   {f}
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="altrex-plan-coming-soon">Coming soon</p>
+                            <p className="altrex-plan-coming-soon">
+                              Coming soon
+                            </p>
                           )}
                         </div>
                         <div className="altrex-plan-footer">
-                          <span className={`altrex-plan-btn ${plan.available ? "" : "altrex-plan-btn-disabled"}`}>
-                            {plan.available ? `Select ${plan.name} Plan` : "Unavailable"}
+                          <span
+                            className={`altrex-plan-btn ${plan.available ? "" : "altrex-plan-btn-disabled"}`}
+                          >
+                            {plan.available
+                              ? `Select ${plan.name} Plan`
+                              : "Unavailable"}
                           </span>
                         </div>
                       </button>
@@ -361,7 +425,10 @@ export function CompanyRegisterForm() {
                   })}
                 </div>
                 {form.formState.errors.subscriptionPlanId && (
-                  <small className="altrex-form-error" style={{ display: "block", marginTop: "12px" }}>
+                  <small
+                    className="altrex-form-error"
+                    style={{ display: "block", marginTop: "12px" }}
+                  >
                     {form.formState.errors.subscriptionPlanId.message}
                   </small>
                 )}
@@ -448,17 +515,37 @@ export function CompanyRegisterForm() {
                         type="button"
                         className="altrex-password-toggle"
                         onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
                       >
                         {showPassword ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
                           </svg>
                         ) : (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
                           </svg>
                         )}
                       </button>
@@ -477,8 +564,11 @@ export function CompanyRegisterForm() {
                         aria-valuemax={100}
                         aria-label={`Password strength: ${strength.level}`}
                       />
-                      <span className={`altrex-strength-label altrex-strength-label-${strength.level}`}>
-                        {strength.level.charAt(0).toUpperCase() + strength.level.slice(1)}
+                      <span
+                        className={`altrex-strength-label altrex-strength-label-${strength.level}`}
+                      >
+                        {strength.level.charAt(0).toUpperCase() +
+                          strength.level.slice(1)}
                       </span>
                     </div>
                   )}
@@ -490,13 +580,55 @@ export function CompanyRegisterForm() {
                     htmlFor="sa-confirm"
                     error={form.formState.errors.confirmPassword?.message}
                   >
-                    <input
-                      id="sa-confirm"
-                      className="altrex-input"
-                      type={showPassword ? "text" : "password"}
-                      {...form.register("confirmPassword")}
-                      autoComplete="new-password"
-                    />
+                    <div className="altrex-password-row">
+                      <input
+                        id="sa-confirm"
+                        className="altrex-input"
+                        type={showConfirmPassword ? "text" : "password"}
+                        {...form.register("confirmPassword")}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        className="altrex-password-toggle"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </Field>
                 </div>
 
@@ -519,12 +651,18 @@ export function CompanyRegisterForm() {
 
           {/* Navigation */}
           {serverError && step === 3 ? (
-            <p className="altrex-form-error" style={{ marginTop: "12px" }}>{serverError}</p>
+            <p className="altrex-form-error" style={{ marginTop: "12px" }}>
+              {serverError}
+            </p>
           ) : null}
 
           <div className="altrex-step-nav">
             {step > 0 && (
-              <button type="button" className="altrex-button altrex-button-neutral" onClick={goBack}>
+              <button
+                type="button"
+                className="altrex-button altrex-button-neutral"
+                onClick={goBack}
+              >
                 Back
               </button>
             )}
@@ -542,7 +680,9 @@ export function CompanyRegisterForm() {
                 className="altrex-button altrex-button-primary altrex-step-next"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? "Creating company…" : "Create company"}
+                {form.formState.isSubmitting
+                  ? "Creating company…"
+                  : "Create company"}
               </button>
             )}
           </div>

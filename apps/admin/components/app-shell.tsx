@@ -3,30 +3,36 @@
 import { LogOut, Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { ThemeDropdown } from "@/components/theme-dropdown";
 import { navigation } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
-import { ThemeDropdown } from "@/components/theme-dropdown";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const collapsed = useUiStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const setSession = useSessionStore((state) => state.setSession);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      // POST /api/admin/logout — no payload; server invalidates session cookie
       await apiClient.post(endpoints.admin.logout, {});
-    } catch {
-      // Even if the server call fails, clear client state and redirect.
-      // The session may already be expired or the server may return 200 with no body.
+    } catch (error) {
+      // Log it — don't silently assume "session already expired".
+      // If this fires consistently, the endpoint path itself is likely wrong.
+      console.error("Logout request failed:", error);
     } finally {
+      setSession(null);        // clear cached permissions/user immediately
+      queryClient.clear();     // drop all cached query data — critical before a new user can log in
       router.push("/login");
     }
   };

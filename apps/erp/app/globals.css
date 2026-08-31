@@ -14,8 +14,8 @@
   --altrex-raised:  #fffefc;
 
   /* Text */
-  --altrex-text:  #1c1c1b;
-  --altrex-muted: #5e5e5a;
+  --altrex-text:   #1c1c1b;
+  --altrex-muted:  #5e5e5a;
 
   /* Borders / lines */
   --altrex-border: #c9c9c5;
@@ -25,10 +25,10 @@
   --altrex-hover:     #ebeef5;   /* blue/50 — neutral hover for sidebar + icon buttons */
   --altrex-on-accent: #fffefc;
 
-  /* Action / link tokens (per colorSystem.md §6) */
+  /* Action / link tokens */
   --altrex-primary:       #3a5788;   /* blue/600 */
   --altrex-primary-hover: #2e446b;   /* blue/700 */
-  --altrex-link:          #4869a3;   /* blue/500 — link text light */
+  --altrex-link:          #4869a3;   /* blue/500 */
 
   /* Status / danger */
   --altrex-danger-text: #7a3028;   /* danger foreground on light surface */
@@ -67,19 +67,17 @@
   --altrex-border: #454541;
   --altrex-line:   #30302d;
 
-  /* Interactive states
-     Fixed: was #243552 (blue/800 = nav/active-bg) — caused hover ≡ active in sidebar.
-     Now: #2a2a27 — a neutral dark-ink hover tone, visually distinct from active. */
+  /* Interactive states */
   --altrex-hover:     #2a2a27;
   --altrex-on-accent: #fffefc;
 
-  /* Action / link (per colorSystem.md §6 dark column) */
+  /* Action / link */
   --altrex-primary:       #8ca3ca;   /* blue/300 */
   --altrex-primary-hover: #b3c2db;   /* blue/200 */
-  --altrex-link:          #8ca3ca;   /* blue/300 — link text dark */
+  --altrex-link:          #8ca3ca;   /* blue/300 */
 
   /* Status / danger on dark surface */
-  --altrex-danger-text: #f4b8b2;   /* light rose — readable on dark surface */
+  --altrex-danger-text: #f4b8b2;   /* light rose */
 
   /* shadcn bridge — dark overrides */
   --background:           var(--altrex-canvas);
@@ -133,44 +131,57 @@ body {
   display: flex;
   height: 64px;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 0 24px;
-  /* Fixed: was hardcoded #EBEBE9 — now uses the line token */
   border-bottom: 1px solid var(--altrex-line);
   font-weight: 800;
+  font-size: 16px;
 }
 .altrex-shell-collapsed .altrex-brand { justify-content: center; padding: 0; }
 .altrex-brand-mark {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--altrex-primary);
   color: var(--altrex-on-accent);
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--altrex-primary) 35%, transparent);
 }
 
 /* ── Nav links ── */
-.altrex-sidebar nav { display: grid; gap: 4px; padding: 24px 16px; }
+.altrex-sidebar nav { display: grid; gap: 4px; padding: 20px 16px; }
 .altrex-nav-link {
   min-height: 40px;
   display: flex;
   align-items: center;
+  gap: 10px;
   border-radius: 8px;
-  padding: 0 8px;
-  /* Fixed: was hardcoded #454541 */
+  padding: 0 12px;
   color: var(--altrex-muted);
   text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
   transition: background 120ms ease-out, color 120ms ease-out;
 }
 .altrex-nav-link:hover {
-  /* Fixed: was hardcoded #F5F7FA / #2E446B */
   background: var(--altrex-hover);
   color: var(--altrex-text);
 }
+.altrex-nav-link-active {
+  background: color-mix(in srgb, var(--altrex-primary) 12%, transparent);
+  color: var(--altrex-primary);
+  font-weight: 700;
+}
+.altrex-shell-collapsed .altrex-nav-link {
+  justify-content: center;
+  padding: 0;
+}
 
 /* ── Main / Topbar ── */
-.altrex-main { min-width: 0; flex: 1; }
+.altrex-main { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .altrex-topbar {
   display: flex;
   height: 64px;
@@ -188,22 +199,22 @@ body {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  /* Fixed: was hardcoded #454541 */
   color: var(--altrex-muted);
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition: background 120ms ease-out, color 120ms ease-out;
 }
-.altrex-icon-button:hover { background: var(--altrex-hover); }
-.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; margin-right: auto; }
-.altrex-topbar-end { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-
+.altrex-icon-button:hover { background: var(--altrex-hover); color: var(--altrex-text); }
+.altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; font-weight: 600; margin-right: auto; }
+.altrex-topbar-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
 /* ── Content area ── */
-.altrex-content { padding: 24px; }
+.altrex-content { padding: 32px; max-width: 1400px; width: 100%; box-sizing: border-box; }
 .altrex-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
-.altrex-eyebrow { color: var(--altrex-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 28px; }
-.altrex-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 32px; }
+.altrex-eyebrow { color: var(--altrex-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.altrex-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-bottom: 32px; }
+
+/* ── Inputs, Forms & Fields ── */
 .altrex-input {
   min-height: 40px;
   min-width: 240px;
@@ -214,23 +225,265 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 28px; }
   color: var(--altrex-text);
   font-family: inherit;
   font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
-.altrex-input:focus { outline: 2px solid var(--altrex-primary); outline-offset: 1px; }
-.altrex-filter-bar { margin-bottom: 16px; }
+.altrex-input:focus {
+  outline: none;
+  border-color: var(--altrex-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--altrex-primary) 20%, transparent);
+}
+.altrex-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e5e5a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+  cursor: pointer;
+  width: 100%;
+}
+.altrex-select:disabled { opacity: 0.6; cursor: not-allowed; }
+.altrex-textarea {
+  min-height: 80px;
+  padding: 8px 12px;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+}
+.altrex-field {
+  display: grid;
+  gap: 6px;
+  color: var(--altrex-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.altrex-field .altrex-input {
+  width: 100%;
+}
+.altrex-form-error {
+  margin: 0;
+  color: var(--altrex-danger-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.altrex-filter-bar { margin-bottom: 20px; display: flex; gap: 12px; align-items: center; }
+
+/* ── Modals, Dialogs & Drawers ── */
+.altrex-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.altrex-dialog {
+  background: var(--altrex-surface);
+  border: 1px solid var(--altrex-border);
+  border-radius: 14px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: altrex-modal-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.altrex-dialog-sm { max-width: 440px; }
+.altrex-dialog-md { max-width: 580px; }
+.altrex-dialog-lg { max-width: 800px; }
+
+.altrex-dialog-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--altrex-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.altrex-dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--altrex-text);
+}
+.altrex-dialog-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--altrex-muted);
+}
+.altrex-dialog-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.altrex-dialog-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--altrex-line);
+  background: var(--altrex-canvas);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ── Detail Cards & Structured Grids ── */
+.altrex-detail-grid {
+  display: grid;
+  gap: 24px;
+  width: 100%;
+}
+.altrex-detail-card {
+  background: var(--altrex-surface);
+  border: 1px solid var(--altrex-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+.altrex-detail-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--altrex-text);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--altrex-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.altrex-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--altrex-line);
+  font-size: 14px;
+}
+.altrex-detail-label {
+  color: var(--altrex-muted);
+  font-weight: 600;
+}
+.altrex-detail-value {
+  color: var(--altrex-text);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ── Table States & Spinner ── */
+.altrex-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  border: 1px dashed var(--altrex-border);
+  border-radius: 12px;
+  background: var(--altrex-surface);
+  color: var(--altrex-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.altrex-table-state-error {
+  color: var(--altrex-danger-text);
+  border-color: color-mix(in srgb, var(--altrex-danger-text) 40%, transparent);
+  background: color-mix(in srgb, var(--altrex-danger-text) 6%, var(--altrex-surface));
+}
+.altrex-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid var(--altrex-border);
+  border-top-color: var(--altrex-primary);
+  border-radius: 50%;
+  animation: altrex-spin 0.6s linear infinite;
+}
+
+/* ── Action Rows & Custom Buttons ── */
+.altrex-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.altrex-button-sm {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.altrex-button-warning {
+  background: #d97706;
+  color: #fff;
+}
+.altrex-button-warning:hover {
+  background: #b45309;
+}
+.altrex-button-danger {
+  background: #dc2626;
+  color: #fff;
+}
+.altrex-button-danger:hover {
+  background: #b91c1c;
+}
+.altrex-hover-bg:hover {
+  background: var(--altrex-hover);
+}
+
+/* ── Password row ── */
+.altrex-password-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.altrex-password-row .altrex-input {
+  flex: 1;
+  padding-right: 44px;
+  width: 100%;
+}
+.altrex-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  color: var(--altrex-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.altrex-password-toggle:hover { color: var(--altrex-text); }
+
+/* ── Keyframe Animations ── */
+@keyframes altrex-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes altrex-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
-  .altrex-stat-grid { grid-template-columns: 1fr; }
+  .altrex-stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 640px) {
   .altrex-sidebar { width: 72px; flex-basis: 72px; }
   .altrex-brand { justify-content: center; padding: 0; }
-  .altrex-brand span:last-child, .altrex-nav-link { font-size: 0; justify-content: center; }
+  .altrex-brand span:last-child, .altrex-nav-link span { display: none; }
   .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; }
   .altrex-page-header { align-items: flex-start; flex-direction: column; }
   .altrex-input { width: 100%; min-width: 0; }
+  .altrex-stat-grid { grid-template-columns: 1fr; }
 }

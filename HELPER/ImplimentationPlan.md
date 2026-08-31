@@ -19,29 +19,27 @@
 ## 2. Build Order
 
 ### Phase 0 — Workspace Setup
-- [x] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
-- [x] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
-- [x] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps — **shadcn CLI run; Button, Input, Label, Card, Table, Badge, Progress, Separator generated into `packages/ui/src/components/ui/`; hand-rolled Button replaced; DataTable/StatusPill remain as wrappers over raw CSS (no shadcn Table primitive consumer yet)**
-- [x] Install full toolset per `toolset.md` (foundation subset; feature-specific packages remain deferred until their phases)
-- [x] Set up Biome, base `tsconfig`, and shared `packages/config` presets
-- [x] Import initial documented design tokens into `packages/ui/tokens` (provisional values pending Figma export)
+- [ ] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
+- [ ] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
+- [ ] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps
+- [ ] Install full toolset per `toolset.md`
+- [ ] Set up Biome, base `tsconfig`, and shared `packages/config` presets
+- [ ] Import design tokens from the Figma variable set into `packages/ui/tokens`
 
 ### Phase 1 — Foundation Shell
-- [x] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
-- [x] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
-- [x] `lib/query-client.ts` + TanStack Query provider wired into root layout
-- [x] `stores/session-store.ts` + a `/me`-style session check hook
-- [x] App shell layout: sidebar + topbar (per `design.md` §2), for both apps separately (different nav content)
-- [x] Shared components: DataTable, StatusPill, FilterBar, StatCard (in `components/shared`, backed by `packages/ui`)
-- [x] Theme foundation: system/light/dark modes with persisted preference and token-driven CSS variables in both apps
-- [x] Theme toggle in each topbar, with dark-mode contrast verification against `ColorSystem.md`
+- [ ] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
+- [ ] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
+- [ ] `lib/query-client.ts` + TanStack Query provider wired into root layout
+- [ ] `stores/session-store.ts` + a `/me`-style session check hook
+- [ ] App shell layout: sidebar + topbar (per `design.md` §2), for both apps separately (different nav content)
+- [ ] Shared components: DataTable, StatusPill, FilterBar, StatCard (in `components/shared`, backed by `packages/ui`)
 
 ### Phase 2 — Auth Flow (per the confirmed flow, both apps)
-- [x] Admin App: Admin Register page (`/api/admin/register`) — first-run only
-- [x] Admin App: Admin Login page (`/api/admin/login`)
-- [x] Admin App: Company Registration form (`/api/admin/companies`) — **fully sectioned (4-step wizard: Company Details / Contact Details / Subscription Plan / Super Admin & Database), precise field-level validation per spec (regexes + exact error messages), GSAP step transitions, password strength meter, plan card selector, confirmPassword local-only field**
-- [x] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
-- [x] Session-store hydration + route protection — **frontend infrastructure implemented (useSessionCheck hook, SessionProvider, middleware). Backend session-check endpoints (`/api/admin/me` and `/api/auth/me`) added to endpoints.ts but need to be implemented on the backend.**
+- [ ] Admin App: Admin Register page (`/api/admin/register`) — first-run only
+- [ ] Admin App: Admin Login page (`/api/admin/login`)
+- [ ] Admin App: Company Registration form (`/api/admin/companies`) — accessible only immediately post-registration, never shown again afterward (see note below)
+- [ ] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
+- [ ] Session-store hydration + route protection (redirect unauthenticated access to `/login` in both apps)
 - [ ] **Flow note:** once an admin has registered *and* registered a company, subsequent visits show only the Login page — no register/company-register screens. Gate this via the `/me`-equivalent check server-side (via the BFF), not a client-only flag.
 
 ### Phase 3 — Admin Panel Core
@@ -50,12 +48,12 @@
 - [ ] Deactivate vs. Hard-delete — two visually and behaviorally distinct destructive flows
 
 ### Phase 4 — ERP Company Core
-- [ ] Dashboard shell (stat cards + chart placeholders — real data wiring depends on later modules existing)
-- [ ] Company Profile (three-section single form per `modules.md` §2.2)
-- [ ] Users (list, add/edit, password change)
-- [ ] Roles (CRUD)
-- [ ] Permissions + Role Permissions matrix
-- [ ] User Permissions matrix (override view)
+- [x] Dashboard shell (stat cards + chart placeholders — real data wiring depends on later modules existing)
+- [x] Company Profile (three-section single form per `modules.md` §2.2)
+- [x] Users (list, add/edit, password change)
+- [x] Roles (CRUD)
+- [x] Permissions + Role Permissions matrix (with modal UI for empty roles)
+- [x] User Permissions matrix (override view with modal UI)
 
 ### Phase 5 — Party Management
 - [ ] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
@@ -117,8 +115,7 @@ Known future modules: Proforma (backend documented, not confirmed), Delivery Cha
 
 - [ ] What happens to a user's active session if the Financial Year rolls over mid-session? (Flagged during initial planning, not yet answered.)
 - [ ] Confirm whether `jsonwebtoken` in the backend's dependency list is used for anything the frontend needs to know about, or is dead weight.
-- [x] Initial ink and status token values are provisional because the original/Figma primitive export was not present; replace `packages/ui/tokens/colors.ts` values when the source export arrives.
-- [x] Frontend session infrastructure implemented (useSessionCheck hook in `hooks/use-session-check.ts`, SessionProvider in `components/session-provider.tsx`, middleware in `middleware.ts` for both apps). Backend session-check endpoints (`/api/admin/me` and `/api/auth/me`) added to `lib/api/endpoints.ts` but need to be implemented on the backend to complete the session validation flow.
-- [x] `companyCode` regex corrected: previous regex `/^[A-Za-z0-9][A-Za-z0-9_-]{1,19}$/` (allowed lowercase, 2–20 chars, hyphens/underscores) replaced with `/^[A-Z0-9]{2,10}$/` (uppercase-only, 2–10 chars) per spec §1.3. Auto-uppercase applied on `onChange` in the form so users aren't penalized for typing lowercase.
-- [x] Dark mode bug fixed: `--altrex-hover` was `#243552` (blue/800 = `nav/active-bg` dark) in both `globals.css` files — made hovered-but-inactive sidebar items visually identical to the active item in dark mode. Changed to `#2a2a27` (neutral ink hover). Also added `--altrex-link` and `--altrex-danger-text` tokens in both apps; fixed hardcoded hex values in `.altrex-nav-link`, `.altrex-brand`, `.altrex-icon-button`, `.altrex-button-neutral`, `.altrex-form-error`, `.altrex-auth-link`.
-- [x] Theme toggle UI enhancement: Changed theme toggle from simple cycle button to dropdown menu allowing users to directly select Light/Dark/System themes. Created `ThemeDropdown` component in both apps with proper state management and design token integration.
+- [ ] **Credit Notes and Debit Notes** are marked complete on the backend's own checklist, but no endpoint or payload shape has been shared for either. Do not start either module until this is resolved — see `modules.md` §6/§7.
+- [ ] **Purchase Invoice's PUT payload** appears inconsistent with every other document module — its `taxDetails[]` dropped the per-line item linkage and the per-row `is_deleted` flags that Quotation/SO/PO/Invoice/Delivery Challan all still use. Confirm with the backend developer whether this is intentional or a documentation gap before building the Purchase Invoice edit flow. See `modules.md` §7.
+- [ ] **No `/api/auth/logout` or `/api/admin/logout` endpoint has ever been documented by the backend** — the frontend's `endpoints.ts` currently guesses this path by pattern-matching `/api/auth/login`. Confirm the real path/method with the backend developer.
+- [ ] **Suspected root cause of "logs out unexpectedly / all APIs go unauthenticated after some time":** the backend likely uses `express-session`'s default in-memory `MemoryStore`, which is wiped on every `nodemon` restart during active backend development — this would explain sessions dying app-wide, not just on logout. Recommend the backend switch to a persistent store (`connect-pg-simple`, since Postgres is already in use) rather than the default. Not fixable from the frontend — needs backend confirmation and a config change on that side.

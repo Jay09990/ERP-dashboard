@@ -1,0 +1,23 @@
+export type Company = {
+  company_id: number;
+  company_name: string;
+  company_code: string;
+  company_email: string;
+  gst_no: string;
+  phone: string;
+  address: string;
+  subscription_plan_id: number;
+  db_name: string;
+  db_host?: string;
+  db_port?: number;
+  db_username?: string;
+  db_password?: string;
+  status: "active" | "inactive";
+  is_deleted?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  superAdminFirstName?: string;
+  superAdminLastName?: string;
+  superAdminEmail?: string;
+  superAdminPhone?: string;
+};

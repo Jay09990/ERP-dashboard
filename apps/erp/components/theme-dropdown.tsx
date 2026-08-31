@@ -16,7 +16,8 @@ export function ThemeDropdown() {
   const setThemePreference = useUiStore((state) => state.setThemePreference);
   const [isOpen, setIsOpen] = useState(false);
 
-  const currentTheme = themes.find((t) => t.value === themePreference) || themes[2];
+  const currentTheme =
+    themes.find((t) => t.value === themePreference) || themes[2];
   const CurrentIcon = currentTheme.icon;
 
   return (

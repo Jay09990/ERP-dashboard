@@ -8,20 +8,26 @@ async function proxy(request: NextRequest, path: string[]) {
 
   let response: Response;
   try {
+    const headers = new Headers();
+    request.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== "host" && key.toLowerCase() !== "connection") {
+        headers.set(key, value);
+      }
+    });
+
     response = await fetch(`${backendUrl}/api/${path.join("/")}${request.nextUrl.search}`, {
       method: request.method,
-      headers: {
-        cookie: request.headers.get("cookie") ?? "",
-        "content-type": request.headers.get("content-type") ?? "application/json",
-      },
+      headers: headers,
       body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
     });
   } catch {
     return NextResponse.json({ message: "Backend API is unavailable" }, { status: 502 });
   }
   const result = new NextResponse(await response.text(), { status: response.status });
-  const setCookie = response.headers.get("set-cookie");
-  if (setCookie) result.headers.set("set-cookie", setCookie);
+  const setCookies = response.headers.getSetCookie();
+  for (const cookie of setCookies) {
+    result.headers.append("set-cookie", cookie);
+  }
   result.headers.set("content-type", response.headers.get("content-type") ?? "application/json");
   return result;
 }

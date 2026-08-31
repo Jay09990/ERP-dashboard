@@ -10,18 +10,24 @@ export function useSessionCheck() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await apiClient.get(endpoints.admin.me);
+        const response = await apiClient.get<any>(endpoints.admin.me);
         if (response.data) {
           setSession({
             user: {
               id: response.data.userId?.toString() || "",
               name: response.data.fullName || response.data.email || "",
+              email: response.data.email || "",
+              phone: response.data.phone || "",
             },
             permissions: response.data.permissions || [],
             company: response.data.companyId
               ? {
                   id: response.data.companyId.toString(),
                   name: response.data.companyName || "",
+                  gstNo: response.data.gstNo || "",
+                  phone: response.data.companyPhone || "",
+                  email: response.data.companyEmail || "",
+                  address: response.data.address || "",
                 }
               : undefined,
           });

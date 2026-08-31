@@ -7,15 +7,14 @@ export const adminRegisterSchema = z.object({
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().email(),
+  login: z.string().min(1),
   password: z.string().min(1),
 });
 
 // ─── Regexes per spec §1.3 ───────────────────────────────────────────────────
 const companyNameRegex = /^[A-Za-z0-9&.,'\-\s]{3,100}$/;
 const companyCodeRegex = /^[A-Z0-9]{2,10}$/;
-const gstNoRegex =
-  /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const gstNoRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const indianPhoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const nameRegex = /^[A-Za-z][A-Za-z'\-\s]{1,49}$/;
@@ -44,7 +43,10 @@ export const companyRegisterSchema = z
       .string()
       .trim()
       .toUpperCase()
-      .regex(gstNoRegex, "Enter a valid 15-character GSTIN, e.g. 22AAAAA0000A1Z5"),
+      .regex(
+        gstNoRegex,
+        "Enter a valid 15-character GSTIN, e.g. 22AAAAA0000A1Z5",
+      ),
     address: z
       .string()
       .trim()

@@ -1,31 +1,61 @@
 "use client";
 
-import { LogOut, Menu, PanelLeft } from "lucide-react";
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  PanelLeft,
+  Settings,
+  ShieldCheck,
+  Truck,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { type ReactNode, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { navigation } from "@/config/navigation";
+import { ThemeDropdown } from "@/components/theme-dropdown";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
-import { ThemeDropdown } from "@/components/theme-dropdown";
+
+const navigationItems = [
+  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Company Profile", href: "/profile", icon: Building2 },
+  { label: "Users", href: "/users", icon: Users },
+  { label: "Roles", href: "/roles", icon: ShieldCheck },
+  { label: "Customers", href: "/customers", icon: UserCheck },
+  { label: "Vendors", href: "/vendors", icon: Truck },
+  { label: "Items", href: "/items", icon: Package },
+  { label: "Settings", href: "/settings", icon: Settings },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const collapsed = useUiStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const setSession = useSessionStore((state) => state.setSession);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      // POST /api/auth/logout — no payload; server invalidates session cookie
       await apiClient.post(endpoints.auth.logout, {});
-    } catch {
-      // Redirect regardless — session may already be expired
+    } catch (error) {
+      // Log it — don't silently assume "session already expired".
+      // If this fires consistently, the endpoint path itself is likely wrong.
+      console.error("Logout request failed:", error);
     } finally {
+      setSession(null);        // clear cached permissions/user immediately
+      queryClient.clear();     // drop all cached query data — critical before a new user can log in
       router.push("/login");
     }
   };
@@ -40,17 +70,32 @@ export function AppShell({ children }: { children: ReactNode }) {
           {collapsed ? null : <span>Altrex ERP</span>}
         </div>
         <nav aria-label="Primary navigation">
-          {navigation.map((item) => (
-            <Link className="altrex-nav-link" href={item.href} key={item.href}>
-              {collapsed ? item.label.slice(0, 1) : item.label}
-            </Link>
-          ))}
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                className={`altrex-nav-link ${
+                  isActive ? "altrex-nav-link-active" : ""
+                }`}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon size={18} style={{ flexShrink: 0 }} />
+                {collapsed ? null : <span>{item.label}</span>}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
       <div className="altrex-main">
         <header className="altrex-topbar">
-          {/* Sidebar toggle */}
           <button
             type="button"
             className="altrex-icon-button"
@@ -60,15 +105,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             {collapsed ? <Menu size={20} /> : <PanelLeft size={20} />}
           </button>
 
-          {/* Title — margin-right: auto pushes right-side controls to the end */}
-          <span className="altrex-topbar-title">Company workspace</span>
+          <span className="altrex-topbar-title">Enterprise Operations</span>
 
-          {/* Right-side controls */}
           <div className="altrex-topbar-end">
-            {/* Theme dropdown */}
             <ThemeDropdown />
 
-            {/* Logout */}
             <button
               type="button"
               id="topbar-logout"
@@ -78,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={handleLogout}
               disabled={loggingOut}
             >
-              <LogOut size={20} />
+              <LogOut size={19} />
             </button>
           </div>
         </header>

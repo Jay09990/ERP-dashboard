@@ -14,12 +14,16 @@ export function Button({
   );
 }
 
-export function DataTable<T extends { id?: string | number }>({
+export function DataTable<T extends Record<string, any>>({
   columns,
   data,
   emptyMessage = "No records found",
 }: {
-  columns: { key: keyof T; label: string }[];
+  columns: {
+    key: keyof T;
+    label: string;
+    render?: (row: T) => ReactNode;
+  }[];
   data: T[];
   emptyMessage?: string;
 }) {
@@ -41,15 +45,21 @@ export function DataTable<T extends { id?: string | number }>({
               </td>
             </tr>
           ) : (
-            data.map((row, index) => (
-              <tr key={row.id ?? index}>
-                {columns.map((column) => (
-                  <td key={String(column.key)}>
-                    {String(row[column.key] ?? "-")}
-                  </td>
-                ))}
-              </tr>
-            ))
+            data.map((row, index) => {
+              const rowKey =
+                row.id ?? row.role_id ?? row.user_id ?? row.company_id ?? index;
+              return (
+                <tr key={rowKey}>
+                  {columns.map((column) => (
+                    <td key={String(column.key)}>
+                      {column.render
+                        ? column.render(row)
+                        : String(row[column.key] ?? "-")}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

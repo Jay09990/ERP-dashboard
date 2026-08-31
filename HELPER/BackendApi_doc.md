@@ -675,9 +675,7 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "item_id": 2,
@@ -687,39 +685,25 @@ POST
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "quotation_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "quotation_item_index": 0,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "quotation_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "quotation_item_index": 1,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -752,9 +736,7 @@ PUT
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
 	      "quotation_item_id": 2,
@@ -765,43 +747,29 @@ PUT
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
 	      "tax_detail_id": 1,
         "quotation_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
 	      "tax_detail_id": 2,
         "quotation_item_id": 1,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
 	      "tax_detail_id": 3,
         "quotation_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
 	      "tax_detail_id": 4,
         "quotation_item_id": 2,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -841,9 +809,7 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "item_id": 3,
@@ -853,39 +819,25 @@ POST
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "sales_order_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "sales_order_item_index": 0,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "sales_order_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "sales_order_item_index": 1,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -925,10 +877,8 @@ PUT
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
-      },
+        "discount_flat": 500
+	    },
       {
 	      "sales_order_item_id": 2,
         "item_id": 3,
@@ -939,42 +889,29 @@ PUT
         "unit_rate": 25000,
         "discount_percent": 0.2,
         "discount_flat": 350,
-        "tax_percent": 18,
         "tax_amount": 31437
       }
     ],
     "taxDetails": [
       {
 	      "tax_detail_id": 1,
-        "sales_order_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+	      "sales_order_item_id": 1,
+        "tax_id": 1
       },
       {
 	      "tax_detail_id": 2,
         "sales_order_item_id": 1,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
 	      "tax_detail_id": 3,
         "sales_order_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
 	      "tax_detail_id": 4,
         "sales_order_item_id": 2,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1010,9 +947,7 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "item_id": 3,
@@ -1022,39 +957,25 @@ POST
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "purchase_order_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "purchase_order_item_index": 0,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "purchase_order_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "purchase_order_item_index": 1,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1089,9 +1010,7 @@ PUT
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "purchase_order_item_id": 2,
@@ -1102,43 +1021,29 @@ PUT
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "tax_detail_id": 1,
         "purchase_order_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "tax_detail_id": 2,
         "purchase_order_item_id": 1,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "tax_detail_id": 3,
         "purchase_order_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "tax_detail_id": 4,
         "purchase_order_item_id": 2,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1171,9 +1076,7 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "item_id": 3,
@@ -1183,39 +1086,25 @@ POST
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "proforma_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "proforma_item_index": 0,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "proforma_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "proforma_item_index": 1,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1247,9 +1136,7 @@ PUT
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
 				"proforma_item_id": 2,
@@ -1260,43 +1147,29 @@ PUT
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
 				"tax_detail_id": 1,
         "proforma_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
 				"tax_detail_id": 2,
         "proforma_item_id": 1,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
 				"tax_detail_id": 3,
         "proforma_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
 				"tax_detail_id": 4,
         "proforma_item_id": 2,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1329,9 +1202,7 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "item_id": 3,
@@ -1341,39 +1212,25 @@ POST
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "delivery_challan_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "delivery_challan_item_index": 0,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "delivery_challan_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "delivery_challan_item_index": 1,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1405,9 +1262,7 @@ PUT
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910
+        "discount_flat": 500
       },
       {
         "delivery_challan_item_id": 2,
@@ -1418,43 +1273,29 @@ PUT
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "tax_detail_id": 1,
         "delivery_challan_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "tax_detail_id": 2,
         "delivery_challan_item_id": 1,
-        "tax_id": 2,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       },
       {
         "tax_detail_id": 3,
         "delivery_challan_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 1
       },
       {
         "tax_detail_id": 4,
         "delivery_challan_item_id": 2,
-        "tax_id": 2,
-        "taxable_amount": 175000,
-        "tax_percentage": 9,
-        "tax_amount": 15750
+        "tax_id": 2
       }
     ]
   }
@@ -1487,48 +1328,42 @@ POST
     "company_id": 1,
     "itemsDetails": [
       {
-        "item_id": 1,
+        "item_id": 2,
         "description": " prod 1 ",
         "quantity": 5,
         "hsn_code": "hsn12345",
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910,
-        "user_id": 1,
-        "company_id": 1
+        "discount_flat": 500
       },
       {
-        "item_id": 2,
+        "item_id": 3,
         "description": "prod 2 ",
         "quantity": 7,
         "hsn_code": "hsn123452",
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437,
-        "user_id": 1,
-        "company_id": 1
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
         "invoice_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 18,
-        "tax_amount": 17910
+        "tax_id": 1
+      },
+      {
+        "invoice_item_index": 0,
+        "tax_id": 2
       },
       {
         "invoice_item_index": 1,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 18,
-        "tax_amount": 31437
+        "tax_id": 1
+      },
+      {
+        "invoice_item_index": 1,
+        "tax_id": 2
       }
     ]
   }
@@ -1539,7 +1374,6 @@ http://localhost:4500/api/invoice/2
 PUT
 
 ```jsx
-
 {
     "party_id": 1,
     "invoice_date": "2026-08-12",
@@ -1556,60 +1390,50 @@ PUT
     "terms_conditions": "terms",
     "notes": "paid 25,000\npending 3,00,000",
     "status": "draft",
-    "user_id": 1,
-    "company_id": 1,
     "itemsDetails": [
       {
-        "invoice_item_id": 1,  //imp
-        "invoice_id": 1,
-        "item_id": 1,
+        "invoice_item_id": 1,
+        "item_id": 2,
         "description": " prod 1 ",
         "quantity": 5,
         "hsn_code": "hsn12345",
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910,
-        "user_id": 1,
-        "company_id": 1
+        "discount_flat": 500
       },
       {
-	      "invoice_item_id": 2,  //imp
-        "invoice_id": 1,
-        "item_id": 2,
+        "invoice_item_id": 2,
+        "item_id": 3,
         "description": "prod 2 ",
         "quantity": 7,
         "hsn_code": "hsn123452",
         "unit_id": 1,
         "unit_rate": 25000,
         "discount_percent": 0.2,
-        "discount_flat": 350,
-        "tax_percent": 18,
-        "tax_amount": 31437,
-        "user_id": 1,
-        "company_id": 1
+        "discount_flat": 350
       }
     ],
     "taxDetails": [
       {
-        "tax_detail_id": 1,  //imp
-        "invoice_id": 1,
+        "tax_detail_id": 1,
         "invoice_item_id": 1,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 18,
-        "tax_amount": 17910
+        "tax_id": 1
       },
       {
-        "tax_detail_id": 2,  //imp
-        "invoice_id": 1,
+        "tax_detail_id": 2,
+        "invoice_item_id": 1,
+        "tax_id": 2
+      },
+      {
+        "tax_detail_id": 3,
         "invoice_item_id": 2,
-        "tax_id": 1,
-        "taxable_amount": 175000,
-        "tax_percentage": 18,
-        "tax_amount": 31437
+        "tax_id": 1
+      },
+      {
+        "tax_detail_id": 4,
+        "invoice_item_id": 2,
+        "tax_id": 2
       }
     ]
   }
@@ -1648,27 +1472,17 @@ POST
         "unit_id": 1,
         "unit_rate": 20000,
         "discount_percent": 0.5,
-        "discount_flat": 500,
-        "tax_percent": 18,
-        "tax_amount": 17910,
-        "user_id": 1,
-        "company_id": 1
+        "discount_flat": 500
       }
     ],
     "taxDetails": [
       {
         "purchase_invoice_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 1
       },
       {
         "purchase_invoice_item_index": 0,
-        "tax_id": 1,
-        "taxable_amount": 99500,
-        "tax_percentage": 9,
-        "tax_amount": 8955
+        "tax_id": 2
       }
     ]
   }
@@ -1706,33 +1520,19 @@ PUT
           "unit_rate": 20000,
           "total_rate": 100000,
           "discount_percent": 0.5,
-          "discount_flat": 500,
-          "tax_percent": 18,
-          "tax_amount": 17910,
-          "total_amount": 117410,
-          "is_deleted": false
+          "discount_flat": 500
         }
       ],
       "taxDetails": [
         {
           "tax_detail_id": 1,  //imp
-          "purchase_invoice_id": 1,
-          "purchase_invoice_item_id": 1,
           "tax_id": 1,
-          "taxable_amount": 99500,
-          "tax_percentage": 9,
-          "tax_amount": 8955,
-          "is_deleted": false
+          "tax_percentage": 9
         },
         {
           "tax_detail_id": 2,  //imp
-          "purchase_invoice_id": 1,
-          "purchase_invoice_item_id": 1,
-          "tax_id": 1,
-          "taxable_amount": 99500,
-          "tax_percentage": 9,
-          "tax_amount": 8955,
-          "is_deleted": false
+          "tax_id": 2,
+          "tax_percentage": 9
         }
       ]
     }
@@ -2036,12 +1836,12 @@ http://localhost:4500/api/invoice/:invoiceId/:status
 - [x]  quotation
 - [x]  sales order
 - [x]  purchase order
-- [ ]  proforma
-- [ ]  delivery challan
+- [x]  proforma
+- [x]  delivery challan
 - [x]  sales invoice
 - [x]  purchase invoice
-- [ ]  credit notes
-- [ ]  debit notes
+- [x]  credit notes
+- [x]  debit notes
 
 > Item Master & Items
 > 
