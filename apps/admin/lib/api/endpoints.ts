@@ -3,6 +3,7 @@ export const endpoints = {
     register: "/api/admin/register",
     login: "/api/admin/login",
     logout: "/api/admin/logout",
+    me: "/api/admin/me",
   },
 
   companies: "/api/admin/companies",

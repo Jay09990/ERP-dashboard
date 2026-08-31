@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Menu, Monitor, Moon, PanelLeft, Sun } from "lucide-react";
+import { LogOut, Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -9,13 +9,12 @@ import { navigation } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { useUiStore } from "@/stores/ui-store";
+import { ThemeDropdown } from "@/components/theme-dropdown";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const collapsed = useUiStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
-  const themePreference = useUiStore((state) => state.themePreference);
-  const cycleTheme = useUiStore((state) => state.cycleTheme);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -67,22 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Right-side controls */}
           <div className="altrex-topbar-end">
-            {/* Theme toggle */}
-            <button
-              type="button"
-              className="altrex-icon-button"
-              aria-label={`Theme: ${themePreference}`}
-              title={`Theme: ${themePreference}`}
-              onClick={cycleTheme}
-            >
-              {themePreference === "dark" ? (
-                <Moon size={20} />
-              ) : themePreference === "light" ? (
-                <Sun size={20} />
-              ) : (
-                <Monitor size={20} />
-              )}
-            </button>
+            {/* Theme dropdown */}
+            <ThemeDropdown />
 
             {/* Logout */}
             <button

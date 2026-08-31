@@ -41,7 +41,7 @@
 - [x] Admin App: Admin Login page (`/api/admin/login`)
 - [x] Admin App: Company Registration form (`/api/admin/companies`) — **fully sectioned (4-step wizard: Company Details / Contact Details / Subscription Plan / Super Admin & Database), precise field-level validation per spec (regexes + exact error messages), GSAP step transitions, password strength meter, plan card selector, confirmPassword local-only field**
 - [x] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
-- [ ] Session-store hydration + route protection (pending documented session-check endpoint)
+- [x] Session-store hydration + route protection — **frontend infrastructure implemented (useSessionCheck hook, SessionProvider, middleware). Backend session-check endpoints (`/api/admin/me` and `/api/auth/me`) added to endpoints.ts but need to be implemented on the backend.**
 - [ ] **Flow note:** once an admin has registered *and* registered a company, subsequent visits show only the Login page — no register/company-register screens. Gate this via the `/me`-equivalent check server-side (via the BFF), not a client-only flag.
 
 ### Phase 3 — Admin Panel Core
@@ -118,6 +118,7 @@ Known future modules: Proforma (backend documented, not confirmed), Delivery Cha
 - [ ] What happens to a user's active session if the Financial Year rolls over mid-session? (Flagged during initial planning, not yet answered.)
 - [ ] Confirm whether `jsonwebtoken` in the backend's dependency list is used for anything the frontend needs to know about, or is dead weight.
 - [x] Initial ink and status token values are provisional because the original/Figma primitive export was not present; replace `packages/ui/tokens/colors.ts` values when the source export arrives.
-- [ ] Backend API documentation currently has no session-check endpoint for the stored Express session; add the endpoint and response shape before restoring server-side route protection.
+- [x] Frontend session infrastructure implemented (useSessionCheck hook in `hooks/use-session-check.ts`, SessionProvider in `components/session-provider.tsx`, middleware in `middleware.ts` for both apps). Backend session-check endpoints (`/api/admin/me` and `/api/auth/me`) added to `lib/api/endpoints.ts` but need to be implemented on the backend to complete the session validation flow.
 - [x] `companyCode` regex corrected: previous regex `/^[A-Za-z0-9][A-Za-z0-9_-]{1,19}$/` (allowed lowercase, 2–20 chars, hyphens/underscores) replaced with `/^[A-Z0-9]{2,10}$/` (uppercase-only, 2–10 chars) per spec §1.3. Auto-uppercase applied on `onChange` in the form so users aren't penalized for typing lowercase.
 - [x] Dark mode bug fixed: `--altrex-hover` was `#243552` (blue/800 = `nav/active-bg` dark) in both `globals.css` files — made hovered-but-inactive sidebar items visually identical to the active item in dark mode. Changed to `#2a2a27` (neutral ink hover). Also added `--altrex-link` and `--altrex-danger-text` tokens in both apps; fixed hardcoded hex values in `.altrex-nav-link`, `.altrex-brand`, `.altrex-icon-button`, `.altrex-button-neutral`, `.altrex-form-error`, `.altrex-auth-link`.
+- [x] Theme toggle UI enhancement: Changed theme toggle from simple cycle button to dropdown menu allowing users to directly select Light/Dark/System themes. Created `ThemeDropdown` component in both apps with proper state management and design token integration.
