@@ -23,10 +23,10 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   useEffect(() => {
     if (allPermissions && rolePermissions) {
       const rolePermissionMap = new Map(
-        rolePermissions.map(p => [p.permission_name, p.is_allowed])
+        rolePermissions.map((p: { permission_name: string; is_allowed: boolean }) => [p.permission_name, p.is_allowed])
       );
       
-      const merged = allPermissions.map(p => ({
+      const merged = allPermissions.map((p: PermissionItem) => ({
         ...p,
         is_allowed: rolePermissionMap.get(p.permission_name) || false
       }));
@@ -34,7 +34,7 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
       setPermissions(merged);
     } else if (allPermissions) {
       // If role has no permissions yet, show all permissions as unchecked
-      setPermissions(allPermissions.map(p => ({ ...p, is_allowed: false })));
+      setPermissions(allPermissions.map((p: PermissionItem) => ({ ...p, is_allowed: false })));
     }
   }, [allPermissions, rolePermissions]);
 

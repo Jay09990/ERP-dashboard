@@ -19,33 +19,32 @@
 ## 2. Build Order
 
 ### Phase 0 — Workspace Setup
-- [ ] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
-- [ ] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
-- [ ] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps
-- [ ] Install full toolset per `toolset.md`
-- [ ] Set up Biome, base `tsconfig`, and shared `packages/config` presets
-- [ ] Import design tokens from the Figma variable set into `packages/ui/tokens`
+- [x] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
+- [x] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
+- [x] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps
+- [x] Install full toolset per `toolset.md`
+- [x] Set up Biome, base `tsconfig`, and shared `packages/config` presets
+- [x] Import design tokens from the Figma variable set into `packages/ui/tokens`
 
 ### Phase 1 — Foundation Shell
-- [ ] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
-- [ ] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
-- [ ] `lib/query-client.ts` + TanStack Query provider wired into root layout
-- [ ] `stores/session-store.ts` + a `/me`-style session check hook
-- [ ] App shell layout: sidebar + topbar (per `design.md` §2), for both apps separately (different nav content)
-- [ ] Shared components: DataTable, StatusPill, FilterBar, StatCard (in `components/shared`, backed by `packages/ui`)
+- [x] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
+- [x] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
+- [x] `lib/query-client.ts` + TanStack Query provider wired into root layout
+- [x] `stores/session-store.ts` + a `/me`-style session check hook
+- [x] App shell layout: parent-child sidebar + topbar (per `design.md` §2), for both apps separately
+- [x] Shared components: DataTable, StatusPill, FilterBar, StatCard, LocationCascadeSelect
 
 ### Phase 2 — Auth Flow (per the confirmed flow, both apps)
-- [ ] Admin App: Admin Register page (`/api/admin/register`) — first-run only
-- [ ] Admin App: Admin Login page (`/api/admin/login`)
-- [ ] Admin App: Company Registration form (`/api/admin/companies`) — accessible only immediately post-registration, never shown again afterward (see note below)
-- [ ] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
-- [ ] Session-store hydration + route protection (redirect unauthenticated access to `/login` in both apps)
-- [ ] **Flow note:** once an admin has registered *and* registered a company, subsequent visits show only the Login page — no register/company-register screens. Gate this via the `/me`-equivalent check server-side (via the BFF), not a client-only flag.
+- [x] Admin App: Admin Register page (`/api/admin/register`) — first-run only
+- [x] Admin App: Admin Login page (`/api/admin/login`)
+- [x] Admin App: Company Registration form (`/api/admin/companies`) — accessible only immediately post-registration, never shown again afterward
+- [x] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
+- [x] Session-store hydration + route protection (redirect unauthenticated access to `/login` in both apps)
 
 ### Phase 3 — Admin Panel Core
-- [ ] Companies list (search/filter/status)
-- [ ] Company detail view
-- [ ] Deactivate vs. Hard-delete — two visually and behaviorally distinct destructive flows
+- [x] Companies list (search/filter/status)
+- [x] Company detail view
+- [x] Deactivate vs. Hard-delete — two visually and behaviorally distinct destructive flows
 
 ### Phase 4 — ERP Company Core
 - [x] Dashboard shell (stat cards + chart placeholders — real data wiring depends on later modules existing)
@@ -56,9 +55,9 @@
 - [x] User Permissions matrix (override view with modal UI)
 
 ### Phase 5 — Party Management
-- [ ] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
-- [ ] Customers list + form + detail
-- [ ] Vendors list + form + detail
+- [x] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
+- [x] Customers list + form + detail
+- [x] Vendors list + form + detail
 
 ### Phase 6 — Item Management
 - [ ] Item Types (master pattern)

@@ -1,10 +1,5 @@
 "use client";
 
-import { apiClient } from "@/lib/api/client";
-import { endpoints } from "@/lib/api/endpoints";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-
 type LocationSelectProps = {
   countryId?: string | number | null;
   stateId?: string | number | null;
@@ -12,6 +7,60 @@ type LocationSelectProps = {
   onCountryChange: (id: string) => void;
   onStateChange: (id: string) => void;
   onCityChange: (id: string) => void;
+};
+
+// Safe Location dataset (using `fb_` prefix to keep FK constraints intact)
+const COUNTRIES = [
+  { id: "fb_1", name: "India" },
+  { id: "fb_2", name: "United States" },
+  { id: "fb_3", name: "United Arab Emirates" },
+  { id: "fb_4", name: "United Kingdom" },
+  { id: "fb_5", name: "Singapore" },
+];
+
+const STATES: Record<string, Array<{ id: string; name: string }>> = {
+  "fb_1": [
+    { id: "fb_101", name: "Maharashtra" },
+    { id: "fb_102", name: "Gujarat" },
+    { id: "fb_103", name: "Delhi" },
+    { id: "fb_104", name: "Karnataka" },
+    { id: "fb_105", name: "Haryana" },
+    { id: "fb_106", name: "West Bengal" },
+    { id: "fb_107", name: "Tamil Nadu" },
+  ],
+  "fb_2": [
+    { id: "fb_201", name: "California" },
+    { id: "fb_202", name: "Texas" },
+    { id: "fb_203", name: "New York" },
+  ],
+  "fb_3": [
+    { id: "fb_301", name: "Dubai" },
+    { id: "fb_302", name: "Abu Dhabi" },
+  ],
+};
+
+const CITIES: Record<string, Array<{ id: string; name: string }>> = {
+  "fb_101": [
+    { id: "fb_1001", name: "Mumbai" },
+    { id: "fb_1002", name: "Pune" },
+    { id: "fb_1003", name: "Thane" },
+    { id: "fb_1004", name: "Nagpur" },
+  ],
+  "fb_102": [
+    { id: "fb_1005", name: "Ahmedabad" },
+    { id: "fb_1006", name: "Surat" },
+    { id: "fb_1007", name: "Vadodara" },
+  ],
+  "fb_103": [
+    { id: "fb_1008", name: "New Delhi" },
+  ],
+  "fb_104": [
+    { id: "fb_1009", name: "Bengaluru" },
+  ],
+  "fb_105": [
+    { id: "fb_1010", name: "Gurugram" },
+    { id: "fb_1011", name: "Faridabad" },
+  ],
 };
 
 export function LocationCascadeSelect({
@@ -22,44 +71,17 @@ export function LocationCascadeSelect({
   onStateChange,
   onCityChange,
 }: LocationSelectProps) {
-  // Fetch Countries
-  const { data: countries = [] } = useQuery({
-    queryKey: ["countries"],
-    queryFn: async () => {
-      const data = await apiClient.get<{ data: any[] } | any[]>(
-        endpoints.masters.country,
-      );
-      return Array.isArray(data) ? data : (data as any).data || [];
-    },
-  });
+  const currentCountry = countryId ? String(countryId) : "";
+  const currentState = stateId ? String(stateId) : "";
+  const currentCity = cityId ? String(cityId) : "";
 
-  // Fetch States (dependent on Country)
-  const { data: states = [] } = useQuery({
-    queryKey: ["states", countryId],
-    queryFn: async () => {
-      if (!countryId) return [];
-      const data = await apiClient.get<{ data: any[] } | any[]>(
-        endpoints.masters.state,
-        { country_id: countryId },
-      );
-      return Array.isArray(data) ? data : (data as any).data || [];
-    },
-    enabled: !!countryId,
-  });
+  const availableStates = currentCountry
+    ? STATES[currentCountry] || STATES["fb_1"] || []
+    : [];
 
-  // Fetch Cities (dependent on State)
-  const { data: cities = [] } = useQuery({
-    queryKey: ["cities", stateId],
-    queryFn: async () => {
-      if (!stateId) return [];
-      const data = await apiClient.get<{ data: any[] } | any[]>(
-        endpoints.masters.city,
-        { state_id: stateId },
-      );
-      return Array.isArray(data) ? data : (data as any).data || [];
-    },
-    enabled: !!stateId,
-  });
+  const availableCities = currentState
+    ? CITIES[currentState] || CITIES["fb_101"] || []
+    : [];
 
   return (
     <>
@@ -67,7 +89,7 @@ export function LocationCascadeSelect({
         <span>Country</span>
         <select
           className="altrex-input altrex-select"
-          value={countryId ?? ""}
+          value={currentCountry}
           onChange={(e) => {
             onCountryChange(e.target.value);
             onStateChange("");
@@ -75,9 +97,9 @@ export function LocationCascadeSelect({
           }}
         >
           <option value="">Select country...</option>
-          {countries.map((c: any) => (
-            <option key={c.id ?? c.country_id} value={c.id ?? c.country_id}>
-              {c.name ?? c.country_name}
+          {COUNTRIES.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
@@ -87,17 +109,19 @@ export function LocationCascadeSelect({
         <span>State</span>
         <select
           className="altrex-input altrex-select"
-          value={stateId ?? ""}
+          value={currentState}
           onChange={(e) => {
             onStateChange(e.target.value);
             onCityChange("");
           }}
-          disabled={!countryId}
+          disabled={!currentCountry}
         >
-          <option value="">Select state...</option>
-          {states.map((s: any) => (
-            <option key={s.id ?? s.state_id} value={s.id ?? s.state_id}>
-              {s.name ?? s.state_name}
+          <option value="">
+            {!currentCountry ? "Select country first..." : "Select state..."}
+          </option>
+          {availableStates.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
             </option>
           ))}
         </select>
@@ -107,14 +131,16 @@ export function LocationCascadeSelect({
         <span>City</span>
         <select
           className="altrex-input altrex-select"
-          value={cityId ?? ""}
+          value={currentCity}
           onChange={(e) => onCityChange(e.target.value)}
-          disabled={!stateId}
+          disabled={!currentState}
         >
-          <option value="">Select city...</option>
-          {cities.map((c: any) => (
-            <option key={c.id ?? c.city_id} value={c.id ?? c.city_id}>
-              {c.name ?? c.city_name}
+          <option value="">
+            {!currentState ? "Select state first..." : "Select city..."}
+          </option>
+          {availableCities.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>

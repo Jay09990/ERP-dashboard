@@ -45,8 +45,9 @@ Before writing any code in a new session:
 ### → "A bug was reported"
 1. Follow `debug_prompt.md`'s triage steps exactly — do not skip straight to a fix without reproducing the reasoning path described there.
 
-### → "A new module appeared that isn't in modules.md yet"
+### → "A new module appeared or adding a route"
 1. Do not build against it from memory of a conversation or a Slack message. Get it documented in `modules.md` first (status, endpoint, payload shape), per `implementationplan.md` §3's update procedure, then proceed.
+2. **Sidebar Navigation Rule:** All ERP navigation is centralized in `config/navigation.ts` with parent-child structure. Do NOT hand-roll ad-hoc nav items, duplicate sidebar entries, or bypass `config/navigation.ts`. When building a route, match its URL path to the existing entry in `config/navigation.ts`.
 
 ---
 
@@ -57,6 +58,7 @@ Before writing any code in a new session:
 - [ ] Am I reusing the resource-hook factory instead of writing new fetch/state boilerplate? (`architecture_doc.md` §3.1)
 - [ ] Are all numeric/financial values using the `Numeric/Table` text style and right-aligned? (`design.md` §5)
 - [ ] Does the new feature folder follow the standard anatomy (`api.ts`, `schema.ts`, `types.ts`, `components/`, `index.ts`)? (`architecture_doc.md` §3)
+- [ ] Is the route matching the centralized parent-child navigation in `config/navigation.ts` without duplicating entries?
 
 ---
 

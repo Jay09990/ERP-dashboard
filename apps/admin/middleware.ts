@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
   const sessionCookie = request.cookies.get("connect.sid");
 
   // Public routes that don't require authentication
   const publicRoutes = ["/login", "/register", "/company-register"];
   const isPublicRoute = publicRoutes.some((route) => pathname === route);
+
+  if (isPublicRoute && (searchParams.has("logout") || searchParams.has("clear"))) {
+    const response = NextResponse.next();
+    response.cookies.set("connect.sid", "", { path: "/", expires: new Date(0) });
+    return response;
+  }
 
   // If user is not authenticated and trying to access protected route
   if (!sessionCookie && !isPublicRoute && pathname !== "/") {
@@ -15,7 +21,7 @@ export function middleware(request: NextRequest) {
   }
 
   // If user is authenticated and trying to access auth routes
-  if (sessionCookie && isPublicRoute) {
+  if (sessionCookie && isPublicRoute && !searchParams.has("logout") && !searchParams.has("clear")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

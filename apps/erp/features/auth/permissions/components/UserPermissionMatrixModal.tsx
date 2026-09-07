@@ -23,10 +23,10 @@ export function UserPermissionMatrixModal({ userId, userName, onClose }: Props) 
   useEffect(() => {
     if (allPermissions && userPermissions) {
       const userPermissionMap = new Map(
-        userPermissions.map(p => [p.permission_name, p.is_allowed])
+        userPermissions.map((p: { permission_name: string; is_allowed: boolean }) => [p.permission_name, p.is_allowed])
       );
       
-      const merged = allPermissions.map(p => ({
+      const merged = allPermissions.map((p: PermissionItem) => ({
         ...p,
         is_allowed: userPermissionMap.get(p.permission_name) || false
       }));
@@ -34,7 +34,7 @@ export function UserPermissionMatrixModal({ userId, userName, onClose }: Props) 
       setPermissions(merged);
     } else if (allPermissions) {
       // If user has no permissions yet, show all permissions as unchecked
-      setPermissions(allPermissions.map(p => ({ ...p, is_allowed: false })));
+      setPermissions(allPermissions.map((p: PermissionItem) => ({ ...p, is_allowed: false })));
     }
   }, [allPermissions, userPermissions]);
 

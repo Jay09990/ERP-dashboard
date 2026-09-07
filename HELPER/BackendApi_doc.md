@@ -22,26 +22,6 @@
 
 ---
 
-# Installing details:
-
-1. npm init -y
-2. npm i express
-3. npm i -g nodemon
-4. npm install pg
-
-npm install bcrypt
-npm install jsonwebtoken
-npm install dotenv
-npm install cookie-parser
-npm install express-validator
-npm install slugify
-npm install pg-format
-npm install uuid
-
----
-
----
-
 # Session Stored details:
 
 stored in session

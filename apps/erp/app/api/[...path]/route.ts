@@ -6,6 +6,8 @@ async function proxy(request: NextRequest, path: string[]) {
   const backendUrl = process.env.BACKEND_URL;
   if (!backendUrl) return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
 
+  const pathStr = path.join("/");
+
   let response: Response;
   try {
     const headers = new Headers();
@@ -15,7 +17,7 @@ async function proxy(request: NextRequest, path: string[]) {
       }
     });
 
-    response = await fetch(`${backendUrl}/api/${path.join("/")}${request.nextUrl.search}`, {
+    response = await fetch(`${backendUrl}/api/${pathStr}${request.nextUrl.search}`, {
       method: request.method,
       headers: headers,
       body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
@@ -23,11 +25,23 @@ async function proxy(request: NextRequest, path: string[]) {
   } catch {
     return NextResponse.json({ message: "Backend API is unavailable" }, { status: 502 });
   }
+
   const result = new NextResponse(await response.text(), { status: response.status });
   const setCookies = response.headers.getSetCookie();
+
   for (const cookie of setCookies) {
     result.headers.append("set-cookie", cookie);
   }
+
+  // If status is 401 Unauthorized or endpoint is auth/logout, force clear the session cookie
+  if (response.status === 401 || pathStr === "auth/logout") {
+    result.cookies.set("connect.sid", "", {
+      path: "/",
+      expires: new Date(0),
+      httpOnly: true,
+    });
+  }
+
   result.headers.set("content-type", response.headers.get("content-type") ?? "application/json");
   return result;
 }
