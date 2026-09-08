@@ -3,6 +3,12 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  // Public files in the app's public directory must not be redirected to login.
+  if (/\.[^/]+$/.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const sessionCookie = request.cookies.get("connect.sid");
 
   // Public routes that don't require authentication

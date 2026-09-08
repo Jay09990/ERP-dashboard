@@ -65,8 +65,9 @@
 - [ ] Items (dual sales/purchase pricing form)
 
 ### Phase 7 — Masters Batch
+- [x] Operational dependency masters: Item Types/Categories, UOM, Tax Types, Currencies, Payment Terms, Banks, and Country/State/City CRUD routes
+- [x] API-backed `LocationCascadeSelect` shared by Party and Company Profile address forms
 - [ ] All 18+ masters from `modules.md` §8, each as a one-file `api.ts` calling the resource-hook factory + a shared Master CRUD list/modal template
-- [ ] `LocationCascadeSelect` shared component (Country→State→City), reused in Party and Company Profile
 
 ### Phase 8 — Sales Documents
 - [ ] Master document-form template component (shared skeleton, per `design.md` §7)

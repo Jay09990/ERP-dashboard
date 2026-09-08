@@ -571,6 +571,43 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   width: 100%;
 }
 
+.altrex-document-body,
+.altrex-document-body form,
+.altrex-document-top-details,
+.altrex-document-summary {
+  min-width: 0;
+}
+
+.altrex-document-body .altrex-table-wrap {
+  max-width: 100%;
+}
+
+.altrex-document-body {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.altrex-document-body .altrex-input {
+  min-width: 0;
+}
+
+.altrex-document-body .altrex-table {
+  table-layout: fixed;
+}
+
+.altrex-document-body .altrex-table th,
+.altrex-document-body .altrex-table td {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.altrex-document-body .altrex-table td .altrex-input {
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 12px;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    DATA TABLES
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -639,4 +676,23 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   .altrex-page-header { align-items: flex-start; flex-direction: column; }
   .altrex-input { width: 100%; min-width: 0; }
   .altrex-stat-grid { grid-template-columns: 1fr; }
+
+  .altrex-document-dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+  }
+
+  .altrex-document-body {
+    padding: 14px !important;
+  }
+
+  .altrex-document-top-details,
+  .altrex-document-summary {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .altrex-document-top-details .altrex-input {
+    min-width: 0;
+  }
 }

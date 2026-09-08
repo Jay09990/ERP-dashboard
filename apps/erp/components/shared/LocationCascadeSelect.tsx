@@ -1,5 +1,7 @@
 "use client";
 
+import { cityApi, countryApi, stateApi } from "@/features/masters/api";
+
 type LocationSelectProps = {
   countryId?: string | number | null;
   stateId?: string | number | null;
@@ -9,142 +11,58 @@ type LocationSelectProps = {
   onCityChange: (id: string) => void;
 };
 
-// Safe Location dataset (using `fb_` prefix to keep FK constraints intact)
-const COUNTRIES = [
-  { id: "fb_1", name: "India" },
-  { id: "fb_2", name: "United States" },
-  { id: "fb_3", name: "United Arab Emirates" },
-  { id: "fb_4", name: "United Kingdom" },
-  { id: "fb_5", name: "Singapore" },
-];
+type MasterRecord = Record<string, unknown>;
 
-const STATES: Record<string, Array<{ id: string; name: string }>> = {
-  "fb_1": [
-    { id: "fb_101", name: "Maharashtra" },
-    { id: "fb_102", name: "Gujarat" },
-    { id: "fb_103", name: "Delhi" },
-    { id: "fb_104", name: "Karnataka" },
-    { id: "fb_105", name: "Haryana" },
-    { id: "fb_106", name: "West Bengal" },
-    { id: "fb_107", name: "Tamil Nadu" },
-  ],
-  "fb_2": [
-    { id: "fb_201", name: "California" },
-    { id: "fb_202", name: "Texas" },
-    { id: "fb_203", name: "New York" },
-  ],
-  "fb_3": [
-    { id: "fb_301", name: "Dubai" },
-    { id: "fb_302", name: "Abu Dhabi" },
-  ],
-};
+/** Extracts the list payloads returned by the backend's master endpoints. */
+function extractRecords(value: unknown): MasterRecord[] {
+  if (Array.isArray(value)) return value as MasterRecord[];
+  if (!value || typeof value !== "object") return [];
 
-const CITIES: Record<string, Array<{ id: string; name: string }>> = {
-  "fb_101": [
-    { id: "fb_1001", name: "Mumbai" },
-    { id: "fb_1002", name: "Pune" },
-    { id: "fb_1003", name: "Thane" },
-    { id: "fb_1004", name: "Nagpur" },
-  ],
-  "fb_102": [
-    { id: "fb_1005", name: "Ahmedabad" },
-    { id: "fb_1006", name: "Surat" },
-    { id: "fb_1007", name: "Vadodara" },
-  ],
-  "fb_103": [
-    { id: "fb_1008", name: "New Delhi" },
-  ],
-  "fb_104": [
-    { id: "fb_1009", name: "Bengaluru" },
-  ],
-  "fb_105": [
-    { id: "fb_1010", name: "Gurugram" },
-    { id: "fb_1011", name: "Faridabad" },
-  ],
-};
+  for (const nested of Object.values(value as MasterRecord)) {
+    const records = extractRecords(nested);
+    if (records.length) return records;
+  }
 
-export function LocationCascadeSelect({
-  countryId,
-  stateId,
-  cityId,
-  onCountryChange,
-  onStateChange,
-  onCityChange,
-}: LocationSelectProps) {
-  const currentCountry = countryId ? String(countryId) : "";
-  const currentState = stateId ? String(stateId) : "";
-  const currentCity = cityId ? String(cityId) : "";
+  return [];
+}
 
-  const availableStates = currentCountry
-    ? STATES[currentCountry] || STATES["fb_1"] || []
-    : [];
+function toId(value: unknown) {
+  return value == null ? "" : String(value);
+}
 
-  const availableCities = currentState
-    ? CITIES[currentState] || CITIES["fb_101"] || []
-    : [];
+/** Renders API-backed country, state, and city selectors for address forms. */
+export function LocationCascadeSelect({ countryId, stateId, cityId, onCountryChange, onStateChange, onCityChange }: LocationSelectProps) {
+  const { data: countriesData, isLoading: areCountriesLoading } = countryApi.useList();
+  const { data: statesData, isLoading: areStatesLoading } = stateApi.useList();
+  const { data: citiesData, isLoading: areCitiesLoading } = cityApi.useList();
+  const currentCountry = toId(countryId);
+  const currentState = toId(stateId);
+  const currentCity = toId(cityId);
+  const countries = extractRecords(countriesData);
+  const states = extractRecords(statesData).filter((state) => toId(state.country_id) === currentCountry);
+  const cities = extractRecords(citiesData).filter((city) => toId(city.state_id) === currentState);
 
-  return (
-    <>
-      <label className="altrex-field">
-        <span>Country</span>
-        <select
-          className="altrex-input altrex-select"
-          value={currentCountry}
-          onChange={(e) => {
-            onCountryChange(e.target.value);
-            onStateChange("");
-            onCityChange("");
-          }}
-        >
-          <option value="">Select country...</option>
-          {COUNTRIES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="altrex-field">
-        <span>State</span>
-        <select
-          className="altrex-input altrex-select"
-          value={currentState}
-          onChange={(e) => {
-            onStateChange(e.target.value);
-            onCityChange("");
-          }}
-          disabled={!currentCountry}
-        >
-          <option value="">
-            {!currentCountry ? "Select country first..." : "Select state..."}
-          </option>
-          {availableStates.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="altrex-field">
-        <span>City</span>
-        <select
-          className="altrex-input altrex-select"
-          value={currentCity}
-          onChange={(e) => onCityChange(e.target.value)}
-          disabled={!currentState}
-        >
-          <option value="">
-            {!currentState ? "Select state first..." : "Select city..."}
-          </option>
-          {availableCities.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-    </>
-  );
+  return <>
+    <label className="altrex-field">
+      <span>Country</span>
+      <select className="altrex-input altrex-select" value={currentCountry} onChange={(event) => { onCountryChange(event.target.value); onStateChange(""); onCityChange(""); }} disabled={areCountriesLoading}>
+        <option value="">{areCountriesLoading ? "Loading countries..." : "Select country..."}</option>
+        {countries.map((country) => <option key={toId(country.country_id ?? country.id)} value={toId(country.country_id ?? country.id)}>{String(country.country_name ?? country.name ?? "Unnamed country")}</option>)}
+      </select>
+    </label>
+    <label className="altrex-field">
+      <span>State</span>
+      <select className="altrex-input altrex-select" value={currentState} onChange={(event) => { onStateChange(event.target.value); onCityChange(""); }} disabled={!currentCountry || areStatesLoading}>
+        <option value="">{!currentCountry ? "Select country first..." : areStatesLoading ? "Loading states..." : "Select state..."}</option>
+        {states.map((state) => <option key={toId(state.state_id ?? state.id)} value={toId(state.state_id ?? state.id)}>{String(state.state_name ?? state.name ?? "Unnamed state")}</option>)}
+      </select>
+    </label>
+    <label className="altrex-field">
+      <span>City</span>
+      <select className="altrex-input altrex-select" value={currentCity} onChange={(event) => onCityChange(event.target.value)} disabled={!currentState || areCitiesLoading}>
+        <option value="">{!currentState ? "Select state first..." : areCitiesLoading ? "Loading cities..." : "Select city..."}</option>
+        {cities.map((city) => <option key={toId(city.city_id ?? city.id)} value={toId(city.city_id ?? city.id)}>{String(city.city_name ?? city.name ?? "Unnamed city")}</option>)}
+      </select>
+    </label>
+  </>;
 }

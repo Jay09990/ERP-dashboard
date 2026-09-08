@@ -4,10 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { AlertCircle } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { Button } from "@altrex/ui";
+import { AuthCard, Button } from "@altrex/ui";
 import { type AdminRegisterValues, adminRegisterSchema } from "../schema";
 
 export function AdminRegisterForm() {
@@ -111,7 +112,10 @@ export function AdminRegisterForm() {
           </div>
         </Field>
         {serverError ? (
-          <p className="altrex-form-error">{serverError}</p>
+          <div className="altrex-auth-banner" role="alert">
+            <AlertCircle size={16} aria-hidden="true" />
+            <span>{serverError}</span>
+          </div>
         ) : null}
         <Button type="submit" disabled={form.formState.isSubmitting}>
           Create admin
@@ -155,13 +159,8 @@ function AuthFrame({
   children: React.ReactNode;
 }) {
   return (
-    <main className="altrex-auth-page">
-      <section className="altrex-auth-panel">
-        <span className="altrex-eyebrow">{eyebrow}</span>
-        <h1>{title}</h1>
-        <p className="altrex-auth-description">{description}</p>
-        {children}
-      </section>
-    </main>
+    <AuthCard eyebrow={eyebrow} title={title} description={description}>
+      {children}
+    </AuthCard>
   );
 }

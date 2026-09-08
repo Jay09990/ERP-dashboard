@@ -1,13 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { apiClient } from "@/lib/api/client";
-import { endpoints } from "@/lib/api/endpoints";
+import { currencyApi } from "@/features/masters/api";
 import { AddressRepeater } from "./AddressRepeater";
 import { ContactPersonRepeater } from "./ContactPersonRepeater";
 import { partySchema, PartyFormValues } from "../schema";
@@ -35,16 +33,9 @@ export function PartyFormDrawer({
     ? `Edit ${partyType === "customer" ? "Customer" : "Vendor"}`
     : `New ${partyType === "customer" ? "Customer" : "Vendor"}`;
 
-  // Fetch Currencies for currency selector
-  const { data: currencies = [] } = useQuery({
-    queryKey: ["currencies"],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: any[] } | any[]>(
-        endpoints.masters.currency
-      );
-      return Array.isArray(res) ? res : (res as any).data || [];
-    },
-  });
+  // Currency master data is shared with Items and transactional documents.
+  const { data: currencyData = [] } = currencyApi.useList();
+  const currencies = Array.isArray(currencyData) ? currencyData : (currencyData as any).data || [];
 
   const {
     register,

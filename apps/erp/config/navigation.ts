@@ -166,19 +166,19 @@ export const navigationConfig: NavParentItem[] = [
       {
         id: "items",
         label: "Items",
-        href: "/inventory/items",
+        href: "/items",
         icon: Boxes,
       },
       {
         id: "item-categories",
         label: "Item Categories",
-        href: "/inventory/categories",
+        href: "/items/categories",
         icon: FolderTree,
       },
       {
         id: "item-types",
         label: "Item Types",
-        href: "/inventory/types",
+        href: "/items/types",
         icon: Tag,
       },
     ],
@@ -301,7 +301,7 @@ export const navigationConfig: NavParentItem[] = [
           {
             id: "tax-types",
             label: "Tax Types",
-            href: "/masters/tax-types",
+            href: "/masters/taxes",
             icon: Percent,
           },
           {

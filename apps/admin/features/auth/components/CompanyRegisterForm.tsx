@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -8,6 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { AuthCard } from "@altrex/ui";
 import { type CompanyRegisterValues, companyRegisterSchema } from "../schema";
 
 type StepDef = { label: string; fields: (keyof CompanyRegisterValues)[] };
@@ -227,13 +229,12 @@ export function CompanyRegisterForm() {
   };
 
   return (
-    <main className="altrex-auth-page altrex-auth-page-scroll">
-      <section className="altrex-auth-panel altrex-auth-panel-wide">
-        <span className="altrex-eyebrow">Tenant setup</span>
-        <h1>Register a company</h1>
-        <p className="altrex-auth-description">
-          Create the company and its first super admin in one step.
-        </p>
+    <AuthCard
+      eyebrow="Tenant setup"
+      title="Register a company"
+      description="Create the company and its first super admin in one step."
+      wide
+    >
 
         <StepIndicator current={step} total={STEPS.length} />
         <p className="altrex-step-label">{STEPS[step].label}</p>
@@ -651,9 +652,10 @@ export function CompanyRegisterForm() {
 
           {/* Navigation */}
           {serverError && step === 3 ? (
-            <p className="altrex-form-error" style={{ marginTop: "12px" }}>
-              {serverError}
-            </p>
+            <div className="altrex-auth-banner" role="alert">
+              <AlertCircle size={16} aria-hidden="true" />
+              <span>{serverError}</span>
+            </div>
           ) : null}
 
           <div className="altrex-step-nav">
@@ -687,7 +689,6 @@ export function CompanyRegisterForm() {
             )}
           </div>
         </form>
-      </section>
-    </main>
+    </AuthCard>
   );
 }

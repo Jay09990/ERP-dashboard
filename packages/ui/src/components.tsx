@@ -1,5 +1,33 @@
 import type { ReactNode } from "react";
 
+export function AuthCard({
+  eyebrow,
+  title,
+  description,
+  wide = false,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <main className="altrex-auth-page">
+      <section className={`altrex-auth-panel${wide ? " altrex-auth-panel-wide" : ""}`}>
+        <div className="altrex-auth-mark" aria-hidden="true">
+          A
+        </div>
+        <span className="altrex-eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        <p className="altrex-auth-description">{description}</p>
+        {children}
+      </section>
+    </main>
+  );
+}
+
 export function Button({
   children,
   variant = "primary",

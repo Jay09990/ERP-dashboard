@@ -2,7 +2,7 @@
 
 import { LogOut, Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -15,6 +15,7 @@ import { useUiStore } from "@/stores/ui-store";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const collapsed = useUiStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
@@ -46,10 +47,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="altrex-brand-mark">A</span>
           {collapsed ? null : <span>Altrex Admin</span>}
         </div>
-        <nav aria-label="Primary navigation">
+        <nav className="altrex-sidebar-nav" aria-label="Primary navigation">
           {navigation.map((item) => (
-            <Link className="altrex-nav-link" href={item.href} key={item.href}>
-              {collapsed ? item.label.slice(0, 1) : item.label}
+            <Link
+              className={`altrex-nav-child-link ${
+                pathname === item.href ? "altrex-nav-child-active" : ""
+              }`}
+              href={item.href}
+              key={item.href}
+              title={collapsed ? item.label : undefined}
+            >
+              <span>{collapsed ? item.label.slice(0, 1) : item.label}</span>
             </Link>
           ))}
         </nav>

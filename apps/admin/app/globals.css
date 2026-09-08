@@ -296,6 +296,14 @@ body {
   color: var(--altrex-text);
 }
 
+.altrex-shell-collapsed .altrex-nav-child-link {
+  justify-content: center;
+  min-height: 42px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .altrex-nav-child-active {
   color: var(--altrex-primary) !important;
   font-weight: 700 !important;
