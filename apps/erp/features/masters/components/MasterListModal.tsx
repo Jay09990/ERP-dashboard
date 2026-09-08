@@ -30,15 +30,17 @@ interface MasterListModalProps<T extends Record<string, any>> {
   useDelete: () => { mutate: (id: string, opts?: any) => void; isPending: boolean };
 }
 
-function extractList<T>(value: any): T[] {
+/** Finds the first record array in a backend response, regardless of its list key. */
+function extractList<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (Array.isArray(value)) return value;
-  for (const key of ["data", "items", "Items", "rows", "records", "list", "result", "payload", "response"]) {
-    if (Array.isArray(value?.[key])) return value[key];
-    if (value?.[key] && value[key] !== value) {
-      const nested = extractList<T>(value[key]);
-      if (nested.length > 0) return nested;
-    }
+  if (!value || typeof value !== "object" || visited.has(value)) return [];
+
+  visited.add(value);
+  for (const nestedValue of Object.values(value)) {
+    const nested = extractList<T>(nestedValue, visited);
+    if (nested.length > 0) return nested;
   }
+
   return [];
 }
 

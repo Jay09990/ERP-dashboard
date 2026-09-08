@@ -54,17 +54,20 @@ export function ItemFormDrawer({ item, onClose }: Props) {
       item_code: "",
       hsn_code: "",
       item_type: "",
+      item_parent_category: "",
       item_category: "",
       unit_id: "",
       conv_unit_id: "",
       conv_rate: 1,
       sales_rate: 0,
-      sales_min_price: 0,
-      sales_discount_percent: 0,
+      sales_qty: 1,
+      sales_convert_qty: 1,
+      sales_conv_rate: 1,
       sales_currency_id: "",
       purchase_rate: 0,
-      purchase_min_price: 0,
-      purchase_discount_percent: 0,
+      purchase_qty: 1,
+      purchase_convert_qty: 1,
+      purchase_conv_rate: 1,
       purchase_currency_id: "",
       tax_id: "",
       status: "active",
@@ -78,17 +81,20 @@ export function ItemFormDrawer({ item, onClose }: Props) {
         item_code: item.item_code ?? "",
         hsn_code: item.hsn_code ?? "",
         item_type: item.item_type ? item.item_type.toString() : "",
+        item_parent_category: item.item_perent_category ? item.item_perent_category.toString() : "",
         item_category: item.item_category ? item.item_category.toString() : "",
         unit_id: item.unit_id ? item.unit_id.toString() : "",
         conv_unit_id: item.conv_unit_id ? item.conv_unit_id.toString() : "",
         conv_rate: item.conv_rate ?? 1,
         sales_rate: item.sales_rate ?? 0,
-        sales_min_price: item.sales_min_price ?? 0,
-        sales_discount_percent: item.sales_discount_percent ?? 0,
+        sales_qty: item.sales_qty ?? 1,
+        sales_convert_qty: item.sales_convert_qty ?? 1,
+        sales_conv_rate: item.sales_conv_rate ?? 1,
         sales_currency_id: item.sales_currency_id ? item.sales_currency_id.toString() : "",
         purchase_rate: item.purchase_rate ?? 0,
-        purchase_min_price: item.purchase_min_price ?? 0,
-        purchase_discount_percent: item.purchase_discount_percent ?? 0,
+        purchase_qty: item.purchase_qty ?? 1,
+        purchase_convert_qty: item.purchase_convert_qty ?? 1,
+        purchase_conv_rate: item.purchase_conv_rate ?? 1,
         purchase_currency_id: item.purchase_currency_id ? item.purchase_currency_id.toString() : "",
         tax_id: item.tax_id ? item.tax_id.toString() : "",
         status: item.status || "active",
@@ -97,22 +103,26 @@ export function ItemFormDrawer({ item, onClose }: Props) {
   }, [item, form]);
 
   const onSubmit = (values: ItemValues) => {
+    const { item_parent_category, ...itemValues } = values;
     const payload = {
-      ...values,
-      item_type: values.item_type ? Number(values.item_type) : null,
-      item_category: values.item_category ? Number(values.item_category) : null,
-      unit_id: values.unit_id ? Number(values.unit_id) : null,
-      conv_unit_id: values.conv_unit_id ? Number(values.conv_unit_id) : null,
-      conv_rate: values.conv_rate ? Number(values.conv_rate) : 1,
-      sales_rate: values.sales_rate ? Number(values.sales_rate) : 0,
-      sales_min_price: values.sales_min_price ? Number(values.sales_min_price) : 0,
-      sales_discount_percent: values.sales_discount_percent ? Number(values.sales_discount_percent) : 0,
-      sales_currency_id: values.sales_currency_id ? Number(values.sales_currency_id) : null,
-      purchase_rate: values.purchase_rate ? Number(values.purchase_rate) : 0,
-      purchase_min_price: values.purchase_min_price ? Number(values.purchase_min_price) : 0,
-      purchase_discount_percent: values.purchase_discount_percent ? Number(values.purchase_discount_percent) : 0,
-      purchase_currency_id: values.purchase_currency_id ? Number(values.purchase_currency_id) : null,
-      tax_id: values.tax_id ? Number(values.tax_id) : null,
+      ...itemValues,
+      item_type: itemValues.item_type ? Number(itemValues.item_type) : null,
+      item_perent_category: item_parent_category ? Number(item_parent_category) : null,
+      item_category: itemValues.item_category ? Number(itemValues.item_category) : null,
+      unit_id: itemValues.unit_id ? Number(itemValues.unit_id) : null,
+      conv_unit_id: itemValues.conv_unit_id ? Number(itemValues.conv_unit_id) : null,
+      conv_rate: itemValues.conv_rate ? Number(itemValues.conv_rate) : 1,
+      sales_rate: itemValues.sales_rate ? Number(itemValues.sales_rate) : 0,
+      sales_qty: itemValues.sales_qty ? Number(itemValues.sales_qty) : 1,
+      sales_convert_qty: itemValues.sales_convert_qty ? Number(itemValues.sales_convert_qty) : 1,
+      sales_conv_rate: itemValues.sales_conv_rate ? Number(itemValues.sales_conv_rate) : 1,
+      sales_currency_id: itemValues.sales_currency_id ? Number(itemValues.sales_currency_id) : null,
+      purchase_rate: itemValues.purchase_rate ? Number(itemValues.purchase_rate) : 0,
+      purchase_qty: itemValues.purchase_qty ? Number(itemValues.purchase_qty) : 1,
+      purchase_convert_qty: itemValues.purchase_convert_qty ? Number(itemValues.purchase_convert_qty) : 1,
+      purchase_conv_rate: itemValues.purchase_conv_rate ? Number(itemValues.purchase_conv_rate) : 1,
+      purchase_currency_id: itemValues.purchase_currency_id ? Number(itemValues.purchase_currency_id) : null,
+      tax_id: itemValues.tax_id ? Number(itemValues.tax_id) : null,
     };
 
     if (isEdit && item) {
@@ -215,6 +225,18 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                 </label>
 
                 <label className="altrex-field">
+                  <span>Parent Category</span>
+                  <select className="altrex-input altrex-select" {...form.register("item_parent_category")}>
+                    <option value="">Select Parent Category...</option>
+                    {categories.map((c: any) => (
+                      <option key={`parent-${c.category_id ?? c.id}`} value={(c.category_id ?? c.id).toString()}>
+                        {c.category_name ?? c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="altrex-field">
                   <span>Category</span>
                   <select className="altrex-input altrex-select" {...form.register("item_category")}>
                     <option value="">Select Category...</option>
@@ -282,16 +304,20 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                 </div>
                 <div style={{ display: "grid", gap: "12px" }}>
                   <label className="altrex-field">
+                    <span>Sales Quantity</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="1" {...form.register("sales_qty")} />
+                  </label>
+                  <label className="altrex-field">
+                    <span>Sales Converted Quantity</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="10" {...form.register("sales_convert_qty")} />
+                  </label>
+                  <label className="altrex-field">
                     <span>Selling Rate</span>
                     <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("sales_rate")} />
                   </label>
                   <label className="altrex-field">
-                    <span>Minimum Sales Price</span>
-                    <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("sales_min_price")} />
-                  </label>
-                  <label className="altrex-field">
-                    <span>Default Sales Discount (%)</span>
-                    <input type="number" step="0.1" className="altrex-input" placeholder="0%" {...form.register("sales_discount_percent")} />
+                    <span>Sales Converted Rate</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("sales_conv_rate")} />
                   </label>
                   <label className="altrex-field">
                     <span>Sales Currency</span>
@@ -315,16 +341,20 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                 </div>
                 <div style={{ display: "grid", gap: "12px" }}>
                   <label className="altrex-field">
+                    <span>Purchase Quantity</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="1" {...form.register("purchase_qty")} />
+                  </label>
+                  <label className="altrex-field">
+                    <span>Purchase Converted Quantity</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="10" {...form.register("purchase_convert_qty")} />
+                  </label>
+                  <label className="altrex-field">
                     <span>Purchase Rate</span>
                     <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("purchase_rate")} />
                   </label>
                   <label className="altrex-field">
-                    <span>Minimum Purchase Price</span>
-                    <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("purchase_min_price")} />
-                  </label>
-                  <label className="altrex-field">
-                    <span>Purchase Discount (%)</span>
-                    <input type="number" step="0.1" className="altrex-input" placeholder="0%" {...form.register("purchase_discount_percent")} />
+                    <span>Purchase Converted Rate</span>
+                    <input type="number" step="0.01" className="altrex-input" placeholder="0.00" {...form.register("purchase_conv_rate")} />
                   </label>
                   <label className="altrex-field">
                     <span>Purchase Currency</span>

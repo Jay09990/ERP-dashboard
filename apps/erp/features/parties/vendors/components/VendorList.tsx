@@ -25,7 +25,7 @@ import {
 import { PartyFormDrawer, PartyFormValues, PartyRecord } from "../../shared";
 
 export function VendorList() {
-  const { data: vendors = [], isLoading } = useVendors();
+  const { data: vendors = [], isLoading, error } = useVendors();
   const { mutateAsync: createVendor, isPending: isCreating } = useCreateVendor();
   const { mutateAsync: updateVendor, isPending: isUpdating } = useUpdateVendor();
   const { mutateAsync: deleteVendor, isPending: isDeleting } = useDeleteVendor();
@@ -199,6 +199,12 @@ export function VendorList() {
                     Loading vendor directory...
                   </td>
                 </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: 48, color: "var(--altrex-danger-text)" }}>
+                    Could not load vendors from the server.
+                  </td>
+                </tr>
               ) : filteredVendors.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: "center", padding: 48, color: "var(--altrex-muted)" }}>
@@ -221,7 +227,7 @@ export function VendorList() {
                 </tr>
               ) : (
                 filteredVendors.map((v: PartyRecord, index: number) => {
-                  const id = v.party_id ?? v.id ?? index;
+                  const id = v.party_id ?? v.id;
                   const rowKey = `vendor-${id}-${index}`;
                   const balance = parseFloat(String(v.opening_balance || 0));
                   return (
@@ -240,7 +246,7 @@ export function VendorList() {
                           </div>
                           <div>
                             <Link
-                              href={`/parties/vendors/${id}`}
+                              href={id == null ? "/parties/vendors" : `/parties/vendors/${id}`}
                               style={{ color: "var(--altrex-text)", fontWeight: 700, textDecoration: "none" }}
                               className="altrex-table-link"
                             >
@@ -279,7 +285,7 @@ export function VendorList() {
                       <td style={{ textAlign: "right" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
                           <Link
-                            href={`/parties/vendors/${id}`}
+                            href={id == null ? "/parties/vendors" : `/parties/vendors/${id}`}
                             className="altrex-icon-button"
                             style={{ width: 32, height: 32, minWidth: 32, minHeight: 32 }}
                             title="View Details" aria-label="View Vendor Details"

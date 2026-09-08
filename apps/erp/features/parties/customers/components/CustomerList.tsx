@@ -26,7 +26,7 @@ import {
 import { PartyFormDrawer, PartyFormValues, PartyRecord } from "../../shared";
 
 export function CustomerList() {
-  const { data: customers = [], isLoading } = useCustomers();
+  const { data: customers = [], isLoading, error } = useCustomers();
   const { mutateAsync: createCustomer, isPending: isCreating } = useCreateCustomer();
   const { mutateAsync: updateCustomer, isPending: isUpdating } = useUpdateCustomer();
   const { mutateAsync: deleteCustomer, isPending: isDeleting } = useDeleteCustomer();
@@ -230,6 +230,12 @@ export function CustomerList() {
                     Loading customer directory...
                   </td>
                 </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: 48, color: "var(--altrex-danger-text)" }}>
+                    Could not load customers from the server.
+                  </td>
+                </tr>
               ) : filteredCustomers.length === 0 ? (
                 <tr>
                   <td
@@ -262,7 +268,7 @@ export function CustomerList() {
                 </tr>
               ) : (
                 filteredCustomers.map((c: PartyRecord, index: number) => {
-                  const id = c.party_id ?? c.id ?? index;
+                  const id = c.party_id ?? c.id;
                   const rowKey = `customer-${id}-${index}`;
                   const balance = parseFloat(String(c.opening_balance || 0));
 
@@ -288,7 +294,7 @@ export function CustomerList() {
                           </div>
                           <div>
                             <Link
-                              href={`/parties/customers/${id}`}
+                              href={id == null ? "/parties/customers" : `/parties/customers/${id}`}
                               style={{
                                 color: "var(--altrex-text)",
                                 fontWeight: 700,
@@ -376,7 +382,7 @@ export function CustomerList() {
                           }}
                         >
                           <Link
-                            href={`/parties/customers/${id}`}
+                            href={id == null ? "/parties/customers" : `/parties/customers/${id}`}
                             className="altrex-icon-button"
                             style={{ width: 32, height: 32, minWidth: 32, minHeight: 32 }}
                             title="View Details"

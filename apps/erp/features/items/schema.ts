@@ -23,16 +23,18 @@ export const itemSchema = z.object({
   conv_rate: z.union([z.number(), z.string()]).optional(),
 
   // Sales Pricing
+  sales_qty: z.union([z.number(), z.string()]).optional(),
+  sales_convert_qty: z.union([z.number(), z.string()]).optional(),
   sales_currency_id: z.union([z.number(), z.string()]).optional(),
-  sales_min_price: z.union([z.number(), z.string()]).optional(),
   sales_rate: z.union([z.number(), z.string()]).optional(),
-  sales_discount_percent: z.union([z.number(), z.string()]).optional(),
+  sales_conv_rate: z.union([z.number(), z.string()]).optional(),
 
   // Purchase Pricing
+  purchase_qty: z.union([z.number(), z.string()]).optional(),
+  purchase_convert_qty: z.union([z.number(), z.string()]).optional(),
   purchase_currency_id: z.union([z.number(), z.string()]).optional(),
-  purchase_min_price: z.union([z.number(), z.string()]).optional(),
   purchase_rate: z.union([z.number(), z.string()]).optional(),
-  purchase_discount_percent: z.union([z.number(), z.string()]).optional(),
+  purchase_conv_rate: z.union([z.number(), z.string()]).optional(),
 
   tax_id: z.union([z.number(), z.string()]).optional(),
   status: z.enum(["active", "inactive"]).default("active"),
@@ -63,17 +65,20 @@ export type Item = {
   item_type?: number;
   item_parent_category?: number;
   item_category?: number;
+  item_perent_category?: number;
   unit_id?: number;
   conv_unit_id?: number;
   conv_rate?: number | string;
+  sales_qty?: number | string;
+  sales_convert_qty?: number | string;
   sales_currency_id?: number;
-  sales_min_price?: number | string;
   sales_rate?: number | string;
-  sales_discount_percent?: number | string;
+  sales_conv_rate?: number | string;
+  purchase_qty?: number | string;
+  purchase_convert_qty?: number | string;
   purchase_currency_id?: number;
-  purchase_min_price?: number | string;
   purchase_rate?: number | string;
-  purchase_discount_percent?: number | string;
+  purchase_conv_rate?: number | string;
   tax_id?: number;
   status: "active" | "inactive";
   created_at?: string;
