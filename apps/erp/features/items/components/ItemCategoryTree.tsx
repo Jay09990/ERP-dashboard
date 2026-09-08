@@ -6,15 +6,20 @@ import { useMemo, useState } from "react";
 import { useCreateItemCategory, useDeleteItemCategory, useItemCategories } from "../api";
 import type { ItemCategory } from "../schema";
 
+function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (!value || typeof value !== "object" || visited.has(value)) return [];
+  visited.add(value);
+  for (const nested of Object.values(value)) {
+    const records = extractRecords<T>(nested, visited);
+    if (records.length > 0) return records;
+  }
+  return [];
+}
+
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories: ItemCategory[] = Array.isArray(responseData)
-    ? responseData
-    : (responseData as any)?.categories ??
-      (responseData as any)?.Categories ??
-      (responseData as any)?.item_categories ??
-      (responseData as any)?.data ??
-      [];
+  const categories = extractRecords<ItemCategory>(responseData);
 
   const { mutate: createCategory, isPending: isCreating } = useCreateItemCategory();
   const { mutate: deleteCategory, isPending: isDeleting } = useDeleteItemCategory();
@@ -23,7 +28,12 @@ export function ItemCategoryTree() {
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
 
-  const getCategoryId = (c: ItemCategory) => c.category_id ?? (c as any).id;
+  const getCategoryId = (c: ItemCategory) =>
+    c.category_id ?? (c as any).itemCategoryId ?? (c as any).item_category_id ?? (c as any).id;
+  const getCategoryName = (c: ItemCategory) =>
+    c.category_name ?? (c as any).item_category_name ?? (c as any).name ?? "Unnamed category";
+  const getParentId = (c: ItemCategory) =>
+    c.parent_category_id ?? (c as any).parentCategoryId ?? (c as any).item_parent_category ?? null;
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +60,7 @@ export function ItemCategoryTree() {
     const map = new Map<number, ItemCategory[]>();
 
     categories.forEach((cat) => {
-      const pid = cat.parent_category_id;
+      const pid = getParentId(cat);
       if (!pid) {
         roots.push(cat);
       } else {
@@ -82,7 +92,7 @@ export function ItemCategoryTree() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <FolderTree size={16} style={{ color: depth === 0 ? "var(--altrex-primary)" : "#8b5cf6" }} />
             <span style={{ fontWeight: depth === 0 ? 700 : 500, fontSize: "14px", color: "var(--altrex-text)" }}>
-              {cat.category_name}
+              {getCategoryName(cat)}
             </span>
             {depth === 0 && (
               <span
@@ -113,7 +123,7 @@ export function ItemCategoryTree() {
             <Button
               variant="outline"
               onClick={() => {
-                if (confirm(`Are you sure you want to delete category "${cat.category_name}"?`)) {
+                if (confirm(`Are you sure you want to delete category "${getCategoryName(cat)}"?`)) {
                   deleteCategory(id.toString());
                 }
               }}
@@ -224,7 +234,7 @@ export function ItemCategoryTree() {
                     <option value="">(None - Top Level Root)</option>
                     {categories.map((c) => (
                       <option key={getCategoryId(c)} value={getCategoryId(c).toString()}>
-                        {c.category_name}
+                        {getCategoryName(c)}
                       </option>
                     ))}
                   </select>

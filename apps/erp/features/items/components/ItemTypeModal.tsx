@@ -6,15 +6,20 @@ import { useState } from "react";
 import { useCreateItemType, useDeleteItemType, useItemTypes } from "../api";
 import type { ItemType } from "../schema";
 
+function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (!value || typeof value !== "object" || visited.has(value)) return [];
+  visited.add(value);
+  for (const nested of Object.values(value)) {
+    const records = extractRecords<T>(nested, visited);
+    if (records.length > 0) return records;
+  }
+  return [];
+}
+
 export function ItemTypeList() {
   const { data: responseData, isLoading, error } = useItemTypes();
-  const types: ItemType[] = Array.isArray(responseData)
-    ? responseData
-    : (responseData as any)?.types ??
-      (responseData as any)?.Types ??
-      (responseData as any)?.item_types ??
-      (responseData as any)?.data ??
-      [];
+  const types = extractRecords<ItemType>(responseData);
 
   const { mutate: createItemType, isPending: isCreating } = useCreateItemType();
   const { mutate: deleteItemType, isPending: isDeleting } = useDeleteItemType();
@@ -22,7 +27,10 @@ export function ItemTypeList() {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [typeName, setTypeName] = useState("");
 
-  const getTypeId = (t: ItemType) => t.item_type_id ?? (t as any).id;
+  const getTypeId = (t: ItemType) =>
+    t.item_type_id ?? (t as any).itemTypesId ?? (t as any).item_type_id ?? (t as any).id;
+  const getTypeName = (t: ItemType) =>
+    t.item_type_name ?? (t as any).itemTypeName ?? (t as any).name ?? "Unnamed item type";
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +55,7 @@ export function ItemTypeList() {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Tag size={16} style={{ color: "var(--altrex-primary)" }} />
           <span style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
-            {t.item_type_name}
+            {getTypeName(t)}
           </span>
         </div>
       ),
@@ -61,7 +69,7 @@ export function ItemTypeList() {
           <Button
             variant="outline"
             onClick={() => {
-              if (confirm(`Are you sure you want to delete item type "${t.item_type_name}"?`)) {
+              if (confirm(`Are you sure you want to delete item type "${getTypeName(t)}"?`)) {
                 deleteItemType(id);
               }
             }}
