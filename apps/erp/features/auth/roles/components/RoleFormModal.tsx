@@ -2,7 +2,7 @@
 
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
+import { Shield, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateRole, useUpdateRole } from "../api";
@@ -39,32 +39,45 @@ export function RoleFormModal({ role, onClose }: Props) {
     if (isEdit && role) {
       updateRole(
         { id: role.role_id.toString(), body: values },
-        {
-          onSuccess: () => onClose(),
-        },
+        { onSuccess: () => onClose() },
       );
     } else {
-      createRole(values, {
-        onSuccess: () => onClose(),
-      });
+      createRole(values, { onSuccess: () => onClose() });
     }
   };
 
   const isPending = isCreating || isUpdating;
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true">
-      <div className="altrex-dialog altrex-dialog-md">
+    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
         <div className="altrex-dialog-header">
-          <div>
-            <h3 className="altrex-dialog-title">
-              {isEdit ? "Edit Role" : "Create New Role"}
-            </h3>
-            <p className="altrex-dialog-subtitle">
-              {isEdit
-                ? "Modify existing role details and description."
-                : "Define a new user role with specialized access rules."}
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                background: "rgba(37, 99, 235, 0.1)",
+                color: "var(--altrex-primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Shield size={20} />
+            </div>
+            <div>
+              <h3 className="altrex-dialog-title">
+                {isEdit ? "Edit Role" : "Create New Role"}
+              </h3>
+              <p className="altrex-dialog-subtitle">
+                {isEdit
+                  ? "Modify existing role details and description."
+                  : "Define a new role with specialized access rules."}
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -80,14 +93,18 @@ export function RoleFormModal({ role, onClose }: Props) {
           <form
             id="role-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            style={{ display: "grid", gap: "16px" }}
+            style={{ display: "grid", gap: "20px" }}
           >
             <label className="altrex-field">
-              <span>Role Name *</span>
+              <span>
+                Role Name{" "}
+                <span style={{ color: "var(--altrex-danger-text)" }}>*</span>
+              </span>
               <input
                 className="altrex-input"
                 placeholder="e.g. Sales Manager, Warehouse Lead"
                 {...form.register("role_name")}
+                autoFocus
               />
               {form.formState.errors.role_name && (
                 <span className="altrex-form-error">
@@ -100,9 +117,13 @@ export function RoleFormModal({ role, onClose }: Props) {
               <span>Description</span>
               <textarea
                 className="altrex-input altrex-textarea"
-                placeholder="Brief summary of what permissions and responsibilities this role entails..."
+                rows={3}
+                placeholder="Brief summary of what this role is responsible for and what access level it grants..."
                 {...form.register("description")}
               />
+              <span style={{ fontSize: "11px", color: "var(--altrex-muted)" }}>
+                After creating this role, open Permissions to configure its access rights.
+              </span>
             </label>
           </form>
         </div>

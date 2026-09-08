@@ -6,7 +6,10 @@ export const userCreateSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  roleId: z.string().or(z.number()),
+  roleId: z.union([
+    z.string().min(1, "Enterprise role is required"),
+    z.number(),
+  ]),
 });
 
 export const userUpdateSchema = z.object({
@@ -15,7 +18,10 @@ export const userUpdateSchema = z.object({
   phone: z.string().optional(),
   profile_image: z.string().nullable().optional(),
   status: z.enum(["active", "inactive"]),
-  roleId: z.string().or(z.number()),
+  roleId: z.union([
+    z.string().min(1, "Enterprise role is required"),
+    z.number(),
+  ]),
 });
 
 export const passwordChangeSchema = z.object({
@@ -29,12 +35,17 @@ export type PasswordChangeValues = z.infer<typeof passwordChangeSchema>;
 
 export type User = {
   user_id: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
+  id?: number;
+  firstName?: string;
+  first_name?: string;
+  lastName?: string;
+  last_name?: string;
+  phone?: string;
   email: string;
-  profile_image: string | null;
+  profile_image?: string | null;
   status: "active" | "inactive";
-  roleId: number;
-  created_at: string;
+  roleId?: number | string;
+  role_id?: number | string;
+  role_name?: string;
+  created_at?: string;
 };

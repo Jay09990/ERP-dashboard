@@ -2,7 +2,7 @@
 
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, KeyRound, X } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useChangePassword } from "../api";
@@ -32,14 +32,31 @@ export function ChangePasswordModal({ onClose }: Props) {
   };
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true">
-      <div className="altrex-dialog altrex-dialog-md">
+    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
         <div className="altrex-dialog-header">
-          <div>
-            <h3 className="altrex-dialog-title">Change Password</h3>
-            <p className="altrex-dialog-subtitle">
-              Enter your current password and choose a secure new one.
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                background: "rgba(245,158,11,0.1)",
+                color: "#f59e0b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <KeyRound size={20} />
+            </div>
+            <div>
+              <h3 className="altrex-dialog-title">Change Password</h3>
+              <p className="altrex-dialog-subtitle">
+                Enter your current password and choose a secure new one.
+              </p>
+            </div>
           </div>
           <button
             type="button"

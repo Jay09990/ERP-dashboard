@@ -18,6 +18,7 @@ export function DataTable<T extends Record<string, any>>({
   columns,
   data,
   emptyMessage = "No records found",
+  rowKey,
 }: {
   columns: {
     key: keyof T;
@@ -26,6 +27,7 @@ export function DataTable<T extends Record<string, any>>({
   }[];
   data: T[];
   emptyMessage?: string;
+  rowKey?: keyof T | ((row: T, index: number) => string | number);
 }) {
   return (
     <div className="altrex-table-wrap">
@@ -46,10 +48,14 @@ export function DataTable<T extends Record<string, any>>({
             </tr>
           ) : (
             data.map((row, index) => {
-              const rowKey =
-                row.id ?? row.role_id ?? row.user_id ?? row.company_id ?? index;
+              const computedKey =
+                typeof rowKey === "function"
+                  ? rowKey(row, index)
+                  : rowKey
+                  ? row[rowKey]
+                  : row.id ?? row.user_id ?? row.role_id ?? row.company_id ?? index;
               return (
-                <tr key={rowKey}>
+                <tr key={String(computedKey)}>
                   {columns.map((column) => (
                     <td key={String(column.key)}>
                       {column.render

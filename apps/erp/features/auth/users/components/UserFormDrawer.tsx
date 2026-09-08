@@ -5,7 +5,7 @@ import { endpoints } from "@/lib/api/endpoints";
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { UserCog, UserPlus, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateUser, useUpdateUser } from "../api";
@@ -64,27 +64,47 @@ export function UserFormDrawer({ user, onClose }: Props) {
 
   useEffect(() => {
     if (user) {
+      const fn = user.firstName ?? user.first_name ?? "";
+      const ln = user.lastName ?? user.last_name ?? "";
+      const rid = (user.roleId ?? user.role_id ?? "").toString();
       editForm.reset({
-        firstName: user.firstName,
-        lastName: user.lastName ?? "",
+        firstName: fn,
+        lastName: ln,
         phone: user.phone ?? "",
         profile_image: user.profile_image,
-        status: user.status,
-        roleId: user.roleId ? user.roleId.toString() : "",
+        status: user.status || "active",
+        roleId: rid,
       });
     }
   }, [user, editForm]);
 
   const onCreateSubmit = (values: UserCreateValues) => {
-    createUser(values, {
+    const numericRoleId = values.roleId ? Number(values.roleId) : null;
+    const payload = {
+      ...values,
+      first_name: values.firstName,
+      last_name: values.lastName || "",
+      role_id: numericRoleId,
+      roleId: numericRoleId,
+    };
+    createUser(payload as any, {
       onSuccess: () => onClose(),
     });
   };
 
   const onEditSubmit = (values: UserUpdateValues) => {
     if (!user) return;
+    const userId = (user.user_id ?? (user as any).id).toString();
+    const numericRoleId = values.roleId ? Number(values.roleId) : null;
+    const payload = {
+      ...values,
+      first_name: values.firstName,
+      last_name: values.lastName || "",
+      role_id: numericRoleId,
+      roleId: numericRoleId,
+    };
     updateUser(
-      { id: user.user_id.toString(), body: values },
+      { id: userId, body: payload as any },
       {
         onSuccess: () => onClose(),
       },
@@ -94,18 +114,35 @@ export function UserFormDrawer({ user, onClose }: Props) {
   const isPending = isCreating || isUpdating;
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true">
-      <div className="altrex-dialog altrex-dialog-md">
+    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
         <div className="altrex-dialog-header">
-          <div>
-            <h3 className="altrex-dialog-title">
-              {isEdit ? "Edit User" : "Create New User"}
-            </h3>
-            <p className="altrex-dialog-subtitle">
-              {isEdit
-                ? "Update user profile details and enterprise role assignment."
-                : "Fill in the required information to invite a new team member."}
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                background: isEdit ? "rgba(37,99,235,0.1)" : "rgba(16,185,129,0.1)",
+                color: isEdit ? "var(--altrex-primary)" : "#10b981",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {isEdit ? <UserCog size={20} /> : <UserPlus size={20} />}
+            </div>
+            <div>
+              <h3 className="altrex-dialog-title">
+                {isEdit ? "Edit User" : "Create New User"}
+              </h3>
+              <p className="altrex-dialog-subtitle">
+                {isEdit
+                  ? "Update user profile details and enterprise role assignment."
+                  : "Fill in the required information to invite a new team member."}
+              </p>
+            </div>
           </div>
           <button
             type="button"
