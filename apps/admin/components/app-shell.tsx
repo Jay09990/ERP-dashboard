@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import { navigation } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
+import { clearToken } from "@/lib/auth/token";
 import { endpoints } from "@/lib/api/endpoints";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       // If this fires consistently, the endpoint path itself is likely wrong.
       console.error("Logout request failed:", error);
     } finally {
+      clearToken();
       setSession(null);        // clear cached permissions/user immediately
       queryClient.clear();     // drop all cached query data — critical before a new user can log in
       router.push("/login");

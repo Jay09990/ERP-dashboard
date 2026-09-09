@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = request.cookies.get("connect.sid");
+  // Marker only; the real bearer token is stored in localStorage.
+  const sessionCookie = request.cookies.get("altrex_auth");
 
   // Public routes that don't require authentication
   const publicRoutes = ["/login", "/register", "/company-register"];
@@ -17,7 +18,7 @@ export function middleware(request: NextRequest) {
 
   if (isPublicRoute && (searchParams.has("logout") || searchParams.has("clear"))) {
     const response = NextResponse.next();
-    response.cookies.set("connect.sid", "", { path: "/", expires: new Date(0) });
+    response.cookies.set("altrex_auth", "", { path: "/", expires: new Date(0) });
     return response;
   }
 

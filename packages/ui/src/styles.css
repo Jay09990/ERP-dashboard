@@ -166,7 +166,10 @@
 }
 
 .altrex-dialog-md { max-width: 560px; }
-.altrex-dialog-lg { max-width: 960px; }
+.altrex-dialog-lg {
+  width: min(100%, 960px);
+  max-width: 960px;
+}
 
 .altrex-dialog-header,
 .altrex-dialog-footer {

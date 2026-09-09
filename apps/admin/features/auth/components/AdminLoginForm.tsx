@@ -8,11 +8,14 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { setToken } from "@/lib/auth/token";
+import { useSessionStore, type SessionSnapshot } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type AdminLoginValues, adminLoginSchema } from "../schema";
 
 export function AdminLoginForm() {
   const router = useRouter();
+  const setSession = useSessionStore((state) => state.setSession);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<AdminLoginValues>({
@@ -26,7 +29,26 @@ export function AdminLoginForm() {
         email: values.login,
         password: values.password,
       };
-      await apiClient.post(endpoints.admin.login, payload);
+      const response = await apiClient.post<{
+        token?: string;
+        access_token?: string;
+        user?: Record<string, any>;
+        data?: Record<string, any>;
+      }>(endpoints.admin.login, payload);
+      const token = response.token ?? response.access_token;
+      const user = response.user ?? response.data?.user ?? response.data ?? response;
+      if (!token) throw new Error("Login response did not include a token");
+      setToken(token);
+      const session: SessionSnapshot = {
+        user: {
+          id: String(user.userId ?? user.user_id ?? user.id ?? ""),
+          name: user.fullName ?? user.full_name ?? user.name ?? user.email ?? "",
+          email: user.email ?? "",
+          phone: user.phone ?? "",
+        },
+        permissions: user.permissions ?? [],
+      };
+      setSession(session);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(next?.startsWith("/") && !next.startsWith("//") ? next : "/");
     } catch (error) {

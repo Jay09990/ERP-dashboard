@@ -11,7 +11,8 @@ export const itemCategorySchema = z.object({
 
 export const itemSchema = z.object({
   item_name: z.string().min(1, "Item name is required"),
-  item_code: z.string().optional(),
+  item_description: z.string().optional(),
+  item_specification: z.string().optional(),
   hsn_code: z.string().optional(),
   item_type: z.union([z.number(), z.string()]).optional(),
   item_parent_category: z.union([z.number(), z.string(), z.null()]).optional(),
@@ -20,8 +21,6 @@ export const itemSchema = z.object({
   // Units & conversion
   unit_id: z.union([z.number(), z.string()]).optional(),
   conv_unit_id: z.union([z.number(), z.string(), z.null()]).optional(),
-  conv_rate: z.union([z.number(), z.string()]).optional(),
-
   // Sales Pricing
   sales_qty: z.union([z.number(), z.string()]).optional(),
   sales_convert_qty: z.union([z.number(), z.string()]).optional(),
@@ -61,6 +60,8 @@ export type Item = {
   item_id: number;
   item_name: string;
   item_code?: string;
+  item_description?: string;
+  item_specification?: string;
   hsn_code?: string;
   item_type?: number;
   item_parent_category?: number;

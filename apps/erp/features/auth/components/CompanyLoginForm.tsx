@@ -8,11 +8,14 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { setToken } from "@/lib/auth/token";
+import { useSessionStore, type SessionSnapshot } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type CompanyLoginValues, companyLoginSchema } from "../schema";
 
 export function CompanyLoginForm() {
   const router = useRouter();
+  const setSession = useSessionStore((state) => state.setSession);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<CompanyLoginValues>({
@@ -21,7 +24,36 @@ export function CompanyLoginForm() {
   const submit = async (values: CompanyLoginValues) => {
     setServerError("");
     try {
-      await apiClient.post(endpoints.auth.login, values);
+      const response = await apiClient.post<{
+        token?: string;
+        access_token?: string;
+        user?: Record<string, any>;
+        data?: Record<string, any>;
+      }>(endpoints.auth.login, values);
+      const token = response.token ?? response.access_token;
+      const user = response.user ?? response.data?.user ?? response.data ?? response;
+      if (!token) throw new Error("Login response did not include a token");
+      setToken(token);
+      const session: SessionSnapshot = {
+        user: {
+          id: String(user.userId ?? user.user_id ?? user.id ?? ""),
+          name: user.fullName ?? user.full_name ?? user.name ?? user.email ?? "",
+          email: user.email ?? "",
+          phone: user.phone ?? "",
+        },
+        permissions: user.permissions ?? [],
+        company: user.companyId || user.company_id || user.company
+          ? {
+              id: String(user.companyId ?? user.company_id ?? user.company?.id ?? ""),
+              name: user.companyName ?? user.company_name ?? user.company?.name ?? "",
+              gstNo: user.gstNo ?? user.gst_no ?? "",
+              phone: user.companyPhone ?? user.company_phone ?? "",
+              email: user.companyEmail ?? user.company_email ?? "",
+              address: user.address ?? "",
+            }
+          : undefined,
+      };
+      setSession(session);
       const next = new URLSearchParams(window.location.search).get("next");
       router.push(next?.startsWith("/") && !next.startsWith("//") ? next : "/");
     } catch (error) {

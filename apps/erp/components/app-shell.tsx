@@ -21,6 +21,7 @@ import {
   NavSubGroup,
 } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
+import { clearToken } from "@/lib/auth/token";
 import { endpoints } from "@/lib/api/endpoints";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
@@ -87,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Logout request failed:", error);
     } finally {
-      document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      clearToken();
       setSession(null);
       queryClient.clear();
       window.location.href = "/login?logout=1";

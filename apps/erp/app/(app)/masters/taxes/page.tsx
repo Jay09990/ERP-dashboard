@@ -14,16 +14,45 @@ export default function TaxTypesPage() {
         { key: "tax_name", label: "Tax Name" },
         {
           key: "tax_percentage",
-          label: "Tax Rate (%)",
-          render: (row: any) => `${row.tax_percentage}%`,
+          label: "Value",
+          render: (row: any) =>
+            row.tax_type === "fixed" ? row.tax_percentage : `${row.tax_percentage}%`,
         },
         { key: "tax_type", label: "Tax Type" },
       ]}
       fields={[
         { name: "tax_name", label: "Tax Name", required: true, placeholder: "e.g. GST 18%, IGST 12%, SGST 9%" },
-        { name: "tax_percentage", label: "Tax Percentage (%)", type: "number", required: true, placeholder: "18" },
-        { name: "tax_type", label: "Tax Type", placeholder: "e.g. GST, IGST, VAT" },
-        { name: "applicable_on", label: "Applicable On", placeholder: "e.g. Both Sales & Purchase" },
+        {
+          name: "tax_type",
+          label: "Tax Type",
+          type: "select",
+          required: true,
+          options: [
+            { label: "Fixed Amount", value: "fixed" },
+            { label: "Percentage", value: "percentage" },
+          ],
+        },
+        {
+          name: "tax_percentage",
+          label: "Tax Percentage (%)",
+          type: "number",
+          required: true,
+          getLabel: (formData) =>
+            formData.tax_type === "fixed" ? "Tax Amount" : "Tax Percentage (%)",
+          getPlaceholder: (formData) =>
+            formData.tax_type === "fixed" ? "e.g. 100" : "e.g. 18",
+        },
+        {
+          name: "applicable_on",
+          label: "Applicable On",
+          type: "select",
+          required: true,
+          options: [
+            { label: "Sales", value: "sales" },
+            { label: "Purchase", value: "purchase" },
+            { label: "Both Sales & Purchase", value: "both" },
+          ],
+        },
       ]}
       useList={taxTypesApi.useList}
       useCreate={taxTypesApi.useCreate}

@@ -9,8 +9,8 @@ export const uomSchema = z.object({
 export const taxTypeSchema = z.object({
   tax_name: z.string().min(1, "Tax name is required"),
   tax_percentage: z.union([z.number(), z.string()]),
-  tax_type: z.string().optional(),
-  applicable_on: z.string().optional(),
+  tax_type: z.enum(["fixed", "percentage"]),
+  applicable_on: z.enum(["sales", "purchase", "both"]).optional(),
 });
 
 export const currencySchema = z.object({

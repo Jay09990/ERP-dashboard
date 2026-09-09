@@ -62,6 +62,7 @@ Bun is out, **pnpm is the package manager and workspace tool** for this project.
 | Need | Choice | Notes |
 |---|---|---|
 | Server state / caching | **TanStack Query** | Non-negotiable for this API-heavy an app — see `architecture_doc.md` §3.1 for how it's wrapped |
+| HTTP client | **axios** (single instance per app, `lib/api/http-client.ts`) | Centralizes bearer-token attachment via a request interceptor and 401 handling via a response interceptor — see `architecture_doc.md` §4 for the full auth model. Every feature's `api.ts` calls the `apiClient` wrapper, never axios directly. |
 | Client/UI state | **Zustand** | UI state only — see `architecture_doc.md` §5 |
 | Tables | **TanStack Table** + shadcn primitives, **TanStack Virtual** for large lists | |
 | Forms & validation | **react-hook-form + zod** | Schemas live in each feature's `schema.ts`, per `architecture_doc.md` §3 |

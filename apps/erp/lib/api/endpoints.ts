@@ -30,8 +30,8 @@ export const endpoints = {
     vendor: (id: string | number) => `/api/party/vendors/${id}`,
   },
   items: {
-    items: "/api/items",
-    item: (id: string | number) => `/api/items/${id}`,
+    items: "/api/items/items",
+    item: (id: string | number) => `/api/items/items/${id}`,
     itemTypes: "/api/items/item-types",
     itemType: (id: string | number) => `/api/items/item-types/${id}`,
     itemCategories: "/api/items/item-category",

@@ -9,17 +9,16 @@ import { useForm } from "react-hook-form";
 import { useCreateItem, useItemCategories, useItemTypes, useUpdateItem } from "../api";
 import { type Item, type ItemValues, itemSchema } from "../schema";
 
-function extractList(value: any, keys: string[]): any[] {
-  if (Array.isArray(value)) return value;
-  for (const key of keys) {
-    if (Array.isArray(value?.[key])) return value[key];
+function extractList<T>(value: unknown, visited = new Set<unknown>()): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (!value || typeof value !== "object" || visited.has(value)) return [];
+
+  visited.add(value);
+  for (const nestedValue of Object.values(value)) {
+    const nested = extractList<T>(nestedValue, visited);
+    if (nested.length > 0) return nested;
   }
-  for (const key of ["data", "result", "payload", "response"]) {
-    if (value?.[key] && value[key] !== value) {
-      const nested = extractList(value[key], keys);
-      if (nested.length > 0) return nested;
-    }
-  }
+
   return [];
 }
 
@@ -35,30 +34,37 @@ export function ItemFormDrawer({ item, onClose }: Props) {
 
   // Fetch dropdown data
   const { data: itemTypesData = [] } = useItemTypes();
-  const itemTypes = extractList(itemTypesData, ["types", "Types", "item_types"]);
+  const itemTypes = extractList<any>(itemTypesData);
 
   const { data: categoriesData = [] } = useItemCategories();
-  const categories = extractList(categoriesData, ["categories", "Categories", "item_categories"]);
+  const categories = extractList<any>(categoriesData);
 
   const { data: uomsData = [] } = uomApi.useList();
-  const uoms = extractList(uomsData, ["uoms", "UOMs", "units", "Units"]);
+  const uoms = extractList<any>(uomsData);
   const { data: taxesData = [] } = taxTypesApi.useList();
-  const taxes = extractList(taxesData, ["taxes", "Taxes", "tax_types"]);
+  const taxes = extractList<any>(taxesData);
   const { data: currenciesData = [] } = currencyApi.useList();
-  const currencies = extractList(currenciesData, ["currencies", "Currencies", "currency"]);
+  const currencies = extractList<any>(currenciesData);
+
+  const getRecordId = (record: any, ...keys: string[]) => {
+    for (const key of keys) {
+      if (record?.[key] !== undefined && record?.[key] !== null) return record[key];
+    }
+    return undefined;
+  };
 
   const form = useForm<ItemValues>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
       item_name: "",
-      item_code: "",
+      item_description: "",
+      item_specification: "",
       hsn_code: "",
       item_type: "",
       item_parent_category: "",
       item_category: "",
       unit_id: "",
       conv_unit_id: "",
-      conv_rate: 1,
       sales_rate: 0,
       sales_qty: 1,
       sales_convert_qty: 1,
@@ -78,14 +84,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
     if (item) {
       form.reset({
         item_name: item.item_name,
-        item_code: item.item_code ?? "",
+        item_description: item.item_description ?? "",
+        item_specification: item.item_specification ?? "",
         hsn_code: item.hsn_code ?? "",
         item_type: item.item_type ? item.item_type.toString() : "",
         item_parent_category: item.item_perent_category ? item.item_perent_category.toString() : "",
         item_category: item.item_category ? item.item_category.toString() : "",
         unit_id: item.unit_id ? item.unit_id.toString() : "",
         conv_unit_id: item.conv_unit_id ? item.conv_unit_id.toString() : "",
-        conv_rate: item.conv_rate ?? 1,
         sales_rate: item.sales_rate ?? 0,
         sales_qty: item.sales_qty ?? 1,
         sales_convert_qty: item.sales_convert_qty ?? 1,
@@ -103,26 +109,31 @@ export function ItemFormDrawer({ item, onClose }: Props) {
   }, [item, form]);
 
   const onSubmit = (values: ItemValues) => {
-    const { item_parent_category, ...itemValues } = values;
+    const { item_parent_category } = values;
+    const valueAsString = (value: number | string | undefined, fallback: string) =>
+      value === undefined || value === "" ? fallback : String(value);
     const payload = {
-      ...itemValues,
-      item_type: itemValues.item_type ? Number(itemValues.item_type) : null,
+      item_name: values.item_name,
+      item_description: values.item_description ?? "",
+      item_specification: values.item_specification ?? "",
+      item_type: values.item_type ? Number(values.item_type) : null,
       item_perent_category: item_parent_category ? Number(item_parent_category) : null,
-      item_category: itemValues.item_category ? Number(itemValues.item_category) : null,
-      unit_id: itemValues.unit_id ? Number(itemValues.unit_id) : null,
-      conv_unit_id: itemValues.conv_unit_id ? Number(itemValues.conv_unit_id) : null,
-      conv_rate: itemValues.conv_rate ? Number(itemValues.conv_rate) : 1,
-      sales_rate: itemValues.sales_rate ? Number(itemValues.sales_rate) : 0,
-      sales_qty: itemValues.sales_qty ? Number(itemValues.sales_qty) : 1,
-      sales_convert_qty: itemValues.sales_convert_qty ? Number(itemValues.sales_convert_qty) : 1,
-      sales_conv_rate: itemValues.sales_conv_rate ? Number(itemValues.sales_conv_rate) : 1,
-      sales_currency_id: itemValues.sales_currency_id ? Number(itemValues.sales_currency_id) : null,
-      purchase_rate: itemValues.purchase_rate ? Number(itemValues.purchase_rate) : 0,
-      purchase_qty: itemValues.purchase_qty ? Number(itemValues.purchase_qty) : 1,
-      purchase_convert_qty: itemValues.purchase_convert_qty ? Number(itemValues.purchase_convert_qty) : 1,
-      purchase_conv_rate: itemValues.purchase_conv_rate ? Number(itemValues.purchase_conv_rate) : 1,
-      purchase_currency_id: itemValues.purchase_currency_id ? Number(itemValues.purchase_currency_id) : null,
-      tax_id: itemValues.tax_id ? Number(itemValues.tax_id) : null,
+      item_category: values.item_category ? Number(values.item_category) : null,
+      hsn_code: values.hsn_code ?? "",
+      unit_id: values.unit_id ? Number(values.unit_id) : null,
+      conv_unit_id: values.conv_unit_id ? Number(values.conv_unit_id) : null,
+      sales_currency_id: values.sales_currency_id ? Number(values.sales_currency_id) : null,
+      sales_qty: valueAsString(values.sales_qty, "1"),
+      sales_convert_qty: valueAsString(values.sales_convert_qty, "1"),
+      sales_rate: valueAsString(values.sales_rate, "0"),
+      sales_conv_rate: valueAsString(values.sales_conv_rate, "0"),
+      purchase_currency_id: values.purchase_currency_id ? Number(values.purchase_currency_id) : null,
+      purchase_qty: valueAsString(values.purchase_qty, "1"),
+      purchase_convert_qty: valueAsString(values.purchase_convert_qty, "1"),
+      purchase_rate: valueAsString(values.purchase_rate, "0"),
+      purchase_conv_rate: valueAsString(values.purchase_conv_rate, "0"),
+      tax_id: values.tax_id ? Number(values.tax_id) : null,
+      status: values.status,
     };
 
     if (isEdit && item) {
@@ -202,9 +213,24 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   )}
                 </label>
 
-                <label className="altrex-field">
-                  <span>Item Code / SKU</span>
-                  <input className="altrex-input" placeholder="e.g. SK-5001" {...form.register("item_code")} />
+                <label className="altrex-field" style={{ gridColumn: "span 2" }}>
+                  <span>Item Description</span>
+                  <textarea
+                    className="altrex-input"
+                    placeholder="Describe the item"
+                    rows={2}
+                    {...form.register("item_description")}
+                  />
+                </label>
+
+                <label className="altrex-field" style={{ gridColumn: "span 2" }}>
+                  <span>Item Specification</span>
+                  <textarea
+                    className="altrex-input"
+                    placeholder="Add technical specifications"
+                    rows={2}
+                    {...form.register("item_specification")}
+                  />
                 </label>
 
                 <label className="altrex-field">
@@ -216,11 +242,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Item Type</span>
                   <select className="altrex-input altrex-select" {...form.register("item_type")}>
                     <option value="">Select Item Type...</option>
-                    {itemTypes.map((t: any) => (
-                      <option key={t.item_type_id ?? t.id} value={(t.item_type_id ?? t.id).toString()}>
-                        {t.item_type_name ?? t.name}
-                      </option>
-                    ))}
+                    {itemTypes.map((t: any) => {
+                      const id = getRecordId(t, "item_type_id", "itemTypesId", "itemTypeId", "id");
+                      return (
+                        <option key={id} value={String(id)}>
+                          {t.item_type_name ?? t.itemTypeName ?? t.name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </label>
 
@@ -228,11 +257,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Parent Category</span>
                   <select className="altrex-input altrex-select" {...form.register("item_parent_category")}>
                     <option value="">Select Parent Category...</option>
-                    {categories.map((c: any) => (
-                      <option key={`parent-${c.category_id ?? c.id}`} value={(c.category_id ?? c.id).toString()}>
-                        {c.category_name ?? c.name}
+                    {categories.map((c: any) => {
+                      const id = getRecordId(c, "category_id", "itemCategoryId", "item_category_id", "id");
+                      return (
+                      <option key={`parent-${id}`} value={String(id)}>
+                        {c.category_name ?? c.item_category_name ?? c.itemCategoryName ?? c.name}
                       </option>
-                    ))}
+                      );
+                    })}
                   </select>
                 </label>
 
@@ -240,11 +272,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Category</span>
                   <select className="altrex-input altrex-select" {...form.register("item_category")}>
                     <option value="">Select Category...</option>
-                    {categories.map((c: any) => (
-                      <option key={c.category_id ?? c.id} value={(c.category_id ?? c.id).toString()}>
-                        {c.category_name ?? c.name}
+                    {categories.map((c: any) => {
+                      const id = getRecordId(c, "category_id", "itemCategoryId", "item_category_id", "id");
+                      return (
+                      <option key={id} value={String(id)}>
+                        {c.category_name ?? c.item_category_name ?? c.itemCategoryName ?? c.name}
                       </option>
-                    ))}
+                      );
+                    })}
                   </select>
                 </label>
               </div>
@@ -261,11 +296,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Primary Base Unit (UOM)</span>
                   <select className="altrex-input altrex-select" {...form.register("unit_id")}>
                     <option value="">Select Base UOM...</option>
-                    {uoms.map((u: any) => (
-                      <option key={u.unit_id ?? u.id} value={(u.unit_id ?? u.id).toString()}>
-                        {u.unit_name ?? u.unit_code ?? u.name}
+                    {uoms.map((u: any) => {
+                      const id = getRecordId(u, "unit_id", "uom_id", "unitId", "uomId", "id");
+                      return (
+                      <option key={id} value={String(id)}>
+                        {u.unit_name ?? u.uom_name ?? u.unitName ?? u.unit_code ?? u.name}
                       </option>
-                    ))}
+                      );
+                    })}
                   </select>
                 </label>
 
@@ -273,24 +311,17 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Conversion Secondary Unit</span>
                   <select className="altrex-input altrex-select" {...form.register("conv_unit_id")}>
                     <option value="">Select Conversion UOM...</option>
-                    {uoms.map((u: any) => (
-                      <option key={u.unit_id ?? u.id} value={(u.unit_id ?? u.id).toString()}>
-                        {u.unit_name ?? u.unit_code ?? u.name}
+                    {uoms.map((u: any) => {
+                      const id = getRecordId(u, "unit_id", "uom_id", "unitId", "uomId", "id");
+                      return (
+                      <option key={id} value={String(id)}>
+                        {u.unit_name ?? u.uom_name ?? u.unitName ?? u.unit_code ?? u.name}
                       </option>
-                    ))}
+                      );
+                    })}
                   </select>
                 </label>
 
-                <label className="altrex-field">
-                  <span>Conversion Rate Factor</span>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    className="altrex-input"
-                    placeholder="e.g. 10 (1 Box = 10 Pcs)"
-                    {...form.register("conv_rate")}
-                  />
-                </label>
               </div>
             </div>
 
@@ -323,11 +354,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                     <span>Sales Currency</span>
                     <select className="altrex-input altrex-select" {...form.register("sales_currency_id")}>
                       <option value="">Select Currency...</option>
-                      {currencies.map((c: any) => (
-                        <option key={c.currency_id ?? c.id} value={(c.currency_id ?? c.id).toString()}>
-                          {c.currency_code ?? c.name} ({c.symbol ?? "₹"})
-                        </option>
-                      ))}
+                      {currencies.map((c: any) => {
+                        const id = getRecordId(c, "currency_id", "currencyId", "id");
+                        return (
+                          <option key={id} value={String(id)}>
+                            {c.currency_code ?? c.currencyCode ?? c.name} ({c.symbol ?? "₹"})
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
                 </div>
@@ -360,11 +394,14 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                     <span>Purchase Currency</span>
                     <select className="altrex-input altrex-select" {...form.register("purchase_currency_id")}>
                       <option value="">Select Currency...</option>
-                      {currencies.map((c: any) => (
-                        <option key={c.currency_id ?? c.id} value={(c.currency_id ?? c.id).toString()}>
-                          {c.currency_code ?? c.name} ({c.symbol ?? "₹"})
-                        </option>
-                      ))}
+                      {currencies.map((c: any) => {
+                        const id = getRecordId(c, "currency_id", "currencyId", "id");
+                        return (
+                          <option key={id} value={String(id)}>
+                            {c.currency_code ?? c.currencyCode ?? c.name} ({c.symbol ?? "₹"})
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
                 </div>
@@ -378,11 +415,15 @@ export function ItemFormDrawer({ item, onClose }: Props) {
                   <span>Applicable Tax Type</span>
                   <select className="altrex-input altrex-select" {...form.register("tax_id")}>
                     <option value="">Select Tax Rate...</option>
-                    {taxes.map((t: any) => (
-                      <option key={t.tax_id ?? t.id} value={(t.tax_id ?? t.id).toString()}>
-                        {t.tax_name ?? t.name} ({t.tax_percentage ?? t.percentage}%)
-                      </option>
-                    ))}
+                    {taxes.map((t: any) => {
+                      const id = getRecordId(t, "tax_id", "taxTypeId", "id");
+                      const suffix = t.tax_type === "fixed" ? "" : "%";
+                      return (
+                        <option key={id} value={String(id)}>
+                          {t.tax_name ?? t.taxName ?? t.name} ({t.tax_percentage ?? t.percentage}{suffix})
+                        </option>
+                      );
+                    })}
                   </select>
                 </label>
 

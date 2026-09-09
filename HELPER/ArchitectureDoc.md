@@ -161,30 +161,17 @@ Transactional documents (Quotation/SO/Proforma/Invoice/PO/PurchaseInvoice) use t
 
 ---
 
-## 4. The BFF proxy (`app/api/[...path]/route.ts`)
+## 4. Auth model: bearer token via axios, proxied through the BFF
 
-Because the backend is Express + `express-session` (cookie-based, not JWT), the browser must never call `localhost:4500` directly across environments. One catch-all Route Handler per app proxies every request to the Express backend, forwarding cookies both ways:
+**This section supersedes the original cookie-based description — the backend now returns a JWT in the login response body instead of relying purely on `express-session` cookies.**
 
-```ts
-// app/api/[...path]/route.ts
-export async function GET(req: NextRequest, { params }) { return proxy(req, params.path); }
-export async function POST(req: NextRequest, { params }) { return proxy(req, params.path); }
-// ...PUT, DELETE identically
+The frontend stores the token in `localStorage` (via `lib/auth/token.ts`) and attaches it as `Authorization: Bearer <token>` on every request through a single axios instance (`lib/api/http-client.ts`) with a request interceptor. A response interceptor watches for `401` and handles logout centrally — clearing the token, the session store, and the query cache in one place, rather than every feature having to handle auth failure individually.
 
-async function proxy(req: NextRequest, path: string[]) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/${path.join('/')}`, {
-    method: req.method,
-    headers: { cookie: req.headers.get('cookie') ?? '' },
-    body: req.method !== 'GET' ? await req.text() : undefined,
-  });
-  const response = new NextResponse(await res.text(), { status: res.status });
-  const setCookie = res.headers.get('set-cookie');
-  if (setCookie) response.headers.set('set-cookie', setCookie);
-  return response;
-}
-```
+**The Next.js BFF proxy (`app/api/[...path]/route.ts`) is kept even though bearer tokens don't strictly require it** — it still hides the real `BACKEND_URL` from the browser and avoids needing CORS configured on the Express side. What changed is *what* it forwards: it now passes the `Authorization` header straight through instead of relaying `Set-Cookie`/`Cookie` headers, which is meaningfully simpler than the cookie-relay logic it replaced.
 
-`lib/api/client.ts` always calls `/api/...` (same-origin), never `http://localhost:4500` directly. `BACKEND_URL` is an env var, different per environment — never hardcoded (this fixes the `API_BASE = "http://localhost:4500"` hardcoding seen in earlier draft code).
+**Edge Middleware can't read localStorage.** Route-level fast-redirect at the edge (`middleware.ts`) now checks a small non-sensitive marker cookie (`altrex_auth`, presence-only, no secret inside it) instead of the old `connect.sid`. This is a UX optimization only — the real authorization boundary is the backend validating the bearer token on every request, not this cookie.
+
+**Every feature's `api.ts` and the resource-hook factory are unaffected by this change** — they call `apiClient.get/post/put/delete`, and only `lib/api/http-client.ts`'s internals changed from a raw `fetch` wrapper to an axios instance. This is exactly why the original architecture separated "how a request is made" from "what request a feature makes."
 
 ---
 

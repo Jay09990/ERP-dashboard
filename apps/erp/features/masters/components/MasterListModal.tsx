@@ -9,6 +9,8 @@ export type FieldConfig = {
   label: string;
   type?: "text" | "number" | "select";
   placeholder?: string;
+  getLabel?: (formData: Record<string, any>) => string;
+  getPlaceholder?: (formData: Record<string, any>) => string | undefined;
   required?: boolean;
   options?: { label: string; value: string }[];
 };
@@ -236,7 +238,7 @@ export function MasterListModal<T extends Record<string, any>>({
                 {fields.map((f) => (
                   <label key={f.name} className="altrex-field">
                     <span>
-                      {f.label} {f.required && "*"}
+                      {f.getLabel?.(formData) ?? f.label} {f.required && "*"}
                     </span>
                     {f.type === "select" ? (
                       <select
@@ -256,7 +258,7 @@ export function MasterListModal<T extends Record<string, any>>({
                       <input
                         type={f.type === "number" ? "number" : "text"}
                         className="altrex-input"
-                        placeholder={f.placeholder}
+                        placeholder={f.getPlaceholder?.(formData) ?? f.placeholder}
                         value={formData[f.name] ?? ""}
                         onChange={(e) =>
                           setFormData({

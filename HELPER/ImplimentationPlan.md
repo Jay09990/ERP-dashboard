@@ -19,45 +19,46 @@
 ## 2. Build Order
 
 ### Phase 0 — Workspace Setup
-- [x] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
-- [x] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
-- [x] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps
-- [x] Install full toolset per `toolset.md`
-- [x] Set up Biome, base `tsconfig`, and shared `packages/config` presets
-- [x] Import design tokens from the Figma variable set into `packages/ui/tokens`
+- [ ] Initialize pnpm workspace (`apps/admin`, `apps/erp`, `packages/ui`, `packages/api-client`, `packages/config`)
+- [ ] Scaffold both Next.js apps (App Router, TypeScript, Tailwind) inside `apps/*`
+- [ ] Wire `packages/ui` as a shared shadcn/ui base consumed by both apps
+- [ ] Install full toolset per `toolset.md`
+- [ ] Set up Biome, base `tsconfig`, and shared `packages/config` presets
+- [ ] Import design tokens from the Figma variable set into `packages/ui/tokens`
 
 ### Phase 1 — Foundation Shell
-- [x] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
-- [x] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
-- [x] `lib/query-client.ts` + TanStack Query provider wired into root layout
-- [x] `stores/session-store.ts` + a `/me`-style session check hook
-- [x] App shell layout: parent-child sidebar + topbar (per `design.md` §2), for both apps separately
-- [x] Shared components: DataTable, StatusPill, FilterBar, StatCard, LocationCascadeSelect
+- [ ] BFF proxy route handler (`app/api/[...path]/route.ts`) in both apps
+- [ ] `lib/api/client.ts`, `lib/api/endpoints.ts`, `lib/api/create-resource-hooks.ts`
+- [ ] `lib/query-client.ts` + TanStack Query provider wired into root layout
+- [ ] `stores/session-store.ts` + a `/me`-style session check hook
+- [ ] App shell layout: sidebar + topbar (per `design.md` §2), for both apps separately (different nav content)
+- [ ] Shared components: DataTable, StatusPill, FilterBar, StatCard (in `components/shared`, backed by `packages/ui`)
 
 ### Phase 2 — Auth Flow (per the confirmed flow, both apps)
-- [x] Admin App: Admin Register page (`/api/admin/register`) — first-run only
-- [x] Admin App: Admin Login page (`/api/admin/login`)
-- [x] Admin App: Company Registration form (`/api/admin/companies`) — accessible only immediately post-registration, never shown again afterward
-- [x] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
-- [x] Session-store hydration + route protection (redirect unauthenticated access to `/login` in both apps)
+- [ ] Admin App: Admin Register page (`/api/admin/register`) — first-run only
+- [ ] Admin App: Admin Login page (`/api/admin/login`)
+- [ ] Admin App: Company Registration form (`/api/admin/companies`) — accessible only immediately post-registration, never shown again afterward (see note below)
+- [ ] ERP App: Company Login page (`/api/auth/login`, accepts email-or-phone)
+- [ ] Session-store hydration + route protection (redirect unauthenticated access to `/login` in both apps)
+- [ ] **Flow note:** once an admin has registered *and* registered a company, subsequent visits show only the Login page — no register/company-register screens. Gate this via the `/me`-equivalent check server-side (via the BFF), not a client-only flag.
 
 ### Phase 3 — Admin Panel Core
-- [x] Companies list (search/filter/status)
-- [x] Company detail view
-- [x] Deactivate vs. Hard-delete — two visually and behaviorally distinct destructive flows
+- [ ] Companies list (search/filter/status)
+- [ ] Company detail view
+- [ ] Deactivate vs. Hard-delete — two visually and behaviorally distinct destructive flows
 
 ### Phase 4 — ERP Company Core
-- [x] Dashboard shell (stat cards + chart placeholders — real data wiring depends on later modules existing)
-- [x] Company Profile (three-section single form per `modules.md` §2.2)
-- [x] Users (list, add/edit, password change)
-- [x] Roles (CRUD)
-- [x] Permissions + Role Permissions matrix (with modal UI for empty roles)
-- [x] User Permissions matrix (override view with modal UI)
+- [ ] Dashboard shell (stat cards + chart placeholders — real data wiring depends on later modules existing)
+- [ ] Company Profile (three-section single form per `modules.md` §2.2)
+- [ ] Users (list, add/edit, password change)
+- [ ] Roles (CRUD)
+- [ ] Permissions + Role Permissions matrix
+- [ ] User Permissions matrix (override view)
 
 ### Phase 5 — Party Management
-- [x] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
-- [x] Customers list + form + detail
-- [x] Vendors list + form + detail
+- [ ] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
+- [ ] Customers list + form + detail
+- [ ] Vendors list + form + detail
 
 ### Phase 6 — Item Management
 - [ ] Item Types (master pattern)
@@ -65,9 +66,8 @@
 - [ ] Items (dual sales/purchase pricing form)
 
 ### Phase 7 — Masters Batch
-- [x] Operational dependency masters: Item Types/Categories, UOM, Tax Types, Currencies, Payment Terms, Banks, and Country/State/City CRUD routes
-- [x] API-backed `LocationCascadeSelect` shared by Party and Company Profile address forms
 - [ ] All 18+ masters from `modules.md` §8, each as a one-file `api.ts` calling the resource-hook factory + a shared Master CRUD list/modal template
+- [ ] `LocationCascadeSelect` shared component (Country→State→City), reused in Party and Company Profile
 
 ### Phase 8 — Sales Documents
 - [ ] Master document-form template component (shared skeleton, per `design.md` §7)
@@ -118,4 +118,6 @@ Known future modules: Proforma (backend documented, not confirmed), Delivery Cha
 - [ ] **Credit Notes and Debit Notes** are marked complete on the backend's own checklist, but no endpoint or payload shape has been shared for either. Do not start either module until this is resolved — see `modules.md` §6/§7.
 - [ ] **Purchase Invoice's PUT payload** appears inconsistent with every other document module — its `taxDetails[]` dropped the per-line item linkage and the per-row `is_deleted` flags that Quotation/SO/PO/Invoice/Delivery Challan all still use. Confirm with the backend developer whether this is intentional or a documentation gap before building the Purchase Invoice edit flow. See `modules.md` §7.
 - [ ] **No `/api/auth/logout` or `/api/admin/logout` endpoint has ever been documented by the backend** — the frontend's `endpoints.ts` currently guesses this path by pattern-matching `/api/auth/login`. Confirm the real path/method with the backend developer.
-- [ ] **Suspected root cause of "logs out unexpectedly / all APIs go unauthenticated after some time":** the backend likely uses `express-session`'s default in-memory `MemoryStore`, which is wiped on every `nodemon` restart during active backend development — this would explain sessions dying app-wide, not just on logout. Recommend the backend switch to a persistent store (`connect-pg-simple`, since Postgres is already in use) rather than the default. Not fixable from the frontend — needs backend confirmation and a config change on that side.
+- [ ] **Suspected root cause of "logs out unexpectedly / all APIs go unauthenticated after some time":** the backend likely uses `express-session`'s default in-memory `MemoryStore`, which is wiped on every `nodemon` restart during active backend development — this would explain sessions dying app-wide, not just on logout. **Superseded:** the backend has since moved to bearer-token (JWT) auth, which is stateless and removes this entire bug class — no longer applicable, kept here for history.
+- [ ] **Token refresh strategy unconfirmed.** The JWT issued on login expires in 15 minutes (`exp - iat` from an observed token). Confirm with the backend developer whether a refresh-token endpoint exists. Without one, every user gets forced back to login every 15 minutes regardless of activity — needs resolving before this is usable day-to-day.
+- [ ] **Token revocation on logout unconfirmed.** With stateless JWTs, calling a `/logout` endpoint may do nothing meaningful server-side unless the backend maintains a blacklist/revocation list. Confirm whether logout needs to do anything beyond clearing the client-side token, and whether a compromised/stolen token can be invalidated before its natural 15-minute expiry.

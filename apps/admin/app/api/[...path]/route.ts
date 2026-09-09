@@ -27,20 +27,6 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   const result = new NextResponse(await response.text(), { status: response.status });
-  const setCookies = response.headers.getSetCookie();
-
-  for (const cookie of setCookies) {
-    result.headers.append("set-cookie", cookie);
-  }
-
-  if (response.status === 401 || pathStr === "admin/logout" || pathStr === "auth/logout") {
-    result.cookies.set("connect.sid", "", {
-      path: "/",
-      expires: new Date(0),
-      httpOnly: true,
-    });
-  }
-
   result.headers.set("content-type", response.headers.get("content-type") ?? "application/json");
   return result;
 }

@@ -27,21 +27,6 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   const result = new NextResponse(await response.text(), { status: response.status });
-  const setCookies = response.headers.getSetCookie();
-
-  for (const cookie of setCookies) {
-    result.headers.append("set-cookie", cookie);
-  }
-
-  // If status is 401 Unauthorized or endpoint is auth/logout, force clear the session cookie
-  if (response.status === 401 || pathStr === "auth/logout") {
-    result.cookies.set("connect.sid", "", {
-      path: "/",
-      expires: new Date(0),
-      httpOnly: true,
-    });
-  }
-
   result.headers.set("content-type", response.headers.get("content-type") ?? "application/json");
   return result;
 }

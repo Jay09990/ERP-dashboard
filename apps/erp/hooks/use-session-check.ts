@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { clearToken, getToken, isTokenExpired } from "@/lib/auth/token";
 import { useSessionStore } from "@/stores/session-store";
 
 export function useSessionCheck() {
@@ -9,6 +10,12 @@ export function useSessionCheck() {
 
   useEffect(() => {
     const checkSession = async () => {
+      const token = getToken();
+      if (!token || isTokenExpired(token)) {
+        clearToken();
+        setSession(null);
+        return;
+      }
       try {
         const response = await apiClient.get<any>(endpoints.auth.me);
         if (response.data) {
@@ -34,6 +41,7 @@ export function useSessionCheck() {
         }
       } catch (error) {
         // Session not valid or expired
+        clearToken();
         setSession(null);
       }
     };
