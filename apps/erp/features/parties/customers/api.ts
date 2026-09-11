@@ -21,10 +21,24 @@ function extractPartyArray(res: any): PartyRecord[] {
 function extractPartySingle(res: any): PartyRecord | null {
   if (!res) return null;
   if (Array.isArray(res)) return res[0] || null;
-  if (res.data) return Array.isArray(res.data) ? res.data[0] : res.data;
+  if (res.data) return extractPartySingle(res.data);
   if (res.customer) return res.customer;
   if (res.party) return res.party;
-  return res;
+  if (res.result) return extractPartySingle(res.result);
+  if (res.payload) return extractPartySingle(res.payload);
+  return res && typeof res === "object" ? res : null;
+}
+
+function normalizeParty(record: any): PartyRecord | null {
+  if (!record || typeof record !== "object") return null;
+  const normalized = record as PartyRecord & { company_name?: string; name?: string };
+  return {
+    ...normalized,
+    id: normalized.id ?? normalized.party_id ?? "",
+    party_id: normalized.party_id ?? normalized.id ?? "",
+    party_name: normalized.party_name ?? normalized.company_name ?? normalized.name ?? "",
+    phone: normalized.phone ?? "",
+  };
 }
 
 export function useCustomers(params?: Record<string, any>) {
@@ -45,8 +59,8 @@ export function useCustomer(id: string | number) {
     retry: false,
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.party.customer(id));
-      const record = extractPartySingle(res);
-      if (!record || (!record.id && !record.party_id && !record.party_name)) {
+      const record = normalizeParty(extractPartySingle(res));
+      if (!record || (!record.id && !record.party_id)) {
         throw new Error("Customer not found");
       }
       return record;

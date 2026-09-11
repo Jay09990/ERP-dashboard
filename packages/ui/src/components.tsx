@@ -101,7 +101,8 @@ export function DataTable<T extends Record<string, any>>({
   );
 }
 
-export function StatusPill({ status }: { status: string }) {
+export function StatusPill({ status }: { status?: string }) {
+  if (!status) return null;
   return (
     <span className={`altrex-status altrex-status-${status.toLowerCase()}`}>
       {status}

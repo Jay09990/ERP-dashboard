@@ -601,10 +601,53 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   table-layout: fixed;
 }
 
+.altrex-document-body .altrex-document-line-items {
+  width: 100%;
+  min-width: 920px;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-item {
+  width: 28%;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-qty {
+  width: 9%;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-rate {
+  width: 15%;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-discount {
+  width: 11%;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-taxes {
+  width: 29%;
+}
+
+.altrex-document-body .altrex-document-line-items .altrex-document-col-action {
+  width: 8%;
+}
+
 .altrex-document-body .altrex-table th,
 .altrex-document-body .altrex-table td {
+  box-sizing: border-box;
+  min-width: 0;
   padding-left: 8px;
   padding-right: 8px;
+}
+
+.altrex-document-body .altrex-document-line-items td > .altrex-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.altrex-document-body .altrex-document-line-items td:nth-child(4),
+.altrex-document-body .altrex-document-line-items td:nth-child(5),
+.altrex-document-body .altrex-document-line-items td:nth-child(6) {
+  overflow: hidden;
 }
 
 .altrex-document-body .altrex-table td .altrex-input {
