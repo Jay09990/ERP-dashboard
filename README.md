@@ -15,7 +15,6 @@ altrex/
 │   ├── ui/             # Shared component library (shadcn/ui + Tailwind design tokens)
 │   ├── api-client/     # Shared fetch client, resource-hook factory, Zod schemas
 │   └── config/         # Shared TypeScript base configs
-├── HELPER/             # Architecture, module, design, and toolset documentation
 ├── pnpm-workspace.yaml
 └── package.json
 ```
