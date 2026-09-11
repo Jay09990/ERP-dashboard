@@ -74,3 +74,19 @@ export const purchaseInvoiceApi = {
   useUpdate: () => useDocumentResource("purchase-invoices", endpoints.documents.purchaseInvoice).useUpdate(),
   useDelete: () => useDocumentResource("purchase-invoices", endpoints.documents.purchaseInvoice).useDelete(),
 };
+
+export const creditNoteApi = {
+  useList: (p?: any) => useDocumentResource("credit-notes", endpoints.documents.creditNote).useList(p),
+  useDetail: (id: string) => useDocumentResource("credit-notes", endpoints.documents.creditNote).useDetail(id),
+  useCreate: () => useDocumentResource("credit-notes", endpoints.documents.creditNote).useCreate(),
+  useUpdate: () => useDocumentResource("credit-notes", endpoints.documents.creditNote).useUpdate(),
+  useDelete: () => useDocumentResource("credit-notes", endpoints.documents.creditNote).useDelete(),
+};
+
+export const debitNoteApi = {
+  useList: (p?: any) => useDocumentResource("debit-notes", endpoints.documents.debitNote).useList(p),
+  useDetail: (id: string) => useDocumentResource("debit-notes", endpoints.documents.debitNote).useDetail(id),
+  useCreate: () => useDocumentResource("debit-notes", endpoints.documents.debitNote).useCreate(),
+  useUpdate: () => useDocumentResource("debit-notes", endpoints.documents.debitNote).useUpdate(),
+  useDelete: () => useDocumentResource("debit-notes", endpoints.documents.debitNote).useDelete(),
+};

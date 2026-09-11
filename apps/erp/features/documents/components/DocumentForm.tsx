@@ -15,7 +15,9 @@ export type DocumentType =
   | "delivery_challan"
   | "sales_invoice"
   | "purchase_order"
-  | "purchase_invoice";
+  | "purchase_invoice"
+  | "credit_note"
+  | "debit_note";
 
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
@@ -50,7 +52,8 @@ export function DocumentForm({
   onSubmit,
   isSaving,
 }: DocumentFormProps) {
-  const isVendorDoc = docType === "purchase_order" || docType === "purchase_invoice";
+  const isVendorDoc =
+    docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note";
   const partyEndpoint = isVendorDoc ? endpoints.party.vendors : endpoints.party.customers;
 
   // Fetch Parties
@@ -87,6 +90,9 @@ export function DocumentForm({
       initialData?.delivery_date ||
       initialData?.invoice_date ||
       initialData?.purchase_order_date ||
+      initialData?.pi_date ||
+      initialData?.credit_note_date ||
+      initialData?.debit_note_date ||
       new Date().toISOString().split("T")[0],
   );
   const [validUntil, setValidUntil] = useState<string>(
@@ -243,6 +249,10 @@ export function DocumentForm({
         ? "invoice_item_index"
         : docType === "purchase_invoice"
         ? "purchase_invoice_item_index"
+        : docType === "credit_note"
+        ? "credit_note_item_index"
+        : docType === "debit_note"
+        ? "debit_note_item_index"
         : "quotation_item_index";
 
     lineItems.forEach((line, idx) => {
@@ -267,6 +277,10 @@ export function DocumentForm({
         ? "invoice_date"
         : docType === "purchase_invoice"
         ? "pi_date"
+        : docType === "credit_note"
+        ? "credit_note_date"
+        : docType === "debit_note"
+        ? "debit_note_date"
         : "quotation_date";
 
     const payload = {
@@ -288,7 +302,10 @@ export function DocumentForm({
             customer_po_no: customerPoNo || undefined,
           }
         : {}),
-      ...(docType === "purchase_order" || docType === "purchase_invoice"
+      ...(docType === "purchase_order" ||
+      docType === "purchase_invoice" ||
+      docType === "credit_note" ||
+      docType === "debit_note"
         ? { due_date: validUntil || undefined }
         : {}),
       ...(docType === "delivery_challan"

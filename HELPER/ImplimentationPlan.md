@@ -56,29 +56,29 @@
 - [ ] User Permissions matrix (override view)
 
 ### Phase 5 — Party Management
-- [ ] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
-- [ ] Customers list + form + detail
-- [ ] Vendors list + form + detail
+- [x] Shared `PartyForm` (Customer/Vendor parametrized), Address/Contact-Person Repeater component
+- [x] Customers list + form + detail
+- [x] Vendors list + form + detail
 
 ### Phase 6 — Item Management
-- [ ] Item Types (master pattern)
-- [ ] Item Categories (tree/indented-list UI — not a flat table)
-- [ ] Items (dual sales/purchase pricing form)
+- [x] Item Types (master pattern)
+- [x] Item Categories (tree/indented-list UI — not a flat table)
+- [x] Items (dual sales/purchase pricing form)
 
 ### Phase 7 — Masters Batch
-- [ ] All 18+ masters from `modules.md` §8, each as a one-file `api.ts` calling the resource-hook factory + a shared Master CRUD list/modal template
-- [ ] `LocationCascadeSelect` shared component (Country→State→City), reused in Party and Company Profile
+- [x] All 18+ masters from `modules.md` §8, each as a one-file `api.ts` calling the resource-hook factory + a shared Master CRUD list/modal template
+- [x] `LocationCascadeSelect` shared component (Country→State→City), reused in Party and Company Profile
 
 ### Phase 8 — Sales Documents
-- [ ] Master document-form template component (shared skeleton, per `design.md` §7)
-- [ ] Quotation
-- [ ] Sales Order (with optional quotation reference)
-- [ ] Sales Invoice
-- [ ] *(Proforma once its backend status flips to ✅ in `modules.md`)*
+- [x] Master document-form template component (shared skeleton, per `design.md` §7)
+- [x] Quotation
+- [x] Sales Order (with optional quotation reference)
+- [x] Sales Invoice
+- [x] *(Proforma once its backend status flips to ✅ in `modules.md`)*
 
 ### Phase 9 — Purchase Documents
-- [ ] Purchase Order
-- [ ] Purchase Invoice
+- [x] Purchase Order
+- [x] Purchase Invoice
 
 ### Phase 10 — Polish
 - [ ] Dashboard real data wiring (stat cards, charts) now that transactional data exists

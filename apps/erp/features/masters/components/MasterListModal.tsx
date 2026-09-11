@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 export type FieldConfig = {
   name: string;
   label: string;
-  type?: "text" | "number" | "select";
+  type?: "text" | "number" | "select" | "date";
   placeholder?: string;
   getLabel?: (formData: Record<string, any>) => string;
   getPlaceholder?: (formData: Record<string, any>) => string | undefined;
@@ -256,7 +256,7 @@ export function MasterListModal<T extends Record<string, any>>({
                       </select>
                     ) : (
                       <input
-                        type={f.type === "number" ? "number" : "text"}
+                        type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
                         className="altrex-input"
                         placeholder={f.getPlaceholder?.(formData) ?? f.placeholder}
                         value={formData[f.name] ?? ""}

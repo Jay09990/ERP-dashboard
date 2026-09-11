@@ -47,6 +47,8 @@ export function DocumentList({
     doc.invoice_id ??
     doc.purchase_order_id ??
     doc.purchase_invoice_id ??
+    doc.credit_note_id ??
+    doc.debit_note_id ??
     doc.id;
 
   const filtered = useMemo(() => {
@@ -72,6 +74,8 @@ export function DocumentList({
           d.delivery_date ||
           d.invoice_date ||
           d.purchase_order_date ||
+          d.credit_note_date ||
+          d.debit_note_date ||
           d.created_at;
 
         return (

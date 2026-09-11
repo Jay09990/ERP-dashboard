@@ -57,6 +57,146 @@ deviceInfo: 'Thunder Client (https://www.thunderclient.com)'
 }
 }
 
+```jsx
+req.session.users 
+stroed
+{
+  userId: 1,
+  companyId: 1,
+  roleId: 1,
+  email: 'rahul@abc.com',
+  phone: '1234567890',
+  fullName: 'Rahul Shah',
+  permissions: [
+    {
+      permission_name: 'bank:create',
+      module_name: 'Bank Master',
+      is_allowed: true,
+      source: 'user'
+    },
+    {
+      permission_name: 'bank:view',
+      module_name: 'Bank Master',
+      is_allowed: true,
+      source: 'user'
+    },....all permissions
+  ],
+  permissionSummary: {
+    totalPermissions: 132,
+    allowedPermissions: 132,
+    deniedPermissions: 0,
+    modules: [
+      'Bank Master',
+      'Branch Master',
+      'Chart of Account Master',
+      'City Master',
+      'Company',
+      'Cost Center Master',
+      'Country Master',
+      'Cr-Dr Reason Master',
+      'Currency Master',
+      'Customer',
+      'Department Master',
+      'Designation Master',
+      'Document Series Master',
+      'Document Type Master',
+      'Financial Year Master',
+      'Holiday Master',
+      'Invoice',
+      'Items',
+      'Items Category Master',
+      'Items Types Master',
+      'Payment Terms Master',
+      'Permissions',
+      'Purchase Invoice',
+      'Quotation',
+      'Roles',
+      'Sales Order',
+      'Shift Master',
+      'State Master',
+      'TaxTypes Master',
+      'Units Master',
+      'Users',
+      'Vendor'
+    ]
+  },
+  financialYearId: 1,
+  ipAddress: '::ffff:127.0.0.1',
+  deviceInfo: 'Thunder Client (https://www.thunderclient.com)'
+}
+```
+
+```jsx
+req.session.user
+stored
+{
+  userId: 1,
+  companyId: 1,
+  roleId: 1,
+  financialYearId: 1,
+  iat: 1788947772,
+  exp: 1788948672,
+  sub: '1',
+  jti: '9b23eb10-ad57-480a-89b7-29958a9c1312',
+  permissions: [
+    {
+      permission_name: 'bank:create',
+      module_name: 'Bank Master',
+      is_allowed: true,
+      source: 'user'
+    },
+    {
+      permission_name: 'bank:view',
+      module_name: 'Bank Master',
+      is_allowed: true,
+      source: 'user'
+    },....all permissions
+  ],
+  permissionSummary: {
+    totalPermissions: 132,
+    allowedPermissions: 132,
+    deniedPermissions: 0,
+    modules: [
+      'Bank Master',
+      'Branch Master',
+      'Chart of Account Master',
+      'City Master',
+      'Company',
+      'Cost Center Master',
+      'Country Master',
+      'Cr-Dr Reason Master',
+      'Currency Master',
+      'Customer',
+      'Department Master',
+      'Designation Master',
+      'Document Series Master',
+      'Document Type Master',
+      'Financial Year Master',
+      'Holiday Master',
+      'Invoice',
+      'Items',
+      'Items Category Master',
+      'Items Types Master',
+      'Payment Terms Master',
+      'Permissions',
+      'Purchase Invoice',
+      'Quotation',
+      'Roles',
+      'Sales Order',
+      'Shift Master',
+      'State Master',
+      'TaxTypes Master',
+      'Units Master',
+      'Users',
+      'Vendor'
+    ]
+  },
+  financialYearId: 1,
+  ipAddress: '::ffff:127.0.0.1',
+  deviceInfo: 'Thunder Client (https://www.thunderclient.com)'
+}
+```
+
 ### trancate the admin db for restart
 
 ```jsx

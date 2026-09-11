@@ -75,3 +75,80 @@ export const cityApi = {
   useUpdate: () => useMasterResource("cities", endpoints.masters.city).useUpdate(),
   useDelete: () => useMasterResource("cities", endpoints.masters.city).useDelete(),
 };
+
+export const branchApi = {
+  useList: (p?: any) => useMasterResource("branches", endpoints.masters.branch).useList(p),
+  useCreate: () => useMasterResource("branches", endpoints.masters.branch).useCreate(),
+  useUpdate: () => useMasterResource("branches", endpoints.masters.branch).useUpdate(),
+  useDelete: () => useMasterResource("branches", endpoints.masters.branch).useDelete(),
+};
+
+export const departmentApi = {
+  useList: (p?: any) => useMasterResource("departments", endpoints.masters.departments).useList(p),
+  useCreate: () => useMasterResource("departments", endpoints.masters.departments).useCreate(),
+  useUpdate: () => useMasterResource("departments", endpoints.masters.departments).useUpdate(),
+  useDelete: () => useMasterResource("departments", endpoints.masters.departments).useDelete(),
+};
+
+export const designationApi = {
+  useList: (p?: any) => useMasterResource("designations", endpoints.masters.designations).useList(p),
+  useCreate: () => useMasterResource("designations", endpoints.masters.designations).useCreate(),
+  useUpdate: () => useMasterResource("designations", endpoints.masters.designations).useUpdate(),
+  useDelete: () => useMasterResource("designations", endpoints.masters.designations).useDelete(),
+};
+
+export const shiftApi = {
+  useList: (p?: any) => useMasterResource("shifts", endpoints.masters.shift).useList(p),
+  useCreate: () => useMasterResource("shifts", endpoints.masters.shift).useCreate(),
+  useUpdate: () => useMasterResource("shifts", endpoints.masters.shift).useUpdate(),
+  useDelete: () => useMasterResource("shifts", endpoints.masters.shift).useDelete(),
+};
+
+export const holidayApi = {
+  useList: (p?: any) => useMasterResource("holidays", endpoints.masters.holiday).useList(p),
+  useCreate: () => useMasterResource("holidays", endpoints.masters.holiday).useCreate(),
+  useUpdate: () => useMasterResource("holidays", endpoints.masters.holiday).useUpdate(),
+  useDelete: () => useMasterResource("holidays", endpoints.masters.holiday).useDelete(),
+};
+
+export const financialYearApi = {
+  useList: (p?: any) => useMasterResource("financial-years", endpoints.masters.financialYears).useList(p),
+  useCreate: () => useMasterResource("financial-years", endpoints.masters.financialYears).useCreate(),
+  useUpdate: () => useMasterResource("financial-years", endpoints.masters.financialYears).useUpdate(),
+  useDelete: () => useMasterResource("financial-years", endpoints.masters.financialYears).useDelete(),
+};
+
+export const costCenterApi = {
+  useList: (p?: any) => useMasterResource("cost-centers", endpoints.masters.costCenters).useList(p),
+  useCreate: () => useMasterResource("cost-centers", endpoints.masters.costCenters).useCreate(),
+  useUpdate: () => useMasterResource("cost-centers", endpoints.masters.costCenters).useUpdate(),
+  useDelete: () => useMasterResource("cost-centers", endpoints.masters.costCenters).useDelete(),
+};
+
+export const chartOfAccountsApi = {
+  useList: (p?: any) => useMasterResource("chart-of-accounts", endpoints.masters.chartOfAccounts).useList(p),
+  useCreate: () => useMasterResource("chart-of-accounts", endpoints.masters.chartOfAccounts).useCreate(),
+  useUpdate: () => useMasterResource("chart-of-accounts", endpoints.masters.chartOfAccounts).useUpdate(),
+  useDelete: () => useMasterResource("chart-of-accounts", endpoints.masters.chartOfAccounts).useDelete(),
+};
+
+export const crDrReasonApi = {
+  useList: (p?: any) => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useList(p),
+  useCreate: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useCreate(),
+  useUpdate: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useUpdate(),
+  useDelete: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useDelete(),
+};
+
+export const documentTypeApi = {
+  useList: (p?: any) => useMasterResource("document-types", endpoints.masters.documentType).useList(p),
+  useCreate: () => useMasterResource("document-types", endpoints.masters.documentType).useCreate(),
+  useUpdate: () => useMasterResource("document-types", endpoints.masters.documentType).useUpdate(),
+  useDelete: () => useMasterResource("document-types", endpoints.masters.documentType).useDelete(),
+};
+
+export const documentSeriesApi = {
+  useList: (p?: any) => useMasterResource("document-series", endpoints.masters.documentSeries).useList(p),
+  useCreate: () => useMasterResource("document-series", endpoints.masters.documentSeries).useCreate(),
+  useUpdate: () => useMasterResource("document-series", endpoints.masters.documentSeries).useUpdate(),
+  useDelete: () => useMasterResource("document-series", endpoints.masters.documentSeries).useDelete(),
+};

@@ -28,8 +28,21 @@ export function middleware(request: NextRequest) {
   }
 
   // If user is authenticated and trying to access auth routes
+  // Allow navigation to company-register for initial setup flow
   if (sessionCookie && isPublicRoute && !searchParams.has("logout") && !searchParams.has("clear")) {
-    return NextResponse.redirect(new URL("/", request.url));
+    // Allow access to company-register for initial setup
+    if (pathname === "/company-register") {
+      return NextResponse.next();
+    }
+    // Redirect authenticated users from register to dashboard
+    if (pathname === "/register") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    // Redirect authenticated users from login to dashboard (unless they have next param)
+    if (pathname === "/login" && !searchParams.has("next")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();

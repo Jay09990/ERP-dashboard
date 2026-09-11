@@ -567,6 +567,11 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   font-weight: 600;
 }
 
+.altrex-field label {
+  color: var(--altrex-text) !important;
+  font-weight: 700;
+}
+
 .altrex-field .altrex-input {
   width: 100%;
 }

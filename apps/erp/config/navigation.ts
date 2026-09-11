@@ -90,13 +90,13 @@ export const navigationConfig: NavParentItem[] = [
       {
         id: "sales-orders",
         label: "Sales Orders",
-        href: "/sales/sales-orders",
+        href: "/sales/orders",
         icon: ShoppingCart,
       },
       {
         id: "delivery-challans",
         label: "Delivery Challans",
-        href: "/sales/delivery-challans",
+        href: "/sales/challans",
         icon: Truck,
       },
       {
@@ -122,13 +122,13 @@ export const navigationConfig: NavParentItem[] = [
       {
         id: "purchase-orders",
         label: "Purchase Orders",
-        href: "/purchase/purchase-orders",
+        href: "/purchase/orders",
         icon: ClipboardList,
       },
       {
         id: "purchase-invoices",
         label: "Purchase Invoices",
-        href: "/purchase/purchase-invoices",
+        href: "/purchase/invoices",
         icon: FileCheck,
       },
       {

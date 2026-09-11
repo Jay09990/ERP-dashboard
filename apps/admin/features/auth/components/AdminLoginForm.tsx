@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
@@ -49,8 +50,17 @@ export function AdminLoginForm() {
         permissions: user.permissions ?? [],
       };
       setSession(session);
+      
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next?.startsWith("/") && !next.startsWith("//") ? next : "/");
+      
+      // Redirect logic:
+      // 1. If next parameter exists, use it
+      // 2. Otherwise, go to company-register (which will check if companies exist)
+      if (next && next.startsWith("/") && !next.startsWith("//")) {
+        router.push(next);
+      } else {
+        router.push("/company-register");
+      }
     } catch (error) {
       setServerError(
         String((error as { message?: string }).message ?? "Sign in failed"),
@@ -104,6 +114,13 @@ export function AdminLoginForm() {
           <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
             Sign in
           </Button>
+          <Link
+            href="/register"
+            className="altrex-auth-link"
+            style={{ marginTop: "12px", display: "block", textAlign: "center" }}
+          >
+            First time? Create an admin account
+          </Link>
         </form>
     </AuthCard>
   );

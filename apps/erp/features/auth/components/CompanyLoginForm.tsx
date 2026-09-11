@@ -8,6 +8,7 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { normalizePermissionNames } from "@/lib/auth/permissions";
 import { setToken } from "@/lib/auth/token";
 import { useSessionStore, type SessionSnapshot } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
@@ -41,7 +42,7 @@ export function CompanyLoginForm() {
           email: user.email ?? "",
           phone: user.phone ?? "",
         },
-        permissions: user.permissions ?? [],
+        permissions: normalizePermissionNames(user.permissions),
         company: user.companyId || user.company_id || user.company
           ? {
               id: String(user.companyId ?? user.company_id ?? user.company?.id ?? ""),

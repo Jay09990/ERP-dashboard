@@ -21,6 +21,7 @@ import {
   NavSubGroup,
 } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
+import { sessionHasPermission } from "@/lib/auth/permissions";
 import { clearToken } from "@/lib/auth/token";
 import { endpoints } from "@/lib/api/endpoints";
 import { useSessionStore } from "@/stores/session-store";
@@ -95,15 +96,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  // Permission filtering helper
+  // Permission filtering helper — login returns objects; normalize to name strings.
   const hasPermission = (permKey?: string) => {
     if (!permKey) return true;
-    if (!session || !session.permissions) return true;
-    return (
-      session.permissions.includes(permKey) ||
-      session.permissions.includes("*") ||
-      session.permissions.includes("all")
-    );
+    if (!session) return true;
+    return sessionHasPermission(session.permissions, permKey);
   };
 
   // Filtered navigation based on permissions and search query

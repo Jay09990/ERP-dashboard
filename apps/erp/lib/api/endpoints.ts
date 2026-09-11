@@ -7,7 +7,6 @@ export const endpoints = {
     // endpoint/method — this path is inferred from the /api/auth/login pattern.
     // Confirm the real path + method with the backend developer.
     logout: "/api/auth/logout",
-    me: "/api/auth/me",
 
     profile: "/api/auth/profile",
     users: "/api/auth/users",
@@ -67,6 +66,12 @@ export const endpoints = {
     purchaseInvoice: "/api/purchase_invoice",
     purchaseInvoiceDetail: (id: string | number) =>
       `/api/purchase_invoice/${id}`,
+
+    // Checklist-complete; payload shape not yet in modules.md — paths follow other document modules.
+    creditNote: "/api/credit_note",
+    creditNoteDetail: (id: string | number) => `/api/credit_note/${id}`,
+    debitNote: "/api/debit_note",
+    debitNoteDetail: (id: string | number) => `/api/debit_note/${id}`,
   },
   masters: {
     // Master routes are mounted beneath /api/master by the Express backend.

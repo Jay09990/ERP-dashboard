@@ -266,8 +266,8 @@
   min-height: 100vh;
   place-items: center;
   padding: 24px;
-  background: #F5F5F4;
-  color: #1C1C1B;
+  background: var(--altrex-canvas, #F5F5F4);
+  color: var(--altrex-text, #1C1C1B);
 }
 
 .altrex-auth-mark {
@@ -277,8 +277,8 @@
   margin-bottom: 24px;
   place-items: center;
   border-radius: 8px;
-  background: #1C1C1B;
-  color: #F5F5F4;
+  background: var(--altrex-text, #1C1C1B);
+  color: var(--altrex-canvas, #F5F5F4);
   font-size: 14px;
   font-weight: 800;
 }
@@ -286,18 +286,28 @@
 .altrex-auth-panel {
   align-self: center;
   width: min(100%, 420px);
-  border: 1px solid #C9C9C5;
+  border: 1px solid var(--altrex-border, #C9C9C5);
   border-radius: 12px;
   padding: 24px;
-  background: #FFFDF9;
+  background: var(--altrex-surface, #FFFDF9);
   box-shadow: 0 4px 16px rgb(28 28 27 / 0.10);
+  color: var(--altrex-text, #1C1C1B);
 }
 
 .altrex-auth-panel h1 {
   margin: 4px 0 0;
-  color: #1C1C1B;
+  color: var(--altrex-text, #1C1C1B) !important;
   font-size: 28px;
   font-weight: 800;
+}
+
+.altrex-auth-panel p,
+.altrex-auth-panel label,
+.altrex-auth-panel small,
+.altrex-auth-panel .altrex-field,
+.altrex-auth-panel .altrex-step-label,
+.altrex-auth-panel .altrex-auth-description {
+  color: var(--altrex-text, #1C1C1B);
 }
 
 .altrex-auth-panel-wide {
@@ -307,7 +317,7 @@
 .altrex-auth-description {
   max-width: 560px;
   margin: 8px 0 24px;
-  color: #5E5E5A;
+  color: var(--altrex-muted, #5E5E5A);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -351,18 +361,18 @@
 .altrex-field {
   display: grid;
   gap: 6px;
-  color: #1C1C1B;
+  color: var(--altrex-text, #1C1C1B);
   font-size: 13px;
   font-weight: 600;
 }
 
 .altrex-auth-panel .altrex-field {
-  color: #1C1C1B;
+  color: var(--altrex-text, #1C1C1B);
 }
 
 .altrex-auth-panel .altrex-field > span,
 .altrex-auth-panel .altrex-field > label {
-  color: #1C1C1B;
+  color: var(--altrex-text, #1C1C1B) !important;
 }
 
 .altrex-auth-form .altrex-button {
@@ -372,25 +382,38 @@
 .altrex-auth-form .altrex-input {
   min-width: 0;
   min-height: 40px;
-  border-color: #C9C9C5;
-  background: #FFFEFC;
-  color: #1C1C1B;
+  border-color: var(--altrex-border, #C9C9C5);
+  background: var(--altrex-raised, #FFFEFC);
+  color: var(--altrex-text, #1C1C1B);
+}
+
+.altrex-auth-panel .altrex-input,
+.altrex-auth-panel .altrex-textarea,
+.altrex-auth-panel .altrex-phone-row,
+.altrex-auth-panel .altrex-password-row .altrex-input {
+  background: var(--altrex-raised, #FFFEFC) !important;
+  color: var(--altrex-text, #1C1C1B) !important;
+}
+
+.altrex-auth-panel .altrex-input::placeholder,
+.altrex-auth-panel .altrex-textarea::placeholder {
+  color: var(--altrex-muted, #64748B);
 }
 
 .altrex-auth-form .altrex-input:focus {
-  border-color: #B3C2DB;
-  box-shadow: 0 0 0 2px #3A5788;
+  border-color: var(--altrex-primary, #B3C2DB);
+  box-shadow: 0 0 0 2px var(--altrex-primary, #3A5788);
 }
 
 .altrex-auth-form button[type="submit"] {
   min-height: 44px;
   border-radius: 8px;
-  background: #3A5788;
-  color: #FFFEFC;
+  background: var(--altrex-primary, #3A5788);
+  color: var(--altrex-on-accent, #FFFEFC);
 }
 
 .altrex-auth-form button[type="submit"]:hover {
-  background: #2E446B;
+  background: var(--altrex-primary-hover, #2E446B);
 }
 
 .altrex-form-error {
@@ -400,7 +423,7 @@
 }
 
 .altrex-auth-link {
-  color: #4869A3;
+  color: var(--altrex-link, #4869A3);
   font-size: 13px;
   font-weight: 600;
   text-align: center;
@@ -413,10 +436,10 @@
   gap: 8px;
   margin: 0;
   padding: 12px;
-  border: 1px solid #E5B8B2;
+  border: 1px solid var(--altrex-danger-text, #E5B8B2);
   border-radius: 8px;
-  background: #F3E4E2;
-  color: #7A3028;
+  background: var(--altrex-raised, #F3E4E2);
+  color: var(--altrex-danger-text, #7A3028);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -428,6 +451,92 @@
 
 .altrex-auth-link:hover {
   text-decoration: underline;
+}
+
+/* Dark mode overrides for auth panel */
+[data-theme="dark"] .altrex-auth-page {
+  background: var(--altrex-canvas, #0b0f17);
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-mark {
+  background: var(--altrex-text, #f8fafc);
+  color: var(--altrex-canvas, #0b0f17);
+}
+
+[data-theme="dark"] .altrex-auth-panel {
+  background: var(--altrex-surface, #161e2e);
+  border-color: var(--altrex-border, #27354a);
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-panel h1 {
+  color: var(--altrex-text, #f8fafc) !important;
+}
+
+[data-theme="dark"] .altrex-auth-panel p,
+[data-theme="dark"] .altrex-auth-panel label,
+[data-theme="dark"] .altrex-auth-panel small,
+[data-theme="dark"] .altrex-auth-panel .altrex-field,
+[data-theme="dark"] .altrex-auth-panel .altrex-step-label,
+[data-theme="dark"] .altrex-auth-panel .altrex-auth-description {
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-description {
+  color: var(--altrex-muted, #94a3b8);
+}
+
+[data-theme="dark"] .altrex-field {
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-panel .altrex-field {
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-panel .altrex-field > span,
+[data-theme="dark"] .altrex-auth-panel .altrex-field > label {
+  color: var(--altrex-text, #f8fafc) !important;
+}
+
+[data-theme="dark"] .altrex-auth-form .altrex-input {
+  border-color: var(--altrex-border, #27354a);
+  background: var(--altrex-raised, #1e293b);
+  color: var(--altrex-text, #f8fafc);
+}
+
+[data-theme="dark"] .altrex-auth-panel .altrex-input,
+[data-theme="dark"] .altrex-auth-panel .altrex-textarea,
+[data-theme="dark"] .altrex-auth-panel .altrex-phone-row,
+[data-theme="dark"] .altrex-auth-panel .altrex-password-row .altrex-input {
+  background: var(--altrex-raised, #1e293b) !important;
+  color: var(--altrex-text, #f8fafc) !important;
+}
+
+[data-theme="dark"] .altrex-auth-panel .altrex-input::placeholder,
+[data-theme="dark"] .altrex-auth-panel .altrex-textarea::placeholder {
+  color: var(--altrex-muted, #94a3b8);
+}
+
+[data-theme="dark"] .altrex-auth-form .altrex-input:focus {
+  border-color: var(--altrex-primary, #3b82f6);
+  box-shadow: 0 0 0 2px var(--altrex-primary, #3b82f6);
+}
+
+[data-theme="dark"] .altrex-auth-form button[type="submit"] {
+  background: var(--altrex-primary, #3b82f6);
+  color: var(--altrex-on-accent, #0b0f17);
+}
+
+[data-theme="dark"] .altrex-auth-form button[type="submit"]:hover {
+  background: var(--altrex-primary-hover, #60a5fa);
+}
+
+[data-theme="dark"] .altrex-auth-banner {
+  border-color: var(--altrex-danger-text, #7f1d1d);
+  background: var(--altrex-raised, #450a0a);
+  color: var(--altrex-danger-text, #f87171);
 }
 
 @media (max-width: 480px) {

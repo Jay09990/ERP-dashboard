@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useForm } from "react-hook-form";
@@ -689,6 +690,13 @@ export function CompanyRegisterForm() {
             )}
           </div>
         </form>
+        <Link
+          href="/register"
+          className="altrex-auth-link"
+          style={{ marginTop: "12px", display: "block", textAlign: "center" }}
+        >
+          Need to register an admin account first?
+        </Link>
     </AuthCard>
   );
 }
