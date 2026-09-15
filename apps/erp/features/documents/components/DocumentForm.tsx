@@ -463,7 +463,12 @@ export function DocumentForm({
               </p>
             </div>
           </div>
-          <button type="button" className="altrex-icon-button" onClick={onClose}>
+          <button
+            type="button"
+            className="altrex-icon-button"
+            aria-label="Close document dialog"
+            onClick={onClose}
+          >
             <X size={18} />
           </button>
         </div>
@@ -728,6 +733,7 @@ export function DocumentForm({
                           <Button
                             type="button"
                             variant="outline"
+                            aria-label={`Remove line item ${idx + 1}`}
                             onClick={() => handleRemoveLine(idx)}
                             disabled={lineItems.length === 1}
                             style={{ color: "var(--altrex-danger-text)", padding: "4px 8px" }}
