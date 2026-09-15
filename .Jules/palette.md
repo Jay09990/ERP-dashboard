@@ -1,5 +1,3 @@
-# Palette's Journal - Critical UX & Accessibility Learnings
-
-## 2025-05-18 - Accessible Custom Dropdown Menus and Escape Key Handling
-**Learning:** Custom dropdown components in app bars require explicit ARIA attributes (`aria-haspopup="menu"`, `aria-expanded`, `role="menu"`, `role="menuitemradio"`) and keydown listeners (specifically `Escape` key with focus restoration) so screen readers and keyboard-only users can seamlessly navigate and dismiss popup menus.
-**Action:** When creating custom dropdown overlay menus, always include ARIA popup/menu roles, `aria-checked` attributes for radio options, and an `Escape` key listener that restores focus to the toggle button.
+## 2025-05-18 - Accessibility and Keyboard Navigation for Dropdown Menus
+**Learning:** Dropdown menus in the header topbar (such as ThemeDropdown) lacked keyboard controls (`Escape` key listeners) and proper ARIA menu semantics (`role="menu"`, `role="menuitemradio"`, `aria-checked`, `aria-expanded`). Furthermore, backdrop click handlers should be semantic elements or buttons with `tabIndex={-1}` and `aria-hidden="true"` to satisfy accessibility linter rules (`useKeyWithClickEvents`).
+**Action:** Always include keyboard event listeners for floating dropdowns, use proper ARIA role attributes for menu/menuitem states, and use compliant backdrop elements.
