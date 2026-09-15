@@ -134,8 +134,66 @@ export const chartOfAccountsApi = {
 
 export const crDrReasonApi = {
   useList: (p?: any) => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useList(p),
-  useCreate: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useCreate(),
-  useUpdate: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useUpdate(),
+  useCreate: () => {
+    const resource = useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useCreate();
+    return {
+      ...resource,
+      mutate: (body: any, opts?: any) => {
+        const formTypeVal = body.form_type || body.type || body.reason_type || "both";
+        const statusVal = body.status || "active";
+        const payload = {
+          ...body,
+          form_type: formTypeVal,
+          type: formTypeVal,
+          reason_type: formTypeVal,
+          status: statusVal,
+        };
+        resource.mutate(payload, opts);
+      },
+      mutateAsync: (body: any, opts?: any) => {
+        const formTypeVal = body.form_type || body.type || body.reason_type || "both";
+        const statusVal = body.status || "active";
+        const payload = {
+          ...body,
+          form_type: formTypeVal,
+          type: formTypeVal,
+          reason_type: formTypeVal,
+          status: statusVal,
+        };
+        return resource.mutateAsync(payload, opts);
+      },
+    };
+  },
+  useUpdate: () => {
+    const resource = useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useUpdate();
+    return {
+      ...resource,
+      mutate: (args: { id: string; body: any }, opts?: any) => {
+        const formTypeVal = args.body?.form_type || args.body?.type || args.body?.reason_type || "both";
+        const statusVal = args.body?.status || "active";
+        const payload = {
+          ...args.body,
+          form_type: formTypeVal,
+          type: formTypeVal,
+          reason_type: formTypeVal,
+          status: statusVal,
+        };
+        resource.mutate({ id: args.id, body: payload }, opts);
+      },
+      mutateAsync: (args: { id: string; body: any }, opts?: any) => {
+        const formTypeVal = args.body?.form_type || args.body?.type || args.body?.reason_type || "both";
+        const statusVal = args.body?.status || "active";
+        const payload = {
+          ...args.body,
+          form_type: formTypeVal,
+          type: formTypeVal,
+          reason_type: formTypeVal,
+          status: statusVal,
+        };
+        return resource.mutateAsync({ id: args.id, body: payload }, opts);
+      },
+    };
+  },
   useDelete: () => useMasterResource("cr-dr-reasons", endpoints.masters.crDrReason).useDelete(),
 };
 

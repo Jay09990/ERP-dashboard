@@ -21,6 +21,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useCompanyProfile, useUpdateCompanyProfile } from "../api";
 import { type ProfileValues, profileSchema } from "../schema";
 import { useSessionStore } from "@/stores/session-store";
+import { bankApi } from "@/features/masters/api";
 
 type Tab = "identity" | "contact" | "banking" | "branding";
 
@@ -138,11 +139,50 @@ function FileDropZone({
   );
 }
 
-export function ProfileForm() {
+function extractBankList(value: unknown, visited = new Set<unknown>()): Array<Record<string, any>> {
+  if (Array.isArray(value)) return value as Array<Record<string, any>>;
+  if (!value || typeof value !== "object" || visited.has(value)) return [];
+
+  visited.add(value);
+  for (const nestedValue of Object.values(value as Record<string, any>)) {
+    const nested = extractBankList(nestedValue, visited);
+    if (nested.length > 0) return nested;
+  }
+
+  return [];
+}
+
+type ProfileFormProps = {
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  isModal?: boolean;
+};
+
+function normalizeProfile(data: any): Record<string, any> {
+  if (!data || typeof data !== "object") return {};
+  const profileDetails = data.profile_details ?? data.company ?? data.profile ?? data.data ?? (data.company_name ? data : {});
+  const bankDetails = data.bank_details ?? data.bank ?? (data.account_no ? data : {});
+  return {
+    ...profileDetails,
+    ...bankDetails,
+    bank_id: bankDetails.bank_id ?? profileDetails.bank_id ?? null,
+  };
+}
+
+export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFormProps = {}) {
   const { data: profile, isLoading } = useCompanyProfile();
   const { mutate: updateProfile, isPending } = useUpdateCompanyProfile();
   const session = useSessionStore((state) => state.session);
   const [activeTab, setActiveTab] = useState<Tab>("identity");
+
+  // Bank master list for the dropdown
+  const { data: banksData, isLoading: isBanksLoading } = bankApi.useList();
+  const bankList = extractBankList(banksData);
+
+  const getBankId = (b: Record<string, any>) => String(b.bank_id ?? b.id ?? "");
+  const getBankName = (b: Record<string, any>) => String(b.bank_name ?? b.name ?? b.title ?? `Bank #${getBankId(b)}`);
+  const getBankIfsc = (b: Record<string, any>) => (b.ifsc_code ?? b.ifsc ? String(b.ifsc_code ?? b.ifsc) : "");
+  const getBankBranch = (b: Record<string, any>) => (b.branch_name ?? b.branch ? String(b.branch_name ?? b.branch) : "");
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -177,12 +217,26 @@ export function ProfileForm() {
 
   useEffect(() => {
     if (profile) {
-      form.reset(profile);
+      const actualProfile = normalizeProfile(profile);
+      form.reset(actualProfile);
     }
   }, [profile, form]);
 
   const onSubmit = (values: ProfileValues) => {
-    updateProfile(values);
+    // Coerce bank_id to string (backend expects "1", not 1 or null)
+    const payload = {
+      ...values,
+      bank_id: values.bank_id != null && values.bank_id !== "" ? String(values.bank_id) : null,
+      city_id: values.city_id != null ? String(values.city_id) : null,
+      state_id: values.state_id != null ? String(values.state_id) : null,
+      country_id: values.country_id != null ? String(values.country_id) : null,
+      opening_balance: values.opening_balance != null && values.opening_balance !== "" ? String(values.opening_balance) : null,
+    };
+    updateProfile(payload as ProfileValues, {
+      onSuccess: () => {
+        onSuccess?.();
+      },
+    });
   };
 
   const isDirty = form.formState.isDirty;
@@ -428,6 +482,83 @@ export function ProfileForm() {
               Banking & Financials
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+
+              {/* Bank Name — dropdown from Bank Master */}
+              <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
+                <span>Bank Name</span>
+                <Controller
+                  control={form.control}
+                  name="bank_id"
+                  render={({ field }) => (
+                    <div style={{ position: "relative" }}>
+                      <select
+                        className="altrex-input"
+                        style={{ appearance: "none", paddingRight: "32px", cursor: "pointer" }}
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => {
+                          const selectedId = e.target.value || null;
+                          field.onChange(selectedId);
+                          if (selectedId) {
+                            const selectedBank = bankList.find((b) => getBankId(b) === selectedId);
+                            if (selectedBank) {
+                              const ifsc = getBankIfsc(selectedBank);
+                              const branch = getBankBranch(selectedBank);
+                              if (ifsc) form.setValue("ifsc_code", ifsc, { shouldDirty: true });
+                              if (branch) form.setValue("branch_name", branch, { shouldDirty: true });
+                            }
+                          }
+                        }}
+                      >
+                        <option value="">{isBanksLoading ? "Loading banks..." : "-- Select Bank --"}</option>
+                        {bankList.map((b) => {
+                          const id = getBankId(b);
+                          const name = getBankName(b);
+                          const ifsc = getBankIfsc(b);
+                          const branch = getBankBranch(b);
+                          return (
+                            <option key={id} value={id}>
+                              {name}
+                              {ifsc ? ` — ${ifsc}` : ""}
+                              {branch ? ` (${branch})` : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {/* Chevron icon */}
+                      <svg
+                        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "var(--altrex-muted)" }}
+                        width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                  )}
+                />
+                {bankList.length === 0 && !isBanksLoading && (
+                  <p style={{ fontSize: "11px", color: "var(--altrex-muted)", marginTop: "4px" }}>
+                    No banks found. Add banks in <strong>Masters → Banks</strong> first.
+                  </p>
+                )}
+                {/* Show selected bank details as hint */}
+                {form.watch("bank_id") && (() => {
+                  const currentBankId = String(form.watch("bank_id"));
+                  const b = bankList.find((x) => getBankId(x) === currentBankId);
+                  if (!b) return null;
+                  const ifsc = getBankIfsc(b);
+                  const branch = getBankBranch(b);
+                  return (
+                    <div style={{
+                      marginTop: "6px", padding: "8px 10px", borderRadius: "8px",
+                      background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.15)",
+                      display: "flex", gap: "16px", fontSize: "11px", color: "var(--altrex-muted)",
+                    }}>
+                      {ifsc && <span><strong>IFSC:</strong> {ifsc}</span>}
+                      {branch && <span><strong>Branch:</strong> {branch}</span>}
+                    </div>
+                  );
+                })()}
+              </label>
+
               <label className="altrex-field">
                 <span>Account Holder Name</span>
                 <input className="altrex-input" {...form.register("account_holder_name")} />
@@ -521,9 +652,19 @@ export function ProfileForm() {
         }}
       >
         {isDirty && (
-          <span style={{ fontSize: "13px", color: "var(--altrex-muted)" }}>
+          <span style={{ fontSize: "13px", color: "var(--altrex-muted)", marginRight: "auto" }}>
             You have unsaved changes
           </span>
+        )}
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
         )}
         <Button
           type="submit"

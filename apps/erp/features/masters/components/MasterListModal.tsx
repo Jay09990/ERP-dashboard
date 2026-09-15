@@ -85,7 +85,14 @@ export function MasterListModal<T extends Record<string, any>>({
     setActiveItem(null);
     const initial: Record<string, any> = {};
     fields.forEach((f) => {
-      initial[f.name] = f.type === "number" ? 0 : "";
+      initial[f.name] =
+        f.type === "number"
+          ? 0
+          : f.name === "status"
+            ? "active"
+            : f.name === "form_type"
+              ? "both"
+              : "";
     });
     setFormData(initial);
     setIsOpenModal(true);
@@ -95,7 +102,13 @@ export function MasterListModal<T extends Record<string, any>>({
     setActiveItem(item);
     const current: Record<string, any> = {};
     fields.forEach((f) => {
-      current[f.name] = item[f.name] ?? "";
+      current[f.name] =
+        item[f.name] ??
+        (f.name === "form_type"
+          ? item.type ?? item.reason_type ?? "both"
+          : f.name === "status"
+            ? item.status ?? "active"
+            : "");
     });
     setFormData(current);
     setIsOpenModal(true);

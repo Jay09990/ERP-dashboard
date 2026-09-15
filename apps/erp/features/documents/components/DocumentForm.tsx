@@ -105,18 +105,75 @@ export function DocumentForm({
   const { data: taxTypesData = [] } = taxTypesApi.useList();
   const taxTypes = extractList(taxTypesData, ["taxes", "taxTypes", "tax_types", "rows", "records", "list", "data"]);
 
+  // Fetch Sales Invoices for Credit Note dropdown
+  const { data: salesInvoicesRes = [] } = useQuery({
+    queryKey: ["sales-invoices-dropdown"],
+    queryFn: async () => {
+      const res = await apiClient.get<any>(endpoints.documents.invoice);
+      return extractList(res, ["invoices", "invoice", "data", "rows", "records", "list"]);
+    },
+    enabled: docType === "credit_note",
+  });
+
+  // Fetch Purchase Invoices for Debit Note dropdown
+  const { data: purchaseInvoicesRes = [] } = useQuery({
+    queryKey: ["purchase-invoices-dropdown"],
+    queryFn: async () => {
+      const res = await apiClient.get<any>(endpoints.documents.purchaseInvoice);
+      return extractList(res, ["purchase_invoices", "purchase_invoice", "invoices", "data", "rows", "records", "list"]);
+    },
+    enabled: docType === "debit_note",
+  });
+
+  // Fetch CR/DR Reasons for Credit/Debit Note dropdown
+  const { data: crDrReasonsRes = [] } = useQuery({
+    queryKey: ["cr-dr-reasons-dropdown"],
+    queryFn: async () => {
+      const res = await apiClient.get<any>(endpoints.masters.crDrReason);
+      return extractList(res, ["reasons", "crDrReasons", "cr_dr_reasons", "data", "rows", "records", "list"]);
+    },
+    enabled: docType === "credit_note" || docType === "debit_note",
+  });
+
+  const filteredReasons = useMemo(() => {
+    return crDrReasonsRes.filter((r: any) => {
+      const typeStr = String(r.form_type ?? r.type ?? r.reason_type ?? r.applicable_to ?? r.applicable_on ?? "both").toLowerCase();
+      if (!typeStr || typeStr === "both" || typeStr === "all") return true;
+      if (docType === "credit_note") return typeStr === "credit" || typeStr === "credit_note" || typeStr === "cr";
+      if (docType === "debit_note") return typeStr === "debit" || typeStr === "debit_note" || typeStr === "dr";
+      return true;
+    });
+  }, [crDrReasonsRes, docType]);
+
   // Form states
   const [partyId, setPartyId] = useState<string>(initialData?.party_id?.toString() || "");
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>(
+    initialData?.invoice_id?.toString() ||
+      initialData?.purchase_invoice_id?.toString() ||
+      initialData?.pi_id?.toString() ||
+      initialData?.sales_invoice_id?.toString() ||
+      "",
+  );
+  const [reasonId, setReasonId] = useState<string>(
+    initialData?.reason_id?.toString() || "1",
+  );
+  const [reasonText, setReasonText] = useState<string>(
+    initialData?.reason || initialData?.reason_text || "",
+  );
   const [docDate, setDocDate] = useState<string>(
-    initialData?.quotation_date ||
+    initialData?.debit_date ||
+      initialData?.debit_note_date ||
+      initialData?.credit_date ||
+      initialData?.credit_note_date ||
+      initialData?.quotation_date ||
       initialData?.sales_order_date ||
       initialData?.proforma_date ||
       initialData?.delivery_date ||
       initialData?.invoice_date ||
       initialData?.purchase_order_date ||
       initialData?.pi_date ||
-      initialData?.credit_note_date ||
-      initialData?.debit_note_date ||
+      initialData?.document_date ||
+      initialData?.date ||
       new Date().toISOString().split("T")[0],
   );
   const [validUntil, setValidUntil] = useState<string>(
@@ -185,11 +242,18 @@ export function DocumentForm({
             tax.purchase_invoice_item_id ??
             tax.credit_note_item_id ??
             tax.debit_note_item_id ??
-            tax.quotation_item_index;
-          return String(ref) === String(item.quotation_item_id ?? item.item_id ?? itemIndex);
+            tax.quotation_item_index ??
+            tax.sales_order_item_index ??
+            tax.proforma_item_index ??
+            tax.delivery_challan_item_index ??
+            tax.invoice_item_index ??
+            tax.purchase_invoice_item_index ??
+            tax.credit_note_item_index ??
+            tax.debit_note_item_index;
+          return String(ref) === String(item.quotation_item_id ?? item.sales_order_item_id ?? item.proforma_item_id ?? item.delivery_challan_item_id ?? item.invoice_item_id ?? item.purchase_order_item_id ?? item.purchase_invoice_item_id ?? item.credit_note_item_id ?? item.debit_note_item_id ?? item.item_id ?? itemIndex);
         })
         .map((tax: any) => Number(tax.tax_id))
-        .filter((taxId: number) => Number.isFinite(taxId)),
+        .filter((taxId: number) => Number.isFinite(taxId) && taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId)),
     })) || [
       {
         item_id: "",
@@ -233,6 +297,8 @@ export function DocumentForm({
       prev.map((line, i) => {
         if (i !== idx) return line;
         const rate = isVendorDoc ? Number(item?.purchase_rate || 0) : Number(item?.sales_rate || 0);
+        const rawTaxId = item?.tax_id ? Number(item.tax_id) : null;
+        const isValidTax = rawTaxId != null && Number.isFinite(rawTaxId) && taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === rawTaxId);
         return {
           ...line,
           item_id: selectedId,
@@ -240,19 +306,20 @@ export function DocumentForm({
           hsn_code: item?.hsn_code || "",
           unit_id: item?.unit_id?.toString() || "",
           unit_rate: rate,
-          selected_taxes: item?.tax_id ? [item.tax_id] : line.selected_taxes,
+          selected_taxes: isValidTax ? [rawTaxId] : line.selected_taxes,
         };
       }),
     );
   };
 
-  const handleToggleTax = (lineIdx: number, taxId: number) => {
+  const handleToggleTax = (lineIdx: number, rawTaxId: number | string) => {
+    const taxId = Number(rawTaxId);
     setLineItems((prev) =>
       prev.map((line, i) => {
         if (i !== lineIdx) return line;
-        const exists = line.selected_taxes.includes(taxId);
+        const exists = line.selected_taxes.some((id) => Number(id) === taxId);
         const updated = exists
-          ? line.selected_taxes.filter((id) => id !== taxId)
+          ? line.selected_taxes.filter((id) => Number(id) !== taxId)
           : [...line.selected_taxes, taxId];
         return { ...line, selected_taxes: updated };
       }),
@@ -306,19 +373,73 @@ export function DocumentForm({
         : docType === "debit_note"
         ? "debit_note_item_id"
         : "quotation_item_id";
-    const itemsDetailsPayload = lineItems.map((line) => ({
-      ...(line[itemIdKey as keyof typeof line] ? { [itemIdKey]: line[itemIdKey as keyof typeof line] } : {}),
-      item_id: Number(line.item_id),
-      description: line.description || "Line item",
-      quantity: Number(line.quantity),
-      hsn_code: line.hsn_code || "",
-      unit_id: line.unit_id ? Number(line.unit_id) : undefined,
-      unit_rate: Number(line.unit_rate),
-      discount_percent: Number(line.discount_percent),
-      discount_flat: Number(line.discount_flat),
-    }));
 
-    // Build tax details array linked by item index
+    const docIdKey =
+      docType === "sales_order"
+        ? "sales_order_id"
+        : docType === "purchase_order"
+        ? "purchase_order_id"
+        : docType === "proforma"
+        ? "proforma_id"
+        : docType === "delivery_challan"
+        ? "delivery_challan_id"
+        : docType === "sales_invoice"
+        ? "invoice_id"
+        : docType === "purchase_invoice"
+        ? "purchase_invoice_id"
+        : docType === "credit_note"
+        ? "credit_note_id"
+        : docType === "debit_note"
+        ? "debit_note_id"
+        : "quotation_id";
+
+    const parentDocId =
+      initialData?.[docIdKey] ??
+      initialData?.purchase_invoice_id ??
+      initialData?.pi_id ??
+      initialData?.invoice_id ??
+      initialData?.quotation_id ??
+      initialData?.sales_order_id ??
+      initialData?.purchase_order_id ??
+      initialData?.proforma_id ??
+      initialData?.delivery_challan_id ??
+      initialData?.credit_note_id ??
+      initialData?.debit_note_id ??
+      initialData?.id;
+
+    const itemsDetailsPayload = lineItems.map((line) => {
+      const lineSub = line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
+      let lineTaxPercent = 0;
+      let lineTaxAmt = 0;
+
+      line.selected_taxes.forEach((taxId) => {
+        const taxObj = taxTypes.find((t: any) => String(t.tax_id ?? t.id) === String(taxId));
+        if (taxObj) {
+          lineTaxPercent += getTaxValue(taxObj);
+          lineTaxAmt += calculateTaxAmount(lineSub, taxObj);
+        }
+      });
+
+      const invItemId = (line as any).invoice_item_id ?? (line as any).sales_order_item_id ?? (line as any).purchase_invoice_item_id;
+
+      return {
+        ...(line[itemIdKey as keyof typeof line] ? { [itemIdKey]: line[itemIdKey as keyof typeof line] } : {}),
+        ...(parentDocId != null ? { [docIdKey]: Number(parentDocId) } : {}),
+        ...(invItemId ? { invoice_item_id: Number(invItemId) } : {}),
+        item_id: Number(line.item_id),
+        description: line.description || "Line item",
+        quantity: Number(line.quantity),
+        hsn_code: line.hsn_code || "",
+        unit_id: line.unit_id ? Number(line.unit_id) : undefined,
+        unit_rate: Number(line.unit_rate),
+        discount_percent: Number(line.discount_percent),
+        discount_flat: Number(line.discount_flat),
+        tax_percent: lineTaxPercent,
+        tax_amount: Math.round(lineTaxAmt),
+      };
+    });
+
+    // Build tax details array linked by item index (POST) or item ID (PUT)
     const taxDetailsPayload: any[] = [];
     const indexKey =
       docType === "sales_order"
@@ -357,37 +478,61 @@ export function DocumentForm({
         : docType === "debit_note"
         ? "debit_note_tax_detail_id"
         : "quotation_tax_detail_id";
+
+    const isEditMode = Boolean(
+      initialData?.quotation_id ||
+        initialData?.sales_order_id ||
+        initialData?.purchase_order_id ||
+        initialData?.proforma_id ||
+        initialData?.delivery_challan_id ||
+        initialData?.invoice_id ||
+        initialData?.pi_id ||
+        initialData?.credit_note_id ||
+        initialData?.debit_note_id ||
+        initialData?.id,
+    );
+
     lineItems.forEach((line, idx) => {
-      const lineTaxable = Number(
-        (line.quantity * line.unit_rate * (1 - line.discount_percent / 100)).toFixed(2),
-      );
-      line.selected_taxes.forEach((taxId) => {
-        const taxObj = taxTypes.find(
-          (tax: any) => String(tax.tax_id ?? tax.id) === String(taxId),
+      line.selected_taxes.forEach((rawTaxId) => {
+        const numericTaxId = Number(rawTaxId);
+        if (!Number.isFinite(numericTaxId)) return;
+
+        // Ensure selected tax_id is active in Tax Master
+        const activeTaxObj = taxTypes.find(
+          (tax: any) => Number(tax.tax_id ?? tax.id) === numericTaxId,
         );
-        const taxValue = getTaxValue(taxObj);
-        const existingTax = initialData?.taxDetails?.find((tax: any) => {
-          const ref = tax[`${docType}_item_id`] ?? tax.quotation_item_id ?? tax.quotation_item_index;
-          return String(ref) === String(line[itemIdKey as keyof typeof line] ?? idx) &&
-            String(tax.tax_id) === String(taxId);
-        });
-        const taxDetail = {
-          ...(existingTax?.[taxDetailIdKey]
-            ? { [taxDetailIdKey]: existingTax[taxDetailIdKey] }
-            : existingTax?.tax_detail_id
-            ? { tax_detail_id: existingTax.tax_detail_id }
-            : {}),
-          [indexKey]: idx,
-          tax_id: taxId,
-          taxable_amount: lineTaxable,
-          tax_percentage: taxValue,
-          tax_amount: Number(calculateTaxAmount(lineTaxable, taxObj).toFixed(2)),
-        };
-        taxDetailsPayload.push(
-          docType === "sales_order"
-            ? { [indexKey]: idx, tax_id: taxId }
-            : taxDetail,
-        );
+        if (!activeTaxObj) return;
+
+        if (!isEditMode) {
+          // POST payload: exact format required by backend API docs
+          taxDetailsPayload.push({
+            [indexKey]: idx,
+            tax_id: numericTaxId,
+          });
+        } else {
+          // PUT payload: exact format required by backend API docs
+          const existingTax = initialData?.taxDetails?.find((tax: any) => {
+            const ref =
+              tax[itemIdKey] ??
+              tax[`${docType}_item_id`] ??
+              tax.quotation_item_id ??
+              tax.quotation_item_index;
+            return (
+              String(ref) === String(line[itemIdKey as keyof typeof line] ?? idx) &&
+              Number(tax.tax_id) === numericTaxId
+            );
+          });
+
+          const detailId = existingTax?.[taxDetailIdKey] ?? existingTax?.tax_detail_id;
+
+          taxDetailsPayload.push({
+            ...(detailId ? { tax_detail_id: Number(detailId) } : {}),
+            ...(line[itemIdKey as keyof typeof line]
+              ? { [itemIdKey]: Number(line[itemIdKey as keyof typeof line]) }
+              : { [indexKey]: idx }),
+            tax_id: numericTaxId,
+          });
+        }
       });
     });
 
@@ -413,6 +558,32 @@ export function DocumentForm({
     const payload = {
       party_id: Number(partyId),
       [dateKey]: docDate,
+      ...(docType === "debit_note"
+        ? {
+            debit_date: docDate,
+            ...(selectedInvoiceId
+              ? {
+                  purchase_invoice_id: Number(selectedInvoiceId),
+                  invoice_id: Number(selectedInvoiceId),
+                  pi_id: Number(selectedInvoiceId),
+                }
+              : {}),
+            reason_id: Number(reasonId || 1),
+          }
+        : {}),
+      ...(docType === "credit_note"
+        ? {
+            credit_date: docDate,
+            ...(selectedInvoiceId
+              ? {
+                  invoice_id: Number(selectedInvoiceId),
+                  sales_invoice_id: Number(selectedInvoiceId),
+                }
+              : {}),
+            reason_id: Number(reasonId || 1),
+          }
+        : {}),
+      ...(docType === "purchase_invoice" ? { invoice_date: docDate } : {}),
       ...(docType === "quotation" || docType === "proforma"
         ? { valid_until: validUntil || undefined }
         : {}),
@@ -448,7 +619,9 @@ export function DocumentForm({
         : {}),
       currency_id: 1,
       round_off: Number((Math.round(grandTotal) - grandTotal).toFixed(2)).toFixed(2),
-      notes,
+      notes: notes
+        ? (reasonText ? `${notes}\nReason: ${reasonText}` : notes)
+        : (reasonText ? `Reason: ${reasonText}` : ""),
       terms_conditions: terms,
       status,
       itemsDetails: itemsDetailsPayload,
@@ -545,7 +718,27 @@ export function DocumentForm({
               </label>
 
               <label className="altrex-field">
-                <span>Document Date *</span>
+                <span>
+                  {docType === "debit_note"
+                    ? "Debit Date *"
+                    : docType === "credit_note"
+                    ? "Credit Date *"
+                    : docType === "quotation"
+                    ? "Quotation Date *"
+                    : docType === "sales_order"
+                    ? "Order Date *"
+                    : docType === "proforma"
+                    ? "Proforma Date *"
+                    : docType === "delivery_challan"
+                    ? "Delivery Date *"
+                    : docType === "sales_invoice"
+                    ? "Invoice Date *"
+                    : docType === "purchase_order"
+                    ? "PO Date *"
+                    : docType === "purchase_invoice"
+                    ? "Purchase Invoice Date *"
+                    : "Document Date *"}
+                </span>
                 <input
                   type="date"
                   className="altrex-input"
@@ -625,6 +818,88 @@ export function DocumentForm({
                     />
                   </label>
                 </>
+              )}
+
+              {docType === "credit_note" && (
+                <label className="altrex-field">
+                  <span>Against Sales Invoice *</span>
+                  <select
+                    className="altrex-input altrex-select"
+                    value={selectedInvoiceId}
+                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
+                  >
+                    <option value="">Select Sales Invoice...</option>
+                    {salesInvoicesRes
+                      .filter(
+                        (inv: any) =>
+                          !partyId ||
+                          String(inv.party_id ?? inv.customer_id ?? inv.party?.party_id) === String(partyId),
+                      )
+                      .map((inv: any) => {
+                        const invId = inv.invoice_id ?? inv.id;
+                        const invNo = inv.invoice_no ?? inv.doc_no ?? `#${invId}`;
+                        return (
+                          <option key={invId} value={invId.toString()}>
+                            {invNo} {inv.total_amount ? `(₹${inv.total_amount})` : ""}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </label>
+              )}
+
+              {docType === "debit_note" && (
+                <label className="altrex-field">
+                  <span>Against Purchase Invoice *</span>
+                  <select
+                    className="altrex-input altrex-select"
+                    value={selectedInvoiceId}
+                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
+                  >
+                    <option value="">Select Purchase Invoice...</option>
+                    {purchaseInvoicesRes
+                      .filter(
+                        (inv: any) =>
+                          !partyId ||
+                          String(inv.party_id ?? inv.vendor_id ?? inv.party?.party_id) === String(partyId),
+                      )
+                      .map((inv: any) => {
+                        const invId = inv.purchase_invoice_id ?? inv.pi_id ?? inv.id;
+                        const invNo = inv.purchase_invoice_no ?? inv.pi_no ?? inv.doc_no ?? `#${invId}`;
+                        return (
+                          <option key={invId} value={invId.toString()}>
+                            {invNo} {inv.total_amount ? `(₹${inv.total_amount})` : ""}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </label>
+              )}
+
+              {(docType === "credit_note" || docType === "debit_note") && (
+                <label className="altrex-field">
+                  <span>Reason *</span>
+                  <select
+                    className="altrex-input altrex-select"
+                    value={reasonId}
+                    onChange={(e) => {
+                      setReasonId(e.target.value);
+                      const selectedObj = filteredReasons.find(
+                        (r: any) => String(r.reason_id ?? r.id) === e.target.value,
+                      );
+                      if (selectedObj) {
+                        setReasonText(selectedObj.reason_name ?? selectedObj.reason ?? selectedObj.name ?? "");
+                      }
+                    }}
+                  >
+                    <option value="">Select Reason...</option>
+                    {filteredReasons.map((r: any) => (
+                      <option key={r.reason_id ?? r.id} value={(r.reason_id ?? r.id).toString()}>
+                        {r.reason_name ?? r.reason ?? r.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
             </div>
 
