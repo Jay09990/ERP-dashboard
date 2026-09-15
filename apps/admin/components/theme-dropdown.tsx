@@ -15,6 +15,18 @@ export function ThemeDropdown() {
   const themePreference = useUiStore((state) => state.themePreference);
   const setThemePreference = useUiStore((state) => state.setThemePreference);
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   const currentTheme =
     themes.find((t) => t.value === themePreference) || themes[2];
@@ -36,12 +48,15 @@ export function ThemeDropdown() {
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
         className="altrex-icon-button"
         aria-label={`Theme preference, currently ${themePreference}`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
         title={`Theme: ${themePreference}`}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >
         <CurrentIcon size={20} />
