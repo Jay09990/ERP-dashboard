@@ -1,3 +1,5 @@
-## 2025-09-12 - Accessible Dropdown Menu Controls
-**Learning:** Custom dropdown triggers and popovers (like `ThemeDropdown`) lack native menu accessibility. Adding proper WAI-ARIA roles (`aria-haspopup="menu"`, `aria-expanded`, `role="menu"`, `role="menuitemradio"`, `aria-checked`), keyboard dismissal (`Escape`), and hiding decorative symbols (`aria-hidden="true"`) greatly enhances screen reader & keyboard user experience.
-**Action:** Always include menu accessibility attributes and an `Escape` key listener on custom toggle popover menus across apps.
+
+## 2025-05-18 - Accessibility and Keyboard Navigation for Dropdown Menus
+**Learning:** Dropdown menus in the header topbar (such as ThemeDropdown) lacked keyboard controls (`Escape` key listeners) and proper ARIA menu semantics (`role="menu"`, `role="menuitemradio"`, `aria-checked`, `aria-expanded`). Furthermore, backdrop click handlers should be semantic elements or buttons with `tabIndex={-1}` and `aria-hidden="true"` to satisfy accessibility linter rules (`useKeyWithClickEvents`).
+**Action:** Always include keyboard event listeners for floating dropdowns, use proper ARIA role attributes for menu/menuitem states, and use compliant backdrop elements.
+
