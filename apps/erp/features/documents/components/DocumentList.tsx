@@ -363,6 +363,7 @@ export function DocumentList({
           <div className="altrex-row-actions" style={{ display: "flex", gap: "8px" }}>
             <Button
               variant="outline"
+              aria-label={`Edit document #DOC-${id}`}
               onClick={() => {
                 setActiveDoc(d);
                 setIsOpenForm(true);
@@ -373,6 +374,7 @@ export function DocumentList({
             </Button>
             <Button
               variant="outline"
+              aria-label={`Print or view PDF for document #DOC-${id}`}
               onClick={() => printDocument(d, docType)}
               style={{ fontSize: "12px", padding: "4px 10px" }}
             >
@@ -380,6 +382,7 @@ export function DocumentList({
             </Button>
             <Button
               variant="outline"
+              aria-label={`Delete document #DOC-${id}`}
               onClick={() => {
                 if (confirm(`Are you sure you want to delete document #DOC-${id}?`)) {
                   deleteDoc(id);

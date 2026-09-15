@@ -411,6 +411,10 @@ body {
 }
 
 .altrex-icon-button:hover { background: var(--altrex-hover); color: var(--altrex-text); }
+.altrex-icon-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--altrex-primary) 80%, transparent);
+}
 
 .altrex-topbar-title { color: var(--altrex-muted); font-size: 14px; font-weight: 600; margin-right: auto; }
 .altrex-topbar-end { display: flex; align-items: center; gap: 8px; margin-left: auto; }
