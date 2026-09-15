@@ -50,6 +50,24 @@ interface DocumentFormProps {
   isSaving: boolean;
 }
 
+function getTaxValue(tax: any) {
+  return Number(
+    tax?.tax_percentage ??
+      tax?.percentage ??
+      tax?.tax_amount ??
+      tax?.amount ??
+      tax?.value ??
+      0,
+  );
+}
+
+function calculateTaxAmount(taxableAmount: number, tax: any) {
+  const taxValue = getTaxValue(tax);
+  return String(tax?.tax_type ?? "").toLowerCase() === "fixed"
+    ? taxValue
+    : (taxableAmount * taxValue) / 100;
+}
+
 export function DocumentForm({
   docType,
   title,
@@ -105,6 +123,7 @@ export function DocumentForm({
     initialData?.valid_until || initialData?.due_date || initialData?.expected_delivery_date || "",
   );
   const [customerPoNo, setCustomerPoNo] = useState<string>(initialData?.customer_po_no || "");
+  const [customerPoDate, setCustomerPoDate] = useState<string>(initialData?.customer_po_date || "");
   const [poNo, setPoNo] = useState<string>(initialData?.po_no || "");
   const [poDate, setPoDate] = useState<string>(initialData?.po_date || "");
   const [notes, setNotes] = useState<string>(initialData?.notes || "");
@@ -132,6 +151,7 @@ export function DocumentForm({
       unit_id: string;
       unit_rate: number;
       discount_percent: number;
+      discount_flat: number;
       selected_taxes: number[];
     }[]
   >(
@@ -152,6 +172,7 @@ export function DocumentForm({
       unit_id: item.unit_id?.toString() || "",
       unit_rate: Number(item.unit_rate || 0),
       discount_percent: Number(item.discount_percent || 0),
+      discount_flat: Number(item.discount_flat || 0),
       selected_taxes: (initialData?.taxDetails ?? [])
         .filter((tax: any) => {
           const ref =
@@ -178,6 +199,7 @@ export function DocumentForm({
         unit_id: "",
         unit_rate: 0,
         discount_percent: 0,
+        discount_flat: 0,
         selected_taxes: [],
       },
     ],
@@ -194,6 +216,7 @@ export function DocumentForm({
         unit_id: "",
         unit_rate: 0,
         discount_percent: 0,
+        discount_flat: 0,
         selected_taxes: [],
       },
     ]);
@@ -246,9 +269,8 @@ export function DocumentForm({
       sub += lineSub;
 
       line.selected_taxes.forEach((taxId) => {
-        const taxObj = taxTypes.find((t: any) => (t.tax_id ?? t.id) === taxId);
-        const rate = Number(taxObj?.tax_percentage ?? 0);
-        taxAmt += (lineSub * rate) / 100;
+        const taxObj = taxTypes.find((t: any) => String(t.tax_id ?? t.id) === String(taxId));
+        taxAmt += calculateTaxAmount(lineSub, taxObj);
       });
     });
 
@@ -293,7 +315,7 @@ export function DocumentForm({
       unit_id: line.unit_id ? Number(line.unit_id) : undefined,
       unit_rate: Number(line.unit_rate),
       discount_percent: Number(line.discount_percent),
-      discount_flat: 0,
+      discount_flat: Number(line.discount_flat),
     }));
 
     // Build tax details array linked by item index
@@ -343,13 +365,13 @@ export function DocumentForm({
         const taxObj = taxTypes.find(
           (tax: any) => String(tax.tax_id ?? tax.id) === String(taxId),
         );
-        const taxPercentage = Number(taxObj?.tax_percentage ?? 0);
+        const taxValue = getTaxValue(taxObj);
         const existingTax = initialData?.taxDetails?.find((tax: any) => {
           const ref = tax[`${docType}_item_id`] ?? tax.quotation_item_id ?? tax.quotation_item_index;
           return String(ref) === String(line[itemIdKey as keyof typeof line] ?? idx) &&
             String(tax.tax_id) === String(taxId);
         });
-        taxDetailsPayload.push({
+        const taxDetail = {
           ...(existingTax?.[taxDetailIdKey]
             ? { [taxDetailIdKey]: existingTax[taxDetailIdKey] }
             : existingTax?.tax_detail_id
@@ -358,9 +380,14 @@ export function DocumentForm({
           [indexKey]: idx,
           tax_id: taxId,
           taxable_amount: lineTaxable,
-          tax_percentage: taxPercentage,
-          tax_amount: Number(((lineTaxable * taxPercentage) / 100).toFixed(2)),
-        });
+          tax_percentage: taxValue,
+          tax_amount: Number(calculateTaxAmount(lineTaxable, taxObj).toFixed(2)),
+        };
+        taxDetailsPayload.push(
+          docType === "sales_order"
+            ? { [indexKey]: idx, tax_id: taxId }
+            : taxDetail,
+        );
       });
     });
 
@@ -398,8 +425,16 @@ export function DocumentForm({
         : {}),
       ...(docType === "sales_order"
         ? {
-            expected_delivery_date: validUntil || undefined,
-            customer_po_no: customerPoNo || undefined,
+            expected_delivery_date: validUntil || null,
+            quotation_id: initialData?.quotation_id ?? null,
+            quotation_no: initialData?.quotation_no ?? null,
+            customer_po_no: customerPoNo || null,
+            customer_po_date: customerPoDate || null,
+            billing_address_id: initialData?.billing_address_id ?? 1,
+            shipping_address_id: initialData?.shipping_address_id ?? 1,
+            shipping_charges: Number(initialData?.shipping_charges ?? 0),
+            paid_amount: Number(initialData?.paid_amount ?? 0),
+            payment_term_id: initialData?.payment_term_id ?? null,
           }
         : {}),
       ...(docType === "purchase_order" ||
@@ -542,15 +577,26 @@ export function DocumentForm({
               </label>
 
               {docType === "sales_order" && (
-                <label className="altrex-field">
-                  <span>Customer PO Number</span>
-                  <input
-                    className="altrex-input"
-                    placeholder="e.g. PO-8801"
-                    value={customerPoNo}
-                    onChange={(e) => setCustomerPoNo(e.target.value)}
-                  />
-                </label>
+                <>
+                  <label className="altrex-field">
+                    <span>Customer PO Number</span>
+                    <input
+                      className="altrex-input"
+                      placeholder="e.g. PO-8801"
+                      value={customerPoNo}
+                      onChange={(e) => setCustomerPoNo(e.target.value)}
+                    />
+                  </label>
+                  <label className="altrex-field">
+                    <span>Customer PO Date</span>
+                    <input
+                      type="date"
+                      className="altrex-input"
+                      value={customerPoDate}
+                      onChange={(e) => setCustomerPoDate(e.target.value)}
+                    />
+                  </label>
+                </>
               )}
 
               {docType === "sales_invoice" && (
@@ -603,7 +649,7 @@ export function DocumentForm({
                       <th>Item / Product</th>
                       <th>Qty</th>
                       <th>Unit Rate (₹)</th>
-                      <th>Disc (%)</th>
+                      <th>Disc (%) / Flat (₹)</th>
                       <th>Taxes</th>
                       <th>Action</th>
                     </tr>
@@ -678,6 +724,20 @@ export function DocumentForm({
                             }
                             style={{ height: "34px", fontSize: "13px" }}
                           />
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="altrex-input"
+                            placeholder="Flat ₹"
+                            value={line.discount_flat}
+                            onChange={(e) =>
+                              setLineItems((prev) =>
+                                prev.map((l, i) => (i === idx ? { ...l, discount_flat: Number(e.target.value) } : l)),
+                              )
+                            }
+                            style={{ height: "34px", fontSize: "13px", marginTop: "4px" }}
+                          />
                         </td>
                         <td>
                           <div
@@ -718,7 +778,7 @@ export function DocumentForm({
                                     cursor: "pointer",
                                   }}
                                 >
-                                  {t.tax_name} ({t.tax_percentage}%)
+                                  {t.tax_name} ({getTaxValue(t)}{String(t.tax_type).toLowerCase() === "fixed" ? "" : "%"})
                                 </button>
                               );
                             })}
