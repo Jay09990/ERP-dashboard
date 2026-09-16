@@ -1,7 +1,7 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useUiStore } from "@/stores/ui-store";
 
@@ -19,21 +19,6 @@ export function ThemeDropdown() {
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
-  const currentTheme =
-    themes.find((t) => t.value === themePreference) || themes[2];
-  const CurrentIcon = currentTheme.icon;
-
-  useEffect(() => {
-    if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -45,6 +30,10 @@ export function ThemeDropdown() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
+  const currentTheme =
+    themes.find((t) => t.value === themePreference) || themes[2];
+  const CurrentIcon = currentTheme.icon;
+
   return (
     <div className="relative">
       <button
@@ -55,8 +44,6 @@ export function ThemeDropdown() {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         title={`Theme: ${themePreference}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >
         <CurrentIcon size={20} />
