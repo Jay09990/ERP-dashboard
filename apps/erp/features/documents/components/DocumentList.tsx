@@ -3,7 +3,21 @@
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { Button, DataTable, FilterBar } from "@altrex/ui";
-import { CheckCircle, Clock, FileText, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Clock,
+  CreditCard,
+  FileText,
+  Mail,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { DocumentForm, type DocumentType } from "./DocumentForm";
 
@@ -542,8 +556,18 @@ export function DocumentList({
   useDelete,
 }: DocumentListProps) {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [activeDoc, setActiveDoc] = useState<any | null>(null);
   const [isOpenForm, setIsOpenForm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Sorting state
+  const [sortField, setSortField] = useState<string>("date");
+  const [sortAsc, setSortAsc] = useState<boolean>(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: responseData, isLoading, error } = useList();
   const docs = useMemo(
@@ -552,6 +576,10 @@ export function DocumentList({
         "quotations",
         "Quotations",
         "quotation",
+        "invoices",
+        "purchase_invoices",
+        "credit_notes",
+        "debit_notes",
         "documents",
         "items",
         "rows",
@@ -577,145 +605,214 @@ export function DocumentList({
     doc.debit_note_id ??
     doc.id;
 
+  const getDocNo = (doc: any) =>
+    doc.invoice_no ??
+    doc.purchase_invoice_no ??
+    doc.pi_no ??
+    doc.quotation_no ??
+    doc.sales_order_no ??
+    doc.proforma_no ??
+    doc.delivery_challan_no ??
+    doc.credit_note_no ??
+    doc.debit_note_no ??
+    doc.doc_no ??
+    `#${getId(doc)}`;
+
+  const getDate = (doc: any) =>
+    doc.invoice_date ??
+    doc.pi_date ??
+    doc.quotation_date ??
+    doc.sales_order_date ??
+    doc.proforma_date ??
+    doc.delivery_date ??
+    doc.credit_date ??
+    doc.credit_note_date ??
+    doc.debit_date ??
+    doc.debit_note_date ??
+    doc.purchase_order_date ??
+    doc.created_at ??
+    "";
+
+  const getDueDate = (doc: any) =>
+    doc.due_date ?? doc.valid_until ?? doc.expected_delivery_date ?? "";
+
+  const getPartyName = (doc: any) =>
+    doc.party_name ??
+    doc.company_name ??
+    doc.customer_name ??
+    doc.vendor_name ??
+    doc.party?.company_name ??
+    doc.party?.party_name ??
+    "N/A";
+
+  const getTaxAmount = (doc: any) => {
+    if (doc.total_tax_amount != null) return Number(doc.total_tax_amount);
+    if (Array.isArray(doc.itemsDetails)) {
+      return doc.itemsDetails.reduce((sum: number, i: any) => sum + Number(i.tax_amount || 0), 0);
+    }
+    return 0;
+  };
+
+  const getGrandTotal = (doc: any) => {
+    if (doc.total_amount != null) return Number(doc.total_amount);
+    if (doc.grand_total != null) return Number(doc.grand_total);
+    const sub = Number(doc.subtotal_amount || 0);
+    const tax = getTaxAmount(doc);
+    return sub + tax;
+  };
+
+  const getBalanceDue = (doc: any) => {
+    if (doc.balance_due != null) return Number(doc.balance_due);
+    const total = getGrandTotal(doc);
+    const paid = Number(doc.paid_amount || 0);
+    return total - paid;
+  };
+
+  const isVendorDoc = docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note";
+  const partyLabel = isVendorDoc ? "Vendor Name" : "Client Name";
+
+  // Filter & Search
   const filtered = useMemo(() => {
-    if (!search.trim()) return docs;
-    return docs.filter((d) =>
-      Object.values(d).some((val) => val && String(val).toLowerCase().includes(search.toLowerCase())),
-    );
-  }, [docs, search]);
+    let result = docs;
+    if (statusFilter) {
+      result = result.filter((d) => (d.status || "draft").toLowerCase() === statusFilter.toLowerCase());
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((d) =>
+        [getDocNo(d), getPartyName(d), d.notes, d.status].some(
+          (val) => val && String(val).toLowerCase().includes(q),
+        ),
+      );
+    }
+    return result;
+  }, [docs, search, statusFilter]);
 
-  const draftCount = docs.filter((d) => d.status === "draft").length;
-  const approvedCount = docs.filter((d) => d.status === "approved" || d.status === "sent").length;
+  // Sort
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    list.sort((a, b) => {
+      let valA: any = "";
+      let valB: any = "";
 
-  const columns = [
-    {
-      key: "id" as any,
-      label: "Document Ref",
-      render: (d: any) => {
-        const id = getId(d);
-        const date =
-          d.quotation_date ||
-          d.sales_order_date ||
-          d.proforma_date ||
-          d.delivery_date ||
-          d.invoice_date ||
-          d.purchase_order_date ||
-          d.credit_note_date ||
-          d.debit_note_date ||
-          d.created_at;
+      if (sortField === "date") {
+        valA = getDate(a);
+        valB = getDate(b);
+      } else if (sortField === "docNo") {
+        valA = getDocNo(a);
+        valB = getDocNo(b);
+      } else if (sortField === "party") {
+        valA = getPartyName(a);
+        valB = getPartyName(b);
+      } else if (sortField === "dueDate") {
+        valA = getDueDate(a);
+        valB = getDueDate(b);
+      } else if (sortField === "tax") {
+        valA = getTaxAmount(a);
+        valB = getTaxAmount(b);
+      } else if (sortField === "amount") {
+        valA = getGrandTotal(a);
+        valB = getGrandTotal(b);
+      } else if (sortField === "balance") {
+        valA = getBalanceDue(a);
+        valB = getBalanceDue(b);
+      } else {
+        valA = getId(a);
+        valB = getId(b);
+      }
 
-        return (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: "rgba(37,99,235,0.1)",
-                color: "var(--altrex-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                flexShrink: 0,
-              }}
-            >
-              <FileText size={18} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
-                #DOC-{id}
-              </span>
-              <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>
-                {date ? new Date(date).toLocaleDateString("en-IN") : "N/A"}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: "status" as any,
-      label: "Status",
-      render: (d: any) => {
-        const status = d.status || "draft";
-        const isApproved = status === "approved" || status === "sent";
-        return (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "3px 10px",
-              borderRadius: "12px",
-              fontSize: "12px",
-              fontWeight: 600,
-              background: isApproved ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)",
-              color: isApproved ? "#10b981" : "#f59e0b",
-            }}
-          >
-            <span
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                backgroundColor: isApproved ? "#10b981" : "#f59e0b",
-              }}
-            />
-            {status.toUpperCase()}
-          </span>
-        );
-      },
-    },
-    {
-      key: "action" as any,
-      label: "Actions",
-      render: (d: any) => {
-        const id = getId(d)?.toString() ?? "";
-        return (
-          <div className="altrex-row-actions" style={{ display: "flex", gap: "8px" }}>
-            <Button
-              variant="outline"
-              aria-label={`Edit document #DOC-${id}`}
-              onClick={() => {
-                setActiveDoc(d);
-                setIsOpenForm(true);
-              }}
-              style={{ fontSize: "12px", padding: "4px 10px" }}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              aria-label={`Print or view PDF for document #DOC-${id}`}
-              onClick={() => printDocument(d, docType)}
-              style={{ fontSize: "12px", padding: "4px 10px" }}
-            >
-              PDF
-            </Button>
-            <Button
-              variant="outline"
-              aria-label={`Delete document #DOC-${id}`}
-              onClick={() => {
-                if (confirm(`Are you sure you want to delete document #DOC-${id}?`)) {
-                  deleteDoc(id);
-                }
-              }}
-              disabled={isDeleting}
-              style={{
-                color: "var(--altrex-danger-text)",
-                borderColor: "rgba(220, 38, 38, 0.2)",
-                fontSize: "12px",
-                padding: "4px 10px",
-              }}
-            >
-              <Trash2 size={13} />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [filtered, sortField, sortAsc]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedDocs = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, safeCurrentPage, pageSize]);
+
+  // Calculate totals
+  const pageTaxTotal = useMemo(() => paginatedDocs.reduce((sum, d) => sum + getTaxAmount(d), 0), [paginatedDocs]);
+  const pageAmountTotal = useMemo(() => paginatedDocs.reduce((sum, d) => sum + getGrandTotal(d), 0), [paginatedDocs]);
+  const pageBalanceTotal = useMemo(() => paginatedDocs.reduce((sum, d) => sum + getBalanceDue(d), 0), [paginatedDocs]);
+
+  const grandTaxTotal = useMemo(() => sorted.reduce((sum, d) => sum + getTaxAmount(d), 0), [sorted]);
+  const grandAmountTotal = useMemo(() => sorted.reduce((sum, d) => sum + getGrandTotal(d), 0), [sorted]);
+  const grandBalanceTotal = useMemo(() => sorted.reduce((sum, d) => sum + getBalanceDue(d), 0), [sorted]);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set(paginatedDocs.map((d) => String(getId(d)))));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (idStr: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(idStr)) next.delete(idStr);
+      else next.add(idStr);
+      return next;
+    });
+  };
+
+  const fmtCurrency = (num: number) => {
+    return `₹ ${num.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+  };
+
+  const fmtTableDate = (d: string) => {
+    if (!d) return "—";
+    try {
+      const dateObj = new Date(d);
+      if (isNaN(dateObj.getTime())) return d;
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      return `${day} - ${month} - ${year}`;
+    } catch {
+      return d;
+    }
+  };
+
+  const exportCsv = () => {
+    const headers = ["Issue Date", "Doc No", "Status", partyLabel, "Due Date", "Tax", "Amount", "Balance", "Dr/Cr"];
+    const rows = sorted.map((d) => [
+      fmtTableDate(getDate(d)),
+      getDocNo(d),
+      d.status || "draft",
+      getPartyName(d),
+      fmtTableDate(getDueDate(d)),
+      getTaxAmount(d).toFixed(2),
+      getGrandTotal(d).toFixed(2),
+      getBalanceDue(d).toFixed(2),
+      docType === "credit_note" ? "Cr" : "Dr",
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.map((cell) => `"${cell}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${docType}_export_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleFormSubmit = (payload: any) => {
     if (activeDoc) {
@@ -741,151 +838,533 @@ export function DocumentList({
   const isSaving = isCreating || isUpdating;
 
   return (
-    <>
-      <div className="altrex-page-header">
-        <div>
-          <span className="altrex-eyebrow">{eyebrow}</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>{title}</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            {subtitle}
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setActiveDoc(null);
-            setIsOpenForm(true);
-          }}
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-        >
-          <Plus size={16} />
-          Create New Document
-        </Button>
-      </div>
-
-      {/* KPI Cards */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: 0 }}>
+      {/* Top Controls Toolbar matching user screenshot */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "16px",
-          marginBottom: "24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          background: "var(--altrex-surface)",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          border: "1px solid var(--altrex-border)",
         }}
       >
-        <div
-          className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
-        >
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "10px",
-              background: "rgba(37, 99, 235, 0.1)",
-              color: "var(--altrex-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          {/* Status Filter Dropdown */}
+          <select
+            className="altrex-input altrex-select"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
             }}
+            style={{ width: "160px", height: "36px", fontSize: "13px", background: "var(--altrex-canvas)", color: "var(--altrex-text)" }}
           >
-            <FileText size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
-              TOTAL DOCUMENTS
-            </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
-              {docs.length}
-            </div>
+            <option value="">Filter {title}</option>
+            <option value="draft">Draft</option>
+            <option value="approved">Approved</option>
+            <option value="sent">Sent</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          {/* Search Box */}
+          <div style={{ position: "relative", width: "240px" }}>
+            <Search
+              size={15}
+              style={{
+                position: "absolute",
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--altrex-muted)",
+              }}
+            />
+            <input
+              type="text"
+              className="altrex-input"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              style={{ paddingLeft: "32px", height: "36px", fontSize: "13px", width: "100%", background: "var(--altrex-canvas)", color: "var(--altrex-text)" }}
+            />
           </div>
         </div>
 
-        <div
-          className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
-        >
-          <div
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Green + New Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveDoc(null);
+              setIsOpenForm(true);
+            }}
             style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "10px",
-              background: "rgba(245, 158, 11, 0.1)",
-              color: "#f59e0b",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              justifyContent: "center",
+              gap: "6px",
+              backgroundColor: "#10b981",
+              color: "#ffffff",
+              fontWeight: 600,
+              fontSize: "13px",
+              padding: "7px 16px",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
             }}
           >
-            <Clock size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
-              DRAFT DOCUMENTS
-            </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
-              {draftCount}
-            </div>
-          </div>
-        </div>
+            <Plus size={16} />
+            + New
+          </button>
 
-        <div
-          className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
-        >
-          <div
+          {/* Export Button */}
+          <button
+            type="button"
+            onClick={exportCsv}
             style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "10px",
-              background: "rgba(16, 185, 129, 0.1)",
-              color: "#10b981",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              justifyContent: "center",
+              gap: "6px",
+              backgroundColor: "var(--altrex-raised)",
+              color: "var(--altrex-text)",
+              fontWeight: 600,
+              fontSize: "13px",
+              padding: "7px 16px",
+              borderRadius: "6px",
+              border: "1px solid var(--altrex-border)",
+              cursor: "pointer",
             }}
           >
-            <CheckCircle size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
-              APPROVED / SENT
-            </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
-              {approvedCount}
-            </div>
-          </div>
+            Export
+          </button>
         </div>
       </div>
 
-      <FilterBar>
-        <input
-          className="altrex-input"
-          placeholder="Search documents by reference, party, notes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: "320px" }}
-        />
-      </FilterBar>
+      {/* Main Table Matching Screenshot */}
+      <div
+        style={{
+          background: "var(--altrex-surface)",
+          borderRadius: "8px",
+          border: "1px solid var(--altrex-border)",
+          overflowX: "auto",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "12.5px",
+            color: "var(--altrex-text)",
+            textAlign: "left",
+          }}
+        >
+          <thead>
+            <tr style={{ background: "var(--altrex-raised)", borderBottom: "1px solid var(--altrex-border)", color: "var(--altrex-text)" }}>
+              <th style={{ padding: "10px 12px", width: "36px", textAlign: "center" }}>
+                <input
+                  type="checkbox"
+                  onChange={handleSelectAll}
+                  checked={
+                    paginatedDocs.length > 0 &&
+                    paginatedDocs.every((d) => selectedIds.has(String(getId(d))))
+                  }
+                  style={{ cursor: "pointer" }}
+                />
+              </th>
+              <th
+                onClick={() => handleSort("date")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                Issue Date <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th
+                onClick={() => handleSort("docNo")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                Doc. No. <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th style={{ padding: "10px 12px", fontWeight: 700, whiteSpace: "nowrap" }}>Status</th>
+              <th
+                onClick={() => handleSort("party")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                {partyLabel} <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th
+                onClick={() => handleSort("dueDate")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                Due Date <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th
+                onClick={() => handleSort("tax")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", textAlign: "right", whiteSpace: "nowrap" }}
+              >
+                Tax <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th
+                onClick={() => handleSort("amount")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", textAlign: "right", whiteSpace: "nowrap" }}
+              >
+                Amount <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th style={{ padding: "10px 12px", fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" }}>
+                Date of Payment
+              </th>
+              <th
+                onClick={() => handleSort("balance")}
+                style={{ padding: "10px 12px", fontWeight: 700, cursor: "pointer", textAlign: "right", whiteSpace: "nowrap" }}
+              >
+                Balance <ArrowUpDown size={12} style={{ display: "inline", marginLeft: "4px" }} />
+              </th>
+              <th style={{ padding: "10px 12px", fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" }}>
+                Dr/Cr
+              </th>
+              <th style={{ padding: "10px 12px", fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" }}>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={12} style={{ padding: "32px", textAlign: "center", color: "var(--altrex-muted)" }}>
+                  <span className="altrex-spinner" /> Loading documents...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={12} style={{ padding: "32px", textAlign: "center", color: "#ef4444" }}>
+                  Failed to load documents from server.
+                </td>
+              </tr>
+            ) : paginatedDocs.length === 0 ? (
+              <tr>
+                <td colSpan={12} style={{ padding: "32px", textAlign: "center", color: "var(--altrex-muted)" }}>
+                  No documents found.
+                </td>
+              </tr>
+            ) : (
+              paginatedDocs.map((doc) => {
+                const idStr = String(getId(doc));
+                const isSelected = selectedIds.has(idStr);
+                const docNo = getDocNo(doc);
+                const isApproved = (doc.status || "draft") === "approved" || (doc.status || "draft") === "sent";
 
-      {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading documents...</span>
+                return (
+                  <tr
+                    key={idStr}
+                    style={{
+                      borderBottom: "1px solid var(--altrex-line)",
+                      backgroundColor: isSelected ? "color-mix(in srgb, var(--altrex-primary) 10%, transparent)" : "transparent",
+                    }}
+                  >
+                    <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectRow(idStr)}
+                        style={{ cursor: "pointer" }}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--altrex-muted)", whiteSpace: "nowrap" }}>
+                      {fmtTableDate(getDate(doc))}
+                    </td>
+                    <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => printDocument(doc, docType)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "var(--altrex-link)",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          padding: 0,
+                          textDecoration: "none",
+                        }}
+                      >
+                        {docNo}
+                      </button>
+                    </td>
+                    <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span title={isApproved ? "Sent" : "Not Sent"} style={{ display: "inline-flex" }}>
+                          <Mail size={14} style={{ color: isApproved ? "#10b981" : "#ef4444", cursor: "pointer" }} />
+                        </span>
+                        <span title={isApproved ? "Paid / Approved" : "Unpaid"} style={{ display: "inline-flex" }}>
+                          <CreditCard size={14} style={{ color: isApproved ? "#10b981" : "#ef4444", cursor: "pointer" }} />
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--altrex-text)", maxWidth: "200px" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          maxWidth: "100%",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={getPartyName(doc)}
+                      >
+                        {getPartyName(doc)}
+                      </span>
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "var(--altrex-muted)", whiteSpace: "nowrap" }}>
+                      {fmtTableDate(getDueDate(doc))}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      {fmtCurrency(getTaxAmount(doc))}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      {fmtCurrency(getGrandTotal(doc))}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "center", color: "var(--altrex-muted)" }}>
+                      {doc.payment_date ? fmtTableDate(doc.payment_date) : "—"}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                      {fmtCurrency(getBalanceDue(doc))}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "center", color: "var(--altrex-muted)" }}>
+                      {docType === "credit_note" ? "Cr" : "Dr"}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "center", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveDoc(doc);
+                            setIsOpenForm(true);
+                          }}
+                          style={{
+                            background: "var(--altrex-raised)",
+                            color: "var(--altrex-text)",
+                            border: "1px solid var(--altrex-border)",
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            fontSize: "11.5px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printDocument(doc, docType)}
+                          style={{
+                            background: "var(--altrex-raised)",
+                            color: "var(--altrex-text)",
+                            border: "1px solid var(--altrex-border)",
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            fontSize: "11.5px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          PDF
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete document ${docNo}?`)) {
+                              deleteDoc(idStr);
+                            }
+                          }}
+                          disabled={isDeleting}
+                          style={{
+                            background: "rgba(220, 38, 38, 0.08)",
+                            color: "#dc2626",
+                            border: "1px solid rgba(220, 38, 38, 0.2)",
+                            borderRadius: "4px",
+                            padding: "2px 6px",
+                            fontSize: "11.5px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+
+          {/* Footer Totals Row matching Screenshot */}
+          <tfoot style={{ background: "var(--altrex-raised)", fontWeight: 700, borderTop: "2px solid var(--altrex-border)", color: "var(--altrex-text)" }}>
+            <tr>
+              <td colSpan={6} style={{ padding: "10px 12px", color: "var(--altrex-text)" }}>
+                Totals on page
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(pageTaxTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(pageAmountTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "center" }}>—</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(pageBalanceTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                {docType === "credit_note" ? "Cr" : "Dr"}
+              </td>
+              <td />
+            </tr>
+            <tr style={{ borderTop: "1px solid var(--altrex-line)" }}>
+              <td colSpan={6} style={{ padding: "10px 12px", color: "var(--altrex-text)" }}>
+                Total
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(grandTaxTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(grandAmountTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "center" }}>—</td>
+              <td style={{ padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                {fmtCurrency(grandBalanceTotal)}
+              </td>
+              <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                {docType === "credit_note" ? "Cr" : "Dr"}
+              </td>
+              <td />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Pagination Controls Footer matching Screenshot */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          padding: "8px 4px",
+        }}
+      >
+        {/* Page Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <button
+            type="button"
+            onClick={() => setCurrentPage(1)}
+            disabled={safeCurrentPage === 1}
+            style={{
+              padding: "4px 8px",
+              border: "1px solid var(--altrex-border)",
+              background: "var(--altrex-surface)",
+              color: "var(--altrex-text)",
+              borderRadius: "4px",
+              cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
+              opacity: safeCurrentPage === 1 ? 0.4 : 1,
+            }}
+          >
+            <ChevronsLeft size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={safeCurrentPage === 1}
+            style={{
+              padding: "4px 8px",
+              border: "1px solid var(--altrex-border)",
+              background: "var(--altrex-surface)",
+              color: "var(--altrex-text)",
+              borderRadius: "4px",
+              cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
+              opacity: safeCurrentPage === 1 ? 0.4 : 1,
+            }}
+          >
+            <ChevronLeft size={14} />
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 2)
+            .map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setCurrentPage(p)}
+                style={{
+                  padding: "4px 10px",
+                  fontSize: "12.5px",
+                  fontWeight: p === safeCurrentPage ? 700 : 500,
+                  border: "1px solid var(--altrex-border)",
+                  background: p === safeCurrentPage ? "var(--altrex-primary)" : "var(--altrex-surface)",
+                  color: p === safeCurrentPage ? "#ffffff" : "var(--altrex-text)",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {p}
+              </button>
+            ))}
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safeCurrentPage === totalPages}
+            style={{
+              padding: "4px 8px",
+              border: "1px solid var(--altrex-border)",
+              background: "var(--altrex-surface)",
+              color: "var(--altrex-text)",
+              borderRadius: "4px",
+              cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
+              opacity: safeCurrentPage === totalPages ? 0.4 : 1,
+            }}
+          >
+            <ChevronRight size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={safeCurrentPage === totalPages}
+            style={{
+              padding: "4px 8px",
+              border: "1px solid var(--altrex-border)",
+              background: "var(--altrex-surface)",
+              color: "var(--altrex-text)",
+              borderRadius: "4px",
+              cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
+              opacity: safeCurrentPage === totalPages ? 0.4 : 1,
+            }}
+          >
+            <ChevronsRight size={14} />
+          </button>
         </div>
-      ) : error ? (
-        <div className="altrex-table-state altrex-table-state-error">
-          Failed to load documents from backend server.
+
+        {/* Page Size Selector */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <select
+            className="altrex-input altrex-select"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            style={{ height: "32px", fontSize: "12.5px", width: "120px", background: "var(--altrex-surface)", color: "var(--altrex-text)", border: "1px solid var(--altrex-border)" }}
+          >
+            <option value={10}>10 per page</option>
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+          </select>
         </div>
-      ) : (
-        <DataTable
-          columns={columns.map((c) => ({
-            key: c.key,
-            label: c.label,
-            ...(c.render ? { render: c.render } : {}),
-          }))}
-          data={filtered}
-          rowKey={(d, idx) => getId(d) ?? idx}
-        />
-      )}
+      </div>
 
       {isOpenForm && (
         <DocumentForm
@@ -901,6 +1380,6 @@ export function DocumentList({
           isSaving={isSaving}
         />
       )}
-    </>
+    </div>
   );
 }
