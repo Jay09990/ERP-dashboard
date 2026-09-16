@@ -91,10 +91,32 @@ export function VendorList() {
           { key: "phone", label: "Phone" },
           { key: "gst_no", label: "GST Number" },
           { key: "status", label: "Status" },
+          {
+            key: "id",
+            label: "Actions",
+            render: (vendor) => (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => handleEdit(vendor as any)}
+                  className="altrex-button altrex-button-secondary"
+                  style={{ padding: "4px 8px", fontSize: "12px" }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => vendor.id && handleDelete(vendor.id)}
+                  className="altrex-button altrex-button-danger"
+                  style={{ padding: "4px 8px", fontSize: "12px" }}
+                >
+                  Delete
+                </button>
+              </div>
+            ),
+          },
         ]}
         data={vendors}
-        onEdit={handleEdit}
-        onDelete={(vendor) => handleDelete(vendor.id!)}
       />
 
       {showForm && (

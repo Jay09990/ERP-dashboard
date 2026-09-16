@@ -3,10 +3,10 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Trash2, Plus } from "lucide-react";
 import { Input } from "@altrex/ui";
-import type { AddressFormValues } from "../schema";
+import type { PartyFormValues } from "../schema";
 
 export function AddressRepeater() {
-  const { control } = useFormContext<AddressFormValues>();
+  const { control } = useFormContext<PartyFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "addresses",

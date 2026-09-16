@@ -34,6 +34,7 @@ export const partySchema = z.object({
   contactPersons: z.array(contactPersonSchema).min(1, "At least one contact person is required"),
 });
 
+export type PartyType = "customer" | "vendor";
 export type PartyFormValues = z.infer<typeof partySchema>;
 export type AddressFormValues = z.infer<typeof addressSchema>;
 export type ContactPersonFormValues = z.infer<typeof contactPersonSchema>;
