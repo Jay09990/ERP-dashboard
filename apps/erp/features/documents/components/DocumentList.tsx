@@ -59,7 +59,7 @@ const DOCUMENT_PRINT_CONFIG: Record<
   delivery_challan: { endpoint: endpoints.documents.deliveryChallanDetail, keys: ["delivery_challan"],                label: "DELIVERY CHALLAN",  refLabel: "Challan #",       dateKey: "delivery_date",       itemIdKey: "delivery_challan_item_id",taxRefKey: "delivery_challan_item_id" },
   sales_invoice:    { endpoint: endpoints.documents.invoiceDetail,         keys: ["invoice"],                         label: "TAX INVOICE",      refLabel: "Invoice #",       dateKey: "invoice_date",        itemIdKey: "invoice_item_id",         taxRefKey: "invoice_item_id" },
   purchase_order:   { endpoint: endpoints.documents.purchaseOrderDetail,   keys: ["purchase_order"],                  label: "PURCHASE ORDER",   refLabel: "PO #",            dateKey: "purchase_order_date", itemIdKey: "purchase_order_item_id",  taxRefKey: "purchase_order_item_id" },
-  purchase_invoice: { endpoint: endpoints.documents.purchaseInvoiceDetail, keys: ["purchase_invoice"],                label: "PURCHASE INVOICE", refLabel: "Bill #",          dateKey: "purchase_invoice_date",itemIdKey: "purchase_invoice_item_id",taxRefKey: "purchase_invoice_item_id" },
+  purchase_invoice: { endpoint: endpoints.documents.purchaseInvoiceDetail, keys: ["purchase_invoice"],                label: "PURCHASE BILL",    refLabel: "Bill #",          dateKey: "purchase_invoice_date",itemIdKey: "purchase_invoice_item_id",taxRefKey: "purchase_invoice_item_id" },
   credit_note:      { endpoint: endpoints.documents.creditNoteDetail,      keys: ["credit_note"],                     label: "CREDIT NOTE",      refLabel: "Credit Note #",   dateKey: "credit_note_date",    itemIdKey: "credit_note_item_id",     taxRefKey: "credit_note_item_id" },
   debit_note:       { endpoint: endpoints.documents.debitNoteDetail,       keys: ["debit_note"],                      label: "DEBIT NOTE",       refLabel: "Debit Note #",    dateKey: "debit_note_date",     itemIdKey: "debit_note_item_id",      taxRefKey: "debit_note_item_id" },
 };
@@ -151,10 +151,10 @@ async function printDocument(document: any, docType: DocumentType) {
   const date = quotation[config.dateKey] ?? quotation.debit_date ?? quotation.debit_note_date ??
     quotation.credit_date ?? quotation.credit_note_date ?? quotation.quotation_date ??
     quotation.sales_order_date ?? quotation.invoice_date ?? quotation.delivery_date ?? quotation.created_at ?? "";
-  const validUntil = quotation.valid_until ?? quotation.due_date ?? "";
+  const validUntil = quotation.valid_until ?? quotation.due_date ?? quotation.shipping_date ?? quotation.expected_delivery_date ?? "";
   const docRefNo = quotation.quotation_no ?? quotation.sales_order_no ?? quotation.proforma_no ??
     quotation.invoice_no ?? quotation.purchase_order_no ?? quotation.purchase_invoice_no ??
-    quotation.credit_note_no ?? quotation.debit_note_no ?? quotation.doc_no ?? `#${documentId}`;
+    quotation.pi_no ?? quotation.credit_note_no ?? quotation.debit_note_no ?? quotation.doc_no ?? `#${documentId}`;
 
   const customerName =
     customerData.party_name ??
@@ -167,8 +167,10 @@ async function printDocument(document: any, docType: DocumentType) {
 
   const lookup = (list: any[], id: any) =>
     list.find((entry) => String(entry.unit_id ?? entry.tax_id ?? entry.bank_id ?? entry.city_id ?? entry.state_id ?? entry.country_id ?? entry.id) === String(id)) ?? {};
-  const money = (value: any) => Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-  const fmtDate = (d: string) => { try { return d ? new Date(d).toLocaleDateString("en-IN") : ""; } catch { return d ?? ""; } };
+  const money = (value: any) => Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  const fmtDate = (d: string) => { try { return d ? new Date(d).toLocaleDateString("en-GB").replace(/\//g, " - ") : ""; } catch { return d ?? ""; } };
+
+  const hasDiscountInItems = items.some((item: any) => Number(item.discount_flat || 0) > 0 || Number(item.discount_percent || 0) > 0);
 
   const rows = items.map((item: any, index: number) => {
     const quantity = Number(item.quantity || 0);
@@ -176,13 +178,14 @@ async function printDocument(document: any, docType: DocumentType) {
     const flatDiscount = Number(item.discount_flat ?? 0);
     const pctDiscount = Number(item.discount_percent ?? 0);
     const grossRate = item.total_rate != null ? Number(item.total_rate) : quantity * rate;
+    const discAmt = flatDiscount > 0 ? flatDiscount : grossRate * (pctDiscount / 100);
     const taxable = item.taxable_value != null
       ? Number(item.taxable_value)
       : (item.total_rate != null && (flatDiscount > 0 || pctDiscount > 0))
-      ? (grossRate - (flatDiscount || (grossRate * (pctDiscount / 100))))
+      ? (grossRate - discAmt)
       : (item.total_amount != null && item.tax_amount != null)
       ? (Number(item.total_amount) - Number(item.tax_amount))
-      : (grossRate - (flatDiscount || (grossRate * (pctDiscount / 100))));
+      : (grossRate - discAmt);
 
     const unit = lookup(units, item.unit_id);
     const allTaxDetails = Array.isArray(quotation.taxDetails) ? quotation.taxDetails : [];
@@ -202,18 +205,32 @@ async function printDocument(document: any, docType: DocumentType) {
     const cgstAmt = cgst ? Number(cgst.tax_amount) : (igst ? Number(igst.tax_amount) : (itemTaxes.length === 1 ? Number(itemTaxes[0].tax_amount) : (itemTaxSum > 0 && !sgst ? itemTaxSum / 2 : 0)));
     const sgstAmt = sgst ? Number(sgst.tax_amount) : (itemTaxes.length > 1 ? Number(itemTaxes[1].tax_amount) : (itemTaxSum > 0 && !cgst && !igst ? itemTaxSum / 2 : 0));
 
+    const cgstPctVal = cgst?.tax_percent ?? (cgstAmt > 0 && taxable > 0 ? (cgstAmt / taxable) * 100 : 9);
+    const sgstPctVal = sgst?.tax_percent ?? (sgstAmt > 0 && taxable > 0 ? (sgstAmt / taxable) * 100 : 9);
+
     const lineTotal = item.total_amount != null ? Number(item.total_amount) : (taxable + itemTaxSum);
     const uomStr = escapeHtml(unit.unit_code ?? unit.unit_name ?? item.unit_name ?? "NOS");
+
+    if (docType === "delivery_challan") {
+      return `<tr>
+        <td class="center">${index + 1}</td>
+        <td><strong>${escapeHtml(item.item_name ?? item.description ?? "Line item")}</strong>${item.item_name && item.description ? `<br><span style="color:#64748b;font-size:8.5px">${escapeHtml(item.description)}</span>` : ""}</td>
+        <td class="center">${escapeHtml(item.hsn_code ?? "")}</td>
+        <td class="num"><strong>${quantity.toFixed(2)}</strong><br><span style="font-size:7.5px;color:#475569">${uomStr}</span></td>
+      </tr>`;
+    }
+
     return `<tr>
       <td class="center">${index + 1}</td>
       <td><strong>${escapeHtml(item.item_name ?? item.description ?? "Line item")}</strong>${item.item_name && item.description ? `<br><span style="color:#64748b;font-size:8.5px">${escapeHtml(item.description)}</span>` : ""}</td>
       <td class="center">${escapeHtml(item.hsn_code ?? "")}</td>
-      <td class="center">${quantity}<br><span style="font-size:7.5px;color:#475569">${uomStr}</span></td>
+      <td class="num">${quantity.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}<br><span style="font-size:7.5px;color:#475569">${uomStr}</span></td>
       <td class="num">${money(rate)}</td>
+      ${hasDiscountInItems ? `<td class="num">${money(discAmt)}${pctDiscount > 0 ? `<br><span style="font-size:7.5px;color:#475569">${pctDiscount}%</span>` : ""}</td>` : ""}
       <td class="num">${money(taxable)}</td>
-      <td class="num">${money(cgstAmt)}</td>
-      <td class="num">${money(sgstAmt)}</td>
-      <td class="num">${money(lineTotal)}</td>
+      <td class="num">${money(cgstAmt)}<br><span style="font-size:7.5px;color:#475569">${cgstPctVal}%</span></td>
+      <td class="num">${money(sgstAmt)}<br><span style="font-size:7.5px;color:#475569">${sgstPctVal}%</span></td>
+      <td class="num"><strong>${money(lineTotal)}</strong></td>
     </tr>`;
   }).join("");
 
@@ -262,6 +279,13 @@ async function printDocument(document: any, docType: DocumentType) {
 
   const bank = lookup(bankRows, company.bank_id);
 
+  const placeOfSupply = () => {
+    const stateObj = lookup(stateRows, billingAddress.state_id ?? company.state_id);
+    const code = stateObj.state_code ?? stateObj.code ?? "GJ (24)";
+    const name = stateObj.state_name ?? stateObj.name ?? "GJ";
+    return `${name} (${code.replace(/^(GJ|IN-)?/i, "")})`;
+  };
+
   const addressText = (addr: any) => {
     const parts = [
       addr.address_line1,
@@ -296,15 +320,25 @@ async function printDocument(document: any, docType: DocumentType) {
       ${attention ? `<p style="margin:1px 0;color:#475569;font-size:9.5px">${escapeHtml(attention)}</p>` : ""}
       ${addrStr ? `<p style="margin:1px 0;color:#475569;font-size:9.5px">${escapeHtml(addrStr)}</p>` : ""}
       ${addrPhone ? `<p style="margin:1px 0;color:#475569;font-size:9.5px">Ph: ${escapeHtml(addrPhone)}</p>` : ""}
-      ${customerData.gst_no ? `<p style="margin:1px 0;color:#475569;font-size:9.5px">GSTIN: ${escapeHtml(customerData.gst_no)}</p>` : ""}
+      ${customerData.gst_no ? `<p style="margin:1px 0;color:#475569;font-size:9.5px"><strong>GSTIN:</strong> ${escapeHtml(customerData.gst_no)}</p>` : ""}
     </div>`;
   };
 
+  const isCopyLabelDoc = docType === "sales_invoice" || docType === "purchase_invoice";
+  const isCreditNote = docType === "credit_note";
+  const isDebitNote = docType === "debit_note";
+  const isDeliveryChallan = docType === "delivery_challan";
+
+  const origInvoiceNo = quotation.invoice_no ?? quotation.sales_invoice_no ?? quotation.purchase_invoice_no ?? quotation.pi_no ?? "";
+  const origInvoiceDate = quotation.invoice_date ?? quotation.pi_date ?? quotation.document_date ?? "";
+  const origDocNo = quotation.doc_no ?? quotation.document_no ?? quotation.purchase_invoice_no ?? quotation.pi_no ?? "";
+  const origDocDate = quotation.doc_date ?? quotation.document_date ?? quotation.pi_date ?? "";
+
   popup.document.open();
   popup.document.write(`<!doctype html>
-<html><head><title>${escapeHtml(config.label)} #${escapeHtml(String(documentId))}</title>
+<html><head><title>${escapeHtml(config.label)} #${escapeHtml(String(docRefNo))}</title>
 <style>
-  @page { size: A4 portrait; margin: 5px; }
+  @page { size: A4 portrait; margin: 8px; }
   * {
     box-sizing: border-box;
     -webkit-print-color-adjust: exact !important;
@@ -323,9 +357,9 @@ async function printDocument(document: any, docType: DocumentType) {
     }
   }
   body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; margin: 0; padding: 0; font-size: 9.5px; background: #ffffff; }
-  .page { position: relative; padding: 10px; width: 100%; margin: 0 auto; }
+  .page { position: relative; padding: 12px; width: 100%; margin: 0 auto; }
   header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-  p { margin: 1px 0; line-height: 1.3; }
+  p { margin: 1px 0; line-height: 1.35; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px; }
   table.items-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px; }
   table.items-table th { background-color: #2b5b84 !important; color: #ffffff !important; font-weight: 700; text-transform: uppercase; padding: 6px 4px; border: 1px solid #2b5b84; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -335,7 +369,7 @@ async function printDocument(document: any, docType: DocumentType) {
   .total-row td { font-weight: 700; background-color: #f8fafc !important; border-top: 2px solid #2b5b84; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .summary-section { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 14px; gap: 20px; }
   .bank-box { font-size: 9.5px; color: #334155; line-height: 1.5; }
-  .totals-box { text-align: right; font-size: 10px; line-height: 1.6; }
+  .totals-box { text-align: right; font-size: 10px; line-height: 1.65; min-width: 320px; }
   .terms-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; pt: 10px; border-top: 1px solid #e2e8f0; }
   .terms-box { max-width: 65%; font-size: 9px; color: #334155; }
   .terms-box ol { margin: 4px 0 0 14px; padding: 0; }
@@ -344,45 +378,82 @@ async function printDocument(document: any, docType: DocumentType) {
 </style></head><body>
 <section class="page">
   <header>
-    <div style="max-width:58%">
+    <div style="max-width:56%">
       ${company.logo ? `<img src="${company.logo}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
-      <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:2px">${escapeHtml(company.company_name ?? "Company Name")}</div>
+      <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:2px">${escapeHtml(company.company_name ?? "Teton Projects Pvt. Ltd.")}</div>
       ${companyAddressText() ? `<p style="color:#475569">${escapeHtml(companyAddressText())}</p>` : ""}
       ${company.phone ? `<p style="color:#475569">+91${escapeHtml(company.phone.replace(/^(\+91|91)/, ""))}</p>` : ""}
       ${company.email ? `<p style="color:#475569">${escapeHtml(company.email)}</p>` : ""}
-      <p style="color:#475569"><strong>GSTIN:</strong> ${escapeHtml(company.gst_no ?? "N/A")} ${company.website ? `&nbsp;<strong>Website:</strong> ${escapeHtml(company.website)}` : ""}</p>
+      <p style="color:#475569"><strong>GSTIN:</strong> ${escapeHtml(company.gst_no ?? "24AAHCT3033A1ZZ")} ${company.website ? `&nbsp;<strong>Website:</strong> ${escapeHtml(company.website)}` : ""}</p>
       ${company.contact_name ? `<p style="color:#475569"><strong>Contact Name:</strong> ${escapeHtml(company.contact_name)}</p>` : ""}
     </div>
 
-    <div style="width:38%;text-align:right">
+    <div style="width:40%;text-align:right">
+      ${isCopyLabelDoc ? `<div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:2px">Original Copy</div>` : ""}
       <div style="font-size:22px;font-weight:700;color:#0f172a;letter-spacing:0.5px">${config.label}</div>
       <div style="font-size:13px;font-weight:700;color:#334155;margin-bottom:8px">${escapeHtml(docRefNo)}</div>
       
+      ${!isDeliveryChallan ? `
       <div style="background-color:#2b5b84!important;color:#ffffff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;border-radius:2px;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:600">Amount Due:</span>
+        <span style="font-size:11px;font-weight:600">${isCreditNote ? "Credits Available:" : "Amount Due:"}</span>
         <span style="font-size:14px;font-weight:700">INR ${money(total)}</span>
       </div>
+      ` : ""}
 
       <div style="font-size:9.5px;color:#334155;line-height:1.5">
-        <div><strong>Issue Date:</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${escapeHtml(fmtDate(date))}</div>
-        ${validUntil ? `<div><strong>Valid Until:</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${escapeHtml(fmtDate(validUntil))}</div>` : ""}
+        ${isCreditNote ? `
+          <div><strong>Date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(date))}</div>
+          ${origInvoiceNo ? `<div><strong>Invoice no:</strong> &nbsp;&nbsp; ${escapeHtml(origInvoiceNo)}</div>` : ""}
+          ${origInvoiceDate ? `<div><strong>Invoice date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(origInvoiceDate))}</div>` : ""}
+          <div><strong>Place of Supply:</strong> &nbsp;&nbsp; ${escapeHtml(placeOfSupply())}</div>
+        ` : isDebitNote ? `
+          <div><strong>Date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(date))}</div>
+          ${origDocNo ? `<div><strong>Document no:</strong> &nbsp;&nbsp; ${escapeHtml(origDocNo)}</div>` : ""}
+          ${origDocDate ? `<div><strong>Document date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(origDocDate))}</div>` : ""}
+          ${origInvoiceNo ? `<div><strong>Invoice No.:</strong> &nbsp;&nbsp; ${escapeHtml(origInvoiceNo)}</div>` : ""}
+          <div><strong>Place of Supply:</strong> &nbsp;&nbsp; ${escapeHtml(placeOfSupply())}</div>
+        ` : isDeliveryChallan ? `
+          <div><strong>Date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(date))}</div>
+          <div><strong>Shipping Date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(validUntil || date))}</div>
+          <div><strong>Place of Supply:</strong> &nbsp;&nbsp; ${escapeHtml(placeOfSupply())}</div>
+        ` : `
+          <div><strong>Issue Date:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(date))}</div>
+          ${validUntil ? `<div><strong>${docType === "quotation" || docType === "purchase_order" ? "Valid Until" : "Due Date"}:</strong> &nbsp;&nbsp; ${escapeHtml(fmtDate(validUntil))}</div>` : ""}
+          <div><strong>Place of Supply:</strong> &nbsp;&nbsp; ${escapeHtml(placeOfSupply())}</div>
+        `}
       </div>
     </div>
   </header>
 
   <div class="grid">
-    ${partyBoxHtml(docType === "purchase_order" || docType === "purchase_invoice" ? "Bill To" : "Quote To", billingAddress)}
-    ${partyBoxHtml(docType === "delivery_challan" ? "Deliver To" : "Ship To", shippingAddress)}
+    ${partyBoxHtml(docType === "quotation" ? "Quote To" : (docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note" ? "Vendor" : "Bill To"), billingAddress)}
+    ${partyBoxHtml("Ship To", shippingAddress)}
   </div>
 
+  ${isDeliveryChallan ? `
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width:6%">S.No</th>
+        <th style="width:54%">Item Description</th>
+        <th style="width:20%">HSN</th>
+        <th style="width:20%">Qty<br><span style="font-size:7.5px;font-weight:400">UoM</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || "<tr><td colspan=\"4\" class=\"center\">No line items</td></tr>"}
+    </tbody>
+  </table>
+  ` : `
   <table class="items-table">
     <thead>
       <tr>
         <th style="width:4%">S.No</th>
-        <th style="width:28%">Item Description</th>
+        <th style="width:${hasDiscountInItems ? '24%' : '28%'}">Item Description</th>
         <th style="width:10%">HSN/SAC</th>
         <th style="width:8%">Qty<br><span style="font-size:7.5px;font-weight:400">UoM</span></th>
-        <th style="width:11%">Price<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>
+        <th style="width:10%">Price<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>
+        ${hasDiscountInItems ? `<th style="width:10%">Discount<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>` : ""}
         <th style="width:12%">Taxable Value<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>
         <th style="width:9%">CGST<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>
         <th style="width:9%">SGST<br><span style="font-size:7.5px;font-weight:400">(INR)</span></th>
@@ -390,9 +461,9 @@ async function printDocument(document: any, docType: DocumentType) {
       </tr>
     </thead>
     <tbody>
-      ${rows || "<tr><td colspan=\"9\" class=\"center\">No line items</td></tr>"}
+      ${rows || `<tr><td colspan="${hasDiscountInItems ? 10 : 9}" class="center">No line items</td></tr>`}
       <tr class="total-row">
-        <td colspan="5" style="text-align:right">Total ${cgstTotal || sgstTotal || igstTotal ? `@18%` : ""}</td>
+        <td colspan="${hasDiscountInItems ? 6 : 5}" style="text-align:right">Total ${cgstTotal || sgstTotal || igstTotal ? `@18%` : ""}</td>
         <td class="num">${money(taxableTotal)}</td>
         <td class="num">${money(cgstTotal)}</td>
         <td class="num">${money(sgstTotal)}</td>
@@ -400,36 +471,47 @@ async function printDocument(document: any, docType: DocumentType) {
       </tr>
     </tbody>
   </table>
+  `}
 
+  ${!isDeliveryChallan ? `
   <div class="summary-section">
     <div class="bank-box">
-      <div><strong>Bank Name:</strong> ${escapeHtml(bank.bank_name ?? bank.name ?? company.bank_name ?? "N/A")}</div>
-      <div><strong>Account Number:</strong> ${escapeHtml(company.account_no ?? "N/A")}</div>
-      <div><strong>Branch Name:</strong> ${escapeHtml(company.branch_name ?? "N/A")}</div>
-      <div><strong>IFSC Code:</strong> ${escapeHtml(company.ifsc_code ?? "N/A")}</div>
+      <div><strong>Bank Name:</strong> ${escapeHtml(bank.bank_name ?? bank.name ?? company.bank_name ?? "ICICI Bank")}</div>
+      <div><strong>Account Number:</strong> ${escapeHtml(company.account_no ?? "137005002624")}</div>
+      <div><strong>Branch Name:</strong> ${escapeHtml(company.branch_name ?? "Sanand Branch")}</div>
+      <div><strong>IFSC Code:</strong> ${escapeHtml(company.ifsc_code ?? "ICIC0001370")}</div>
     </div>
 
     <div class="totals-box">
-      ${subtotalAmount > 0 && discountValue > 0 ? `<div><strong>Subtotal:</strong> &nbsp;&nbsp; INR ${money(subtotalAmount)}</div>` : ""}
-      ${discountValue > 0 ? `<div><strong>Discount:</strong> &nbsp;&nbsp; - INR ${money(discountValue)}</div>` : ""}
+      ${discountValue > 0 ? `<div><strong>Discount:</strong> &nbsp;&nbsp; (-) INR ${money(discountValue)}</div>` : ""}
       <div><strong>Total Taxable Value:</strong> &nbsp;&nbsp; INR ${money(taxableTotal)}</div>
-      ${totalTaxAmount > 0 ? `<div><strong>Total Tax:</strong> &nbsp;&nbsp; INR ${money(totalTaxAmount)}</div>` : ""}
-      ${roundOff !== 0 ? `<div><strong>Round Off:</strong> &nbsp;&nbsp; INR ${money(roundOff)}</div>` : ""}
+      <div><strong>Total Tax Amount:</strong> &nbsp;&nbsp; INR ${money(totalTaxAmount)}</div>
+      ${roundOff !== 0 ? `<div><strong>Rounded Off:</strong> &nbsp;&nbsp; ${roundOff < 0 ? "(-)" : ""} INR ${money(Math.abs(roundOff))}</div>` : ""}
       <div><strong>Total Value (in figure):</strong> &nbsp;&nbsp; INR ${money(total)}</div>
       <div><strong>Total Value (in words):</strong> &nbsp;&nbsp; <strong>INR ${escapeHtml(words)}</strong></div>
     </div>
   </div>
+  ` : ""}
 
   <div class="terms-section">
-    <div class="terms-box">
-      <div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:4px">Terms &amp; Conditions</div>
-      ${hasTerms ? `<ol>${terms.map((t) => `<li>${escapeHtml(t.replace(/^\d+[.)]\s*/, ""))}</li>`).join("")}</ol>` : "<p style=\"font-style:italic\">Standard commercial terms apply.</p>"}
-    </div>
+    ${isCreditNote ? `
+      <div class="sig-box" style="text-align:left;width:30%">
+        <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
+      </div>
+      <div class="sig-box" style="text-align:right;width:30%">
+        <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Receiver Signature</div>
+      </div>
+    ` : `
+      <div class="terms-box">
+        <div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:4px">Terms &amp; Conditions</div>
+        ${hasTerms ? `<ol>${terms.map((t) => `<li>${escapeHtml(t.replace(/^\d+[.)]\s*/, ""))}</li>`).join("")}</ol>` : "<p style=\"font-style:italic\">Payment within 7 Days.</p>"}
+      </div>
 
-    <div class="sig-box">
-      ${company.authorized_signature ? `<img src="${company.authorized_signature}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
-      <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
-    </div>
+      <div class="sig-box">
+        ${company.authorized_signature ? `<img src="${company.authorized_signature}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+        <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
+      </div>
+    `}
   </div>
 </section>
 </body></html>`);

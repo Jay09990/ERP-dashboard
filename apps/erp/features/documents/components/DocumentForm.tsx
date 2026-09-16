@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { useItems } from "@/features/items/api";
 import { taxTypesApi } from "@/features/masters/api";
+import { useSessionStore } from "@/stores/session-store";
 import { Button } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Plus, Trash2, X } from "lucide-react";
@@ -77,6 +78,10 @@ export function DocumentForm({
   onSubmit,
   isSaving,
 }: DocumentFormProps) {
+  const session = useSessionStore((s) => s.session);
+  const sessionUserId = Number(session?.user?.id || 1);
+  const sessionCompanyId = Number(session?.company?.id || 1);
+
   const isVendorDoc =
     docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note";
   const partyEndpoint = isVendorDoc ? endpoints.party.vendors : endpoints.party.customers;
@@ -326,6 +331,111 @@ export function DocumentForm({
     );
   };
 
+  /**
+   * Called when the user picks an invoice on a credit / debit note.
+   * Auto-populates line items from the invoice's itemsDetails so every
+   * item carries the required invoice_item_id (or purchase_invoice_item_id).
+   */
+  const handleInvoiceSelect = async (invoiceIdStr: string, sourceList: any[]) => {
+    setSelectedInvoiceId(invoiceIdStr);
+    if (!invoiceIdStr) {
+      // Reset to a single blank line when invoice is deselected
+      setLineItems([
+        {
+          item_id: "",
+          description: "",
+          quantity: 1,
+          hsn_code: "",
+          unit_id: "",
+          unit_rate: 0,
+          discount_percent: 0,
+          discount_flat: 0,
+          selected_taxes: [],
+        },
+      ]);
+      return;
+    }
+
+    let inv = sourceList.find(
+      (i: any) =>
+        String(i.invoice_id ?? i.purchase_invoice_id ?? i.pi_id ?? i.id) === invoiceIdStr,
+    );
+
+    let invItems: any[] = Array.isArray(inv?.itemsDetails) ? inv.itemsDetails : [];
+    let invTaxDetails: any[] = Array.isArray(inv?.taxDetails) ? inv.taxDetails : [];
+
+    // If summary item list doesn't include itemsDetails, fetch single invoice detail from API
+    if (invItems.length === 0) {
+      try {
+        const endpoint =
+          docType === "debit_note"
+            ? endpoints.documents.purchaseInvoiceDetail(invoiceIdStr)
+            : endpoints.documents.invoiceDetail(invoiceIdStr);
+        const res: any = await apiClient.get(endpoint);
+        const detailedInv =
+          res?.invoice ||
+          res?.purchase_invoice ||
+          res?.data ||
+          res?.Invoice ||
+          res?.Invoices?.[0] ||
+          res?.PurchaseInvoice ||
+          res;
+
+        if (detailedInv) {
+          inv = detailedInv;
+          invItems = Array.isArray(detailedInv.itemsDetails)
+            ? detailedInv.itemsDetails
+            : Array.isArray(detailedInv.items)
+            ? detailedInv.items
+            : [];
+          invTaxDetails = Array.isArray(detailedInv.taxDetails)
+            ? detailedInv.taxDetails
+            : Array.isArray(detailedInv.taxes)
+            ? detailedInv.taxes
+            : [];
+        }
+      } catch (err) {
+        console.error("Failed to fetch invoice details:", err);
+      }
+    }
+
+    if (invItems.length === 0) return;
+
+    setLineItems(
+      invItems.map((item: any) => {
+        // Resolve taxes that belong to this item
+        const itemInvItemId =
+          item.invoice_item_id ?? item.purchase_invoice_item_id ?? item.pi_item_id ?? item.id;
+        const taxIds = invTaxDetails
+          .filter(
+            (td: any) =>
+              String(td.invoice_item_id ?? td.purchase_invoice_item_id ?? td.pi_item_id) ===
+              String(itemInvItemId),
+          )
+          .map((td: any) => Number(td.tax_id))
+          .filter(
+            (taxId: number) =>
+              Number.isFinite(taxId) &&
+              taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId),
+          );
+
+        return {
+          invoice_item_id: item.invoice_item_id ?? undefined,
+          purchase_invoice_item_id: item.purchase_invoice_item_id ?? item.pi_item_id ?? undefined,
+          item_id: item.item_id?.toString() || "",
+          description: item.description || "",
+          quantity: Number(item.quantity || 1),
+          hsn_code: item.hsn_code || "",
+          unit_id: item.unit_id?.toString() || "",
+          unit_rate: Number(item.unit_rate || 0),
+          discount_percent: Number(item.discount_percent || 0),
+          discount_flat: Number(item.discount_flat || 0),
+          selected_taxes: taxIds,
+        };
+      }),
+    );
+  };
+
   // Preview calculations
   const { subtotal, estimatedTax, grandTotal } = useMemo(() => {
     let sub = 0;
@@ -407,7 +517,7 @@ export function DocumentForm({
       initialData?.debit_note_id ??
       initialData?.id;
 
-    const itemsDetailsPayload = lineItems.map((line) => {
+    const itemsDetailsPayload = lineItems.map((line, lineIdx) => {
       const lineSub = line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
       let lineTaxPercent = 0;
       let lineTaxAmt = 0;
@@ -420,12 +530,25 @@ export function DocumentForm({
         }
       });
 
-      const invItemId = (line as any).invoice_item_id ?? (line as any).sales_order_item_id ?? (line as any).purchase_invoice_item_id;
+      // credit_note  → backend expects invoice_item_id
+      // debit_note   → backend expects purchase_invoice_item_id
+      const srcCreditItemId =
+        (line as any).invoice_item_id ??
+        (initialData?.itemsDetails?.[lineIdx] as any)?.invoice_item_id;
+
+      const srcDebitItemId =
+        (line as any).purchase_invoice_item_id ??
+        (initialData?.itemsDetails?.[lineIdx] as any)?.purchase_invoice_item_id;
 
       return {
         ...(line[itemIdKey as keyof typeof line] ? { [itemIdKey]: line[itemIdKey as keyof typeof line] } : {}),
         ...(parentDocId != null ? { [docIdKey]: Number(parentDocId) } : {}),
-        ...(invItemId ? { invoice_item_id: Number(invItemId) } : {}),
+        ...(docType === "credit_note" && srcCreditItemId != null
+          ? { invoice_item_id: Number(srcCreditItemId) }
+          : {}),
+        ...(docType === "debit_note" && srcDebitItemId != null
+          ? { purchase_invoice_item_id: Number(srcDebitItemId) }
+          : {}),
         item_id: Number(line.item_id),
         description: line.description || "Line item",
         quantity: Number(line.quantity),
@@ -550,9 +673,9 @@ export function DocumentForm({
         : docType === "purchase_invoice"
         ? "pi_date"
         : docType === "credit_note"
-        ? "credit_note_date"
+        ? "credit_date"
         : docType === "debit_note"
-        ? "debit_note_date"
+        ? "debit_date"
         : "quotation_date";
 
     const payload = {
@@ -624,6 +747,8 @@ export function DocumentForm({
         : (reasonText ? `Reason: ${reasonText}` : ""),
       terms_conditions: terms,
       status,
+      user_id: sessionUserId,
+      company_id: sessionCompanyId,
       itemsDetails: itemsDetailsPayload,
       taxDetails: taxDetailsPayload,
     };
@@ -826,7 +951,7 @@ export function DocumentForm({
                   <select
                     className="altrex-input altrex-select"
                     value={selectedInvoiceId}
-                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
+                    onChange={(e) => handleInvoiceSelect(e.target.value, salesInvoicesRes)}
                   >
                     <option value="">Select Sales Invoice...</option>
                     {salesInvoicesRes
@@ -854,7 +979,7 @@ export function DocumentForm({
                   <select
                     className="altrex-input altrex-select"
                     value={selectedInvoiceId}
-                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
+                    onChange={(e) => handleInvoiceSelect(e.target.value, purchaseInvoicesRes)}
                   >
                     <option value="">Select Purchase Invoice...</option>
                     {purchaseInvoicesRes
