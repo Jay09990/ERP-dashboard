@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { InvoicedVsPaidChart } from "./InvoicedVsPaidChart";
+import { PaymentStatusDonut } from "./PaymentStatusDonut";
+import { SalesVsPurchaseBarChart } from "./SalesVsPurchaseBarChart";
 import { useDashboardOverview } from "../hooks/use-dashboard-overview";
 
 function StatusChip({ status }: { status: string }) {
@@ -49,6 +52,7 @@ export function DashboardShell() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Header */}
       <div className="altrex-page-header">
         <div>
           <span className="altrex-eyebrow">Enterprise Operations</span>
@@ -72,6 +76,7 @@ export function DashboardShell() {
         </div>
       ) : null}
 
+      {/* Top Stat Cards */}
       <div className="altrex-stat-grid">
         <div className="altrex-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -170,91 +175,145 @@ export function DashboardShell() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        <Link
-          href="/parties/customers"
-          className="altrex-card"
-          style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 14 }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              background: "rgba(59, 130, 246, 0.15)",
-              color: "#3b82f6",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Users size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Customers Directory</div>
-            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-              {overview.isLoading ? "Loading…" : `${overview.customerCount} customer${overview.customerCount === 1 ? "" : "s"}`}
-            </span>
-          </div>
-          <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-        </Link>
-
-        <Link
-          href="/parties/vendors"
-          className="altrex-card"
-          style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 14 }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              background: "rgba(168, 85, 247, 0.15)",
-              color: "#a855f7",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Building2 size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Vendors & Suppliers</div>
-            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-              {overview.isLoading ? "Loading…" : `${overview.vendorCount} vendor${overview.vendorCount === 1 ? "" : "s"}`}
-            </span>
-          </div>
-          <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-        </Link>
-
-        <Link
-          href="/users"
-          className="altrex-card"
-          style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 14 }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 10,
-              background: "rgba(34, 197, 94, 0.15)",
-              color: "#22c55e",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <FileCheck size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Users & Access Control</div>
-            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>Role permissions & team credentials</span>
-          </div>
-          <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-        </Link>
+      {/* Bento Grid Row 1: Invoiced vs Paid Chart (2 Cols) + Payment Status Donut (1 Col) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 20,
+        }}
+      >
+        <div style={{ gridColumn: "span 2", minWidth: 320 }}>
+          <InvoicedVsPaidChart />
+        </div>
+        <div style={{ gridColumn: "span 1", minWidth: 280 }}>
+          <PaymentStatusDonut />
+        </div>
       </div>
 
-      <div className="altrex-card">
+      {/* Bento Grid Row 2: Sales vs Purchase Bar Chart (2 Cols) + Directory Directives (1 Col) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 20,
+        }}
+      >
+        <div style={{ gridColumn: "span 2", minWidth: 320 }}>
+          <SalesVsPurchaseBarChart />
+        </div>
+
+        <div style={{ gridColumn: "span 1", display: "flex", flexDirection: "column", gap: 12 }}>
+          <Link
+            href="/parties/customers"
+            className="altrex-card"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: 16,
+              borderRadius: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: "rgba(59, 130, 246, 0.15)",
+                color: "#3b82f6",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Users size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Customers Directory</div>
+              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
+                {overview.isLoading ? "Loading…" : `${overview.customerCount} customer${overview.customerCount === 1 ? "" : "s"}`}
+              </span>
+            </div>
+            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
+          </Link>
+
+          <Link
+            href="/parties/vendors"
+            className="altrex-card"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: 16,
+              borderRadius: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: "rgba(168, 85, 247, 0.15)",
+                color: "#a855f7",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Building2 size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Vendors & Suppliers</div>
+              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
+                {overview.isLoading ? "Loading…" : `${overview.vendorCount} vendor${overview.vendorCount === 1 ? "" : "s"}`}
+              </span>
+            </div>
+            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
+          </Link>
+
+          <Link
+            href="/users"
+            className="altrex-card"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              padding: 16,
+              borderRadius: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 10,
+                background: "rgba(34, 197, 94, 0.15)",
+                color: "#22c55e",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <FileCheck size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Users & Access Control</div>
+              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>Role permissions & team credentials</span>
+            </div>
+            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Bento Grid Row 3: Recent Activity & Operations */}
+      <div className="altrex-card" style={{ borderRadius: 12, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--altrex-text)" }}>
             Recent Activity & Operations
