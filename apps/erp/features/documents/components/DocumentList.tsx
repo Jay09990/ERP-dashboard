@@ -18,8 +18,9 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DocumentForm, type DocumentType } from "./DocumentForm";
+import { DocumentPreviewModal } from "./DocumentPreviewModal";
 
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
@@ -55,7 +56,7 @@ function extractObject(value: any, keys: string[]): any {
   return value;
 }
 
-const DOCUMENT_PRINT_CONFIG: Record<
+export const DOCUMENT_PRINT_CONFIG: Record<
   DocumentType,
   {
     endpoint: (id: string | number) => string;
@@ -67,18 +68,18 @@ const DOCUMENT_PRINT_CONFIG: Record<
     dateKey: string;
   }
 > = {
-  quotation:        { endpoint: endpoints.documents.quotationDetail,       keys: ["quotation", "quotations"],         label: "QUOTE",            refLabel: "Quote #",         dateKey: "quotation_date",      itemIdKey: "quotation_item_id",       taxRefKey: "quotation_item_id" },
-  sales_order:      { endpoint: endpoints.documents.salesOrderDetail,      keys: ["sales_order", "salesOrders"],      label: "SALES ORDER",      refLabel: "Order #",         dateKey: "sales_order_date",    itemIdKey: "sales_order_item_id",     taxRefKey: "sales_order_item_id" },
-  proforma:         { endpoint: endpoints.documents.proformaDetail,        keys: ["proforma"],                        label: "PROFORMA INVOICE",  refLabel: "Proforma #",      dateKey: "proforma_date",       itemIdKey: "proforma_item_id",        taxRefKey: "proforma_item_id" },
-  delivery_challan: { endpoint: endpoints.documents.deliveryChallanDetail, keys: ["delivery_challan"],                label: "DELIVERY CHALLAN",  refLabel: "Challan #",       dateKey: "delivery_date",       itemIdKey: "delivery_challan_item_id",taxRefKey: "delivery_challan_item_id" },
-  sales_invoice:    { endpoint: endpoints.documents.invoiceDetail,         keys: ["invoice"],                         label: "TAX INVOICE",      refLabel: "Invoice #",       dateKey: "invoice_date",        itemIdKey: "invoice_item_id",         taxRefKey: "invoice_item_id" },
-  purchase_order:   { endpoint: endpoints.documents.purchaseOrderDetail,   keys: ["purchase_order"],                  label: "PURCHASE ORDER",   refLabel: "PO #",            dateKey: "purchase_order_date", itemIdKey: "purchase_order_item_id",  taxRefKey: "purchase_order_item_id" },
-  purchase_invoice: { endpoint: endpoints.documents.purchaseInvoiceDetail, keys: ["purchase_invoice"],                label: "PURCHASE BILL",    refLabel: "Bill #",          dateKey: "purchase_invoice_date",itemIdKey: "purchase_invoice_item_id",taxRefKey: "purchase_invoice_item_id" },
-  credit_note:      { endpoint: endpoints.documents.creditNoteDetail,      keys: ["credit_note"],                     label: "CREDIT NOTE",      refLabel: "Credit Note #",   dateKey: "credit_note_date",    itemIdKey: "credit_note_item_id",     taxRefKey: "credit_note_item_id" },
-  debit_note:       { endpoint: endpoints.documents.debitNoteDetail,       keys: ["debit_note"],                      label: "DEBIT NOTE",       refLabel: "Debit Note #",    dateKey: "debit_note_date",     itemIdKey: "debit_note_item_id",      taxRefKey: "debit_note_item_id" },
+  quotation:        { endpoint: endpoints.documents.quotationDetail,       keys: ["quotation", "Quotation", "Quotations", "quotations"],         label: "QUOTE",            refLabel: "Quote #",         dateKey: "quotation_date",      itemIdKey: "quotation_item_id",       taxRefKey: "quotation_item_id" },
+  sales_order:      { endpoint: endpoints.documents.salesOrderDetail,      keys: ["sales_order", "SalesOrder", "SalesOrders", "salesOrders"],      label: "SALES ORDER",      refLabel: "Order #",         dateKey: "sales_order_date",    itemIdKey: "sales_order_item_id",     taxRefKey: "sales_order_item_id" },
+  proforma:         { endpoint: endpoints.documents.proformaDetail,        keys: ["proforma", "Proforma", "Proformas", "proformas"],            label: "PROFORMA INVOICE",  refLabel: "Proforma #",      dateKey: "proforma_date",       itemIdKey: "proforma_item_id",        taxRefKey: "proforma_item_id" },
+  delivery_challan: { endpoint: endpoints.documents.deliveryChallanDetail, keys: ["delivery_challan", "DeliveryChallan", "DeliveryChallans", "delivery_challans"], label: "DELIVERY CHALLAN",  refLabel: "Challan #",       dateKey: "delivery_date",       itemIdKey: "delivery_challan_item_id",taxRefKey: "delivery_challan_item_id" },
+  sales_invoice:    { endpoint: endpoints.documents.invoiceDetail,         keys: ["invoice", "Invoice", "Invoices", "invoices"],                 label: "TAX INVOICE",      refLabel: "Invoice #",       dateKey: "invoice_date",        itemIdKey: "invoice_item_id",         taxRefKey: "invoice_item_id" },
+  purchase_order:   { endpoint: endpoints.documents.purchaseOrderDetail,   keys: ["purchase_order", "PurchaseOrder", "PurchaseOrders", "purchase_orders"], label: "PURCHASE ORDER",   refLabel: "PO #",            dateKey: "purchase_order_date", itemIdKey: "purchase_order_item_id",  taxRefKey: "purchase_order_item_id" },
+  purchase_invoice: { endpoint: endpoints.documents.purchaseInvoiceDetail, keys: ["purchase_invoice", "PurchaseInvoice", "PurchaseInvoices", "purchase_invoices", "Invoices", "invoices"], label: "PURCHASE BILL",    refLabel: "Bill #",          dateKey: "purchase_invoice_date",itemIdKey: "purchase_invoice_item_id",taxRefKey: "purchase_invoice_item_id" },
+  credit_note:      { endpoint: endpoints.documents.creditNoteDetail,      keys: ["credit_note", "CreditNote", "CreditNotes", "credit_notes"],     label: "CREDIT NOTE",      refLabel: "Credit Note #",   dateKey: "credit_note_date",    itemIdKey: "credit_note_item_id",     taxRefKey: "credit_note_item_id" },
+  debit_note:       { endpoint: endpoints.documents.debitNoteDetail,       keys: ["debit_note", "DebitNote", "DebitNotes", "debit_notes"],        label: "DEBIT NOTE",       refLabel: "Debit Note #",    dateKey: "debit_note_date",     itemIdKey: "debit_note_item_id",      taxRefKey: "debit_note_item_id" },
 };
 
-function numberToWordsIndian(value: number): string {
+export function numberToWordsIndian(value: number): string {
   const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
   const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
   const underThousand = (n: number): string =>
@@ -558,8 +559,19 @@ export function DocumentList({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [activeDoc, setActiveDoc] = useState<any | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [isOpenForm, setIsOpenForm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail?.document) {
+        printDocument(e.detail.document, e.detail.docType);
+      }
+    };
+    window.addEventListener("altrex-print-doc", handler);
+    return () => window.removeEventListener("altrex-print-doc", handler);
+  }, []);
 
   // Sorting state
   const [sortField, setSortField] = useState<string>("date");
@@ -839,8 +851,241 @@ export function DocumentList({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: 0 }}>
-      {/* Top Controls Toolbar matching user screenshot */}
-      <div
+      {previewDoc ? (
+        <div style={{ display: "flex", gap: "16px", minWidth: 0, width: "100%", alignItems: "flex-start" }}>
+          {/* Left Column: Condensed Document List matching SleekBill */}
+          <div
+            style={{
+              width: "350px",
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+              background: "var(--altrex-surface)",
+              borderRadius: "8px",
+              border: "1px solid var(--altrex-border)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Top Toolbar for Condensed List */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "10px 12px",
+                borderBottom: "1px solid var(--altrex-border)",
+                background: "var(--altrex-canvas)",
+                gap: "8px",
+              }}
+            >
+              <select
+                className="altrex-input altrex-select"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{ height: "32px", fontSize: "12px", width: "150px", background: "var(--altrex-surface)", color: "var(--altrex-text)" }}
+              >
+                <option value="">Filter {title}</option>
+                <option value="draft">Draft</option>
+                <option value="approved">Approved</option>
+                <option value="sent">Sent</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveDoc(null);
+                  setIsOpenForm(true);
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  backgroundColor: "#0f172a",
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  padding: "6px 12px",
+                  borderRadius: "5px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Plus size={14} /> + New
+              </button>
+            </div>
+
+            {/* Condensed Cards List */}
+            <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}>
+              {isLoading ? (
+                <div style={{ padding: "24px", textAlign: "center", color: "var(--altrex-muted)", fontSize: "13px" }}>
+                  Loading list...
+                </div>
+              ) : paginatedDocs.length === 0 ? (
+                <div style={{ padding: "24px", textAlign: "center", color: "var(--altrex-muted)", fontSize: "13px" }}>
+                  No documents found.
+                </div>
+              ) : (
+                paginatedDocs.map((d) => {
+                  const idStr = String(getId(d));
+                  const isSelected = String(getId(previewDoc)) === idStr;
+                  const docNo = getDocNo(d);
+                  const amount = getGrandTotal(d);
+                  const dateStr = fmtTableDate(getDate(d));
+                  const partyName = getPartyName(d);
+                  const docTag = docType === "credit_note" ? "CN" : docType === "debit_note" ? "DN" : docType === "sales_invoice" ? "INV" : docType === "purchase_invoice" ? "BILL" : "DOC";
+
+                  return (
+                    <div
+                      key={idStr}
+                      onClick={() => setPreviewDoc(d)}
+                      style={{
+                        padding: "12px 14px",
+                        borderBottom: "1px solid var(--altrex-line)",
+                        cursor: "pointer",
+                        backgroundColor: isSelected
+                          ? "color-mix(in srgb, var(--altrex-primary) 14%, var(--altrex-surface))"
+                          : "transparent",
+                        borderLeft: isSelected ? "4px solid var(--altrex-primary)" : "4px solid transparent",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {/* Line 1: Party Name & Amount */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: "12.5px",
+                            color: "var(--altrex-text)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            maxWidth: "200px",
+                          }}
+                          title={partyName}
+                        >
+                          {partyName}
+                        </span>
+                        <span style={{ fontWeight: 700, fontSize: "12.5px", color: "var(--altrex-text)", whiteSpace: "nowrap" }}>
+                          {fmtCurrency(amount)}
+                        </span>
+                      </div>
+
+                      {/* Line 2: Doc No & Date on left, Status Badge tag on right */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "11px", color: "var(--altrex-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {docNo} {dateStr !== "—" ? `- ${dateStr}` : ""}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: isSelected ? "#3b82f6" : "var(--altrex-muted)",
+                            background: isSelected ? "rgba(59, 130, 246, 0.12)" : "var(--altrex-canvas)",
+                            padding: "1px 6px",
+                            borderRadius: "3px",
+                            border: "1px solid var(--altrex-border)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {docTag}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Left Column Pagination Footer */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "8px 12px",
+                borderTop: "1px solid var(--altrex-border)",
+                background: "var(--altrex-canvas)",
+                fontSize: "11.5px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage === 1}
+                  style={{
+                    padding: "2px 8px",
+                    fontSize: "12px",
+                    border: "1px solid var(--altrex-border)",
+                    background: "var(--altrex-surface)",
+                    color: "var(--altrex-text)",
+                    borderRadius: "4px",
+                    cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
+                    opacity: safeCurrentPage === 1 ? 0.4 : 1,
+                  }}
+                >
+                  &lt;
+                </button>
+                <span style={{ color: "var(--altrex-text)", fontWeight: 600 }}>
+                  {safeCurrentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                  style={{
+                    padding: "2px 8px",
+                    fontSize: "12px",
+                    border: "1px solid var(--altrex-border)",
+                    background: "var(--altrex-surface)",
+                    color: "var(--altrex-text)",
+                    borderRadius: "4px",
+                    cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
+                    opacity: safeCurrentPage === totalPages ? 0.4 : 1,
+                  }}
+                >
+                  &gt;
+                </button>
+              </div>
+
+              <span style={{ color: "var(--altrex-muted)", fontSize: "11px" }}>
+                Total: {sorted.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Right Column: Inline Document Preview Pane */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <DocumentPreviewModal
+              inline
+              doc={previewDoc}
+              docType={docType}
+              onClose={() => setPreviewDoc(null)}
+              onEdit={() => {
+                setActiveDoc(previewDoc);
+                setIsOpenForm(true);
+              }}
+              onDelete={() => {
+                const idStr = String(getId(previewDoc));
+                const docNo = getDocNo(previewDoc);
+                if (confirm(`Delete document ${docNo}?`)) {
+                  deleteDoc(idStr, {
+                    onSuccess: () => setPreviewDoc(null),
+                  });
+                }
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Top Controls Toolbar matching user screenshot */}
+          <div
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -1063,16 +1308,22 @@ export function DocumentList({
                 return (
                   <tr
                     key={idStr}
+                    onClick={() => setPreviewDoc(doc)}
                     style={{
                       borderBottom: "1px solid var(--altrex-line)",
                       backgroundColor: isSelected ? "color-mix(in srgb, var(--altrex-primary) 10%, transparent)" : "transparent",
+                      cursor: "pointer",
                     }}
                   >
                     <td style={{ padding: "10px 12px", textAlign: "center" }}>
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleSelectRow(idStr)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleSelectRow(idStr);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         style={{ cursor: "pointer" }}
                       />
                     </td>
@@ -1082,7 +1333,10 @@ export function DocumentList({
                     <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
                       <button
                         type="button"
-                        onClick={() => printDocument(doc, docType)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewDoc(doc);
+                        }}
                         style={{
                           background: "none",
                           border: "none",
@@ -1142,7 +1396,8 @@ export function DocumentList({
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setActiveDoc(doc);
                             setIsOpenForm(true);
                           }}
@@ -1160,7 +1415,10 @@ export function DocumentList({
                         </button>
                         <button
                           type="button"
-                          onClick={() => printDocument(doc, docType)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            printDocument(doc, docType);
+                          }}
                           style={{
                             background: "var(--altrex-raised)",
                             color: "var(--altrex-text)",
@@ -1175,7 +1433,8 @@ export function DocumentList({
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (confirm(`Delete document ${docNo}?`)) {
                               deleteDoc(idStr);
                             }
@@ -1347,24 +1606,26 @@ export function DocumentList({
           </button>
         </div>
 
-        {/* Page Size Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <select
-            className="altrex-input altrex-select"
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            style={{ height: "32px", fontSize: "12.5px", width: "120px", background: "var(--altrex-surface)", color: "var(--altrex-text)", border: "1px solid var(--altrex-border)" }}
-          >
-            <option value={10}>10 per page</option>
-            <option value={25}>25 per page</option>
-            <option value={50}>50 per page</option>
-            <option value={100}>100 per page</option>
-          </select>
-        </div>
-      </div>
+            {/* Page Size Selector */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <select
+                className="altrex-input altrex-select"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{ height: "32px", fontSize: "12.5px", width: "120px", background: "var(--altrex-surface)", color: "var(--altrex-text)", border: "1px solid var(--altrex-border)" }}
+              >
+                <option value={10}>10 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+              </select>
+            </div>
+          </div>
+        </>
+      )}
 
       {isOpenForm && (
         <DocumentForm
