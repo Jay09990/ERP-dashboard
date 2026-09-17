@@ -108,7 +108,30 @@ export function DocumentForm({
   );
 
   const { data: taxTypesData = [] } = taxTypesApi.useList();
-  const taxTypes = extractList(taxTypesData, ["taxes", "taxTypes", "tax_types", "rows", "records", "list", "data"]);
+  // Memoize taxTypes to avoid recreating array references on every render
+  const taxTypes = useMemo(
+    () => extractList(taxTypesData, ["taxes", "taxTypes", "tax_types", "rows", "records", "list", "data"]),
+    [taxTypesData],
+  );
+
+  // O(1) Map lookups for taxTypes and itemsData to avoid O(N) Array.find scans on renders & submits
+  const taxTypesMap = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const tax of taxTypes) {
+      const id = String(tax.tax_id ?? tax.id);
+      map.set(id, tax);
+    }
+    return map;
+  }, [taxTypes]);
+
+  const itemsMap = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const item of itemsData) {
+      const id = String(item.item_id ?? item.id);
+      map.set(id, item);
+    }
+    return map;
+  }, [itemsData]);
 
   // Fetch Sales Invoices for Credit Note dropdown
   const { data: salesInvoicesRes = [] } = useQuery({
@@ -297,13 +320,13 @@ export function DocumentForm({
   };
 
   const handleItemSelect = (idx: number, selectedId: string) => {
-    const item = itemsData.find((i: any) => (i.item_id ?? i.id)?.toString() === selectedId);
+    const item = itemsMap.get(selectedId);
     setLineItems((prev) =>
       prev.map((line, i) => {
         if (i !== idx) return line;
         const rate = isVendorDoc ? Number(item?.purchase_rate || 0) : Number(item?.sales_rate || 0);
         const rawTaxId = item?.tax_id ? Number(item.tax_id) : null;
-        const isValidTax = rawTaxId != null && Number.isFinite(rawTaxId) && taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === rawTaxId);
+        const isValidTax = rawTaxId != null && Number.isFinite(rawTaxId) && taxTypesMap.has(String(rawTaxId));
         return {
           ...line,
           item_id: selectedId,
@@ -436,7 +459,7 @@ export function DocumentForm({
     );
   };
 
-  // Preview calculations
+  // Preview calculations (memoized with O(1) Map lookups to avoid recalculating on unrelated form state changes)
   const { subtotal, estimatedTax, grandTotal } = useMemo(() => {
     let sub = 0;
     let taxAmt = 0;
@@ -446,7 +469,7 @@ export function DocumentForm({
       sub += lineSub;
 
       line.selected_taxes.forEach((taxId) => {
-        const taxObj = taxTypes.find((t: any) => String(t.tax_id ?? t.id) === String(taxId));
+        const taxObj = taxTypesMap.get(String(taxId));
         taxAmt += calculateTaxAmount(lineSub, taxObj);
       });
     });
@@ -456,7 +479,7 @@ export function DocumentForm({
       estimatedTax: taxAmt,
       grandTotal: sub + taxAmt,
     };
-  }, [lineItems, taxTypes]);
+  }, [lineItems, taxTypesMap]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -523,7 +546,7 @@ export function DocumentForm({
       let lineTaxAmt = 0;
 
       line.selected_taxes.forEach((taxId) => {
-        const taxObj = taxTypes.find((t: any) => String(t.tax_id ?? t.id) === String(taxId));
+        const taxObj = taxTypesMap.get(String(taxId));
         if (taxObj) {
           lineTaxPercent += getTaxValue(taxObj);
           lineTaxAmt += calculateTaxAmount(lineSub, taxObj);
@@ -620,10 +643,8 @@ export function DocumentForm({
         const numericTaxId = Number(rawTaxId);
         if (!Number.isFinite(numericTaxId)) return;
 
-        // Ensure selected tax_id is active in Tax Master
-        const activeTaxObj = taxTypes.find(
-          (tax: any) => Number(tax.tax_id ?? tax.id) === numericTaxId,
-        );
+        // Ensure selected tax_id is active in Tax Master using O(1) map lookup
+        const activeTaxObj = taxTypesMap.get(String(numericTaxId));
         if (!activeTaxObj) return;
 
         if (!isEditMode) {
