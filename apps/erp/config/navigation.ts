@@ -41,6 +41,8 @@ import {
   Clock,
   Briefcase,
   BookOpen,
+  ArrowRightLeft,
+  Scale,
 } from "lucide-react";
 
 export interface NavChildItem {
@@ -180,6 +182,42 @@ export const navigationConfig: NavParentItem[] = [
         label: "Item Types",
         href: "/items/types",
         icon: Tag,
+      },
+      {
+        id: "warehouses",
+        label: "Warehouses",
+        href: "/inventory/warehouses",
+        icon: Building,
+      },
+      {
+        id: "batches",
+        label: "Item Batches",
+        href: "/inventory/batches",
+        icon: Tag,
+      },
+      {
+        id: "stock-transfers",
+        label: "Stock Transfers",
+        href: "/inventory/transfers",
+        icon: ArrowRightLeft,
+      },
+      {
+        id: "stock-adjustments",
+        label: "Stock Adjustments",
+        href: "/inventory/adjustments",
+        icon: Scale,
+      },
+      {
+        id: "stock-summary",
+        label: "Stock Summary",
+        href: "/inventory/stock",
+        icon: ClipboardList,
+      },
+      {
+        id: "stock-ledger",
+        label: "Stock Ledger",
+        href: "/inventory/ledger",
+        icon: BookOpen,
       },
     ],
   },

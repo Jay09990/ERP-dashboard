@@ -6,6 +6,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
+  color-scheme: light;
+
   /* Surface scale (Light) */
   --altrex-canvas:  #f8fafc;
   --altrex-surface: #ffffff;
@@ -52,6 +54,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   /* Surface scale (Dark Slate) */
   --altrex-canvas:  #0b0f17;
   --altrex-surface: #161e2e;
@@ -95,6 +99,11 @@
   --border:               var(--altrex-border);
   --input:                var(--altrex-border);
   --ring:                 var(--altrex-primary);
+}
+
+select option {
+  background-color: var(--altrex-surface);
+  color: var(--altrex-text);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

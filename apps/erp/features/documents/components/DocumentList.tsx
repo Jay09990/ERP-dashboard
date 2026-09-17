@@ -1167,7 +1167,7 @@ export function DocumentList({
             }}
           >
             <Plus size={16} />
-            + New
+            New
           </button>
 
           {/* Export Button */}

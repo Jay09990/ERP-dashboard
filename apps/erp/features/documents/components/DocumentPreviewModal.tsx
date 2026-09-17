@@ -61,7 +61,13 @@ export function DocumentPreviewModal({
   const [cityRows, setCityRows] = useState<any[]>([]);
   const [stateRows, setStateRows] = useState<any[]>([]);
   const [countryRows, setCountryRows] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+   const [isLoading, setIsLoading] = useState(true);
+  const [documentMode, setDocumentMode] = useState<"proforma" | "tax_invoice">(
+    docType === "sales_invoice" ? "tax_invoice" : "proforma",
+  );
+  const [isConverted, setIsConverted] = useState<boolean>(
+    Boolean(docSummary.is_converted) || docType === "sales_invoice",
+  );
 
   const config = DOCUMENT_PRINT_CONFIG[docType];
 
@@ -365,8 +371,8 @@ export function DocumentPreviewModal({
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* Status Ribbon if Approved */}
-      {isApproved && (
+      {/* Status Ribbon if Approved or Converted */}
+      {isApproved ? (
         <div
           style={{
             position: "absolute",
@@ -385,7 +391,26 @@ export function DocumentPreviewModal({
         >
           Approved
         </div>
-      )}
+      ) : isConverted || documentMode === "tax_invoice" ? (
+        <div
+          style={{
+            position: "absolute",
+            top: "24px",
+            left: "-32px",
+            background: "#10b981",
+            color: "#ffffff",
+            fontSize: "10px",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            padding: "4px 36px",
+            transform: "rotate(-45deg)",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            letterSpacing: "1px",
+          }}
+        >
+          Converted
+        </div>
+      ) : null}
 
       {/* Header Section */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
@@ -416,7 +441,11 @@ export function DocumentPreviewModal({
 
         <div style={{ width: "40%", textAlign: "right" }}>
           <div style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", letterSpacing: "0.5px" }}>
-            {config.label}
+            {docType === "sales_invoice" || docType === "proforma"
+              ? documentMode === "proforma"
+                ? "PROFORMA"
+                : "TAX INVOICE"
+              : config.label}
           </div>
           <div style={{ fontSize: "14px", fontWeight: 700, color: "#334155", marginBottom: "10px" }}>
             {docRefNo}
@@ -786,6 +815,34 @@ export function DocumentPreviewModal({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {(docType === "sales_invoice" || docType === "proforma") && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "6px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>
+                  Convert:
+                </span>
+                <select
+                  value={documentMode}
+                  onChange={(e) => {
+                    const val = e.target.value as "proforma" | "tax_invoice";
+                    setDocumentMode(val);
+                    setIsConverted(val === "tax_invoice");
+                  }}
+                  style={{
+                    backgroundColor: "var(--altrex-surface)",
+                    color: "var(--altrex-text)",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    padding: "5px 10px",
+                    borderRadius: "5px",
+                    border: "1px solid var(--altrex-border)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="proforma">PROFORMA</option>
+                  <option value="tax_invoice">TAX INVOICE</option>
+                </select>
+              </div>
+            )}
             <button
               type="button"
               onClick={onEdit}
@@ -947,6 +1004,34 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {(docType === "sales_invoice" || docType === "proforma") && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "6px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>
+                Convert:
+              </span>
+              <select
+                value={documentMode}
+                onChange={(e) => {
+                  const val = e.target.value as "proforma" | "tax_invoice";
+                  setDocumentMode(val);
+                  setIsConverted(val === "tax_invoice");
+                }}
+                style={{
+                  backgroundColor: "var(--altrex-surface)",
+                  color: "var(--altrex-text)",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  padding: "5px 10px",
+                  borderRadius: "5px",
+                  border: "1px solid var(--altrex-border)",
+                  cursor: "pointer",
+                }}
+              >
+                <option value="proforma">PROFORMA</option>
+                <option value="tax_invoice">TAX INVOICE</option>
+              </select>
+            </div>
+          )}
           <button
             type="button"
             onClick={onEdit}

@@ -98,4 +98,20 @@ export const endpoints = {
     warehouse: `${masterApiBase}/warehouse_mst`,
     itemImages: `${masterApiBase}/item_images`,
   },
+  inventory: {
+    warehouse: "/api/inventory/warehouse",
+    warehouseDetail: (id: string | number) => `/api/inventory/warehouse/${id}`,
+    batch: "/api/inventory/batch",
+    batchDetail: (id: string | number) => `/api/inventory/batch/${id}`,
+    stockSummary: "/api/inventory/stock/summary",
+    stockLedger: "/api/inventory/stock/ledger",
+    transfer: "/api/inventory/transfer",
+    transferDetail: (id: string | number) => `/api/inventory/transfer/${id}`,
+    transferStatus: (id: string | number, status: string) =>
+      `/api/inventory/transfer/${id}/${status}`,
+    adjustment: "/api/inventory/adjustment",
+    adjustmentDetail: (id: string | number) => `/api/inventory/adjustment/${id}`,
+    adjustmentStatus: (id: string | number, status: string) =>
+      `/api/inventory/adjustment/${id}/${status}`,
+  },
 } as const;
