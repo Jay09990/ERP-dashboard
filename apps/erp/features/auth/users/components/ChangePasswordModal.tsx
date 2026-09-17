@@ -3,7 +3,7 @@
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, KeyRound, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useChangePassword } from "../api";
 import { type PasswordChangeValues, passwordChangeSchema } from "../schema";
@@ -25,6 +25,16 @@ export function ChangePasswordModal({ onClose }: Props) {
     },
   });
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   const onSubmit = (values: PasswordChangeValues) => {
     changePassword(values, {
       onSuccess: () => onClose(),
@@ -32,8 +42,16 @@ export function ChangePasswordModal({ onClose }: Props) {
   };
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="altrex-dialog-backdrop"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="altrex-dialog altrex-dialog-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
@@ -87,7 +105,11 @@ export function ChangePasswordModal({ onClose }: Props) {
                   type="button"
                   className="altrex-password-toggle"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  tabIndex={-1}
+                  aria-label={
+                    showCurrent
+                      ? "Hide current password"
+                      : "Show current password"
+                  }
                 >
                   {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -112,7 +134,9 @@ export function ChangePasswordModal({ onClose }: Props) {
                   type="button"
                   className="altrex-password-toggle"
                   onClick={() => setShowNew(!showNew)}
-                  tabIndex={-1}
+                  aria-label={
+                    showNew ? "Hide new password" : "Show new password"
+                  }
                 >
                   {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
