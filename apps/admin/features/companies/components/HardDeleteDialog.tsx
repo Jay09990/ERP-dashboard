@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useHardDeleteCompany } from "../api";
 import type { Company } from "../types";
 
@@ -20,6 +21,16 @@ export function HardDeleteDialog({ company, onClose }: Props) {
   const [typedName, setTypedName] = useState("");
   const [checked, setChecked] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   const nameMatches = typedName.trim() === company.company_name.trim();
   const canSubmit = nameMatches && checked && !isPending;
 
@@ -37,7 +48,12 @@ export function HardDeleteDialog({ company, onClose }: Props) {
       aria-modal="true"
       aria-labelledby="harddelete-title"
     >
-      <div className="altrex-dialog altrex-dialog-md altrex-dialog-danger">
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isPending && onClose()}
+      />
+      <div className="altrex-dialog altrex-dialog-md altrex-dialog-danger relative z-10">
         <div className="altrex-dialog-header">
           <div className="altrex-dialog-icon altrex-dialog-icon-danger">
             <svg
@@ -69,6 +85,15 @@ export function HardDeleteDialog({ company, onClose }: Props) {
               <strong>{company.company_name}</strong> ({company.company_code})
             </p>
           </div>
+          <button
+            type="button"
+            className="altrex-icon-button"
+            onClick={onClose}
+            aria-label="Close"
+            disabled={isPending}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className="altrex-dialog-body">
