@@ -2,7 +2,7 @@
 
 import { Button } from "@altrex/ui";
 import { FolderTree, Plus, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useCreateItemCategory, useDeleteItemCategory, useItemCategories } from "../api";
 import type { ItemCategory } from "../schema";
 
@@ -16,6 +16,113 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   }
   return [];
 }
+
+interface CategoryTreeNodeProps {
+  cat: ItemCategory;
+  depth: number;
+  childrenMap: Map<number | string, ItemCategory[]>;
+  getCategoryId: (c: ItemCategory) => number | string;
+  getCategoryName: (c: ItemCategory) => string;
+  onAddSubCategory: (id: string | number) => void;
+  onDeleteCategory: (cat: ItemCategory) => void;
+  isDeleting: boolean;
+}
+
+/**
+ * Memoized category tree node component to prevent recursive re-rendering
+ * of the entire tree when parent modal/input state updates.
+ */
+const CategoryTreeNode = React.memo(function CategoryTreeNode({
+  cat,
+  depth,
+  childrenMap,
+  getCategoryId,
+  getCategoryName,
+  onAddSubCategory,
+  onDeleteCategory,
+  isDeleting,
+}: CategoryTreeNodeProps) {
+  const id = getCategoryId(cat);
+  const children = childrenMap.get(id) || [];
+
+  return (
+    <div style={{ marginLeft: `${depth * 24}px`, marginTop: "8px" }}>
+      <div
+        className="altrex-detail-card"
+        style={{
+          padding: "12px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: depth === 0 ? "var(--altrex-surface)" : "var(--altrex-raised)",
+          borderLeft: depth > 0 ? "3px solid var(--altrex-primary)" : "none",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <FolderTree size={16} style={{ color: depth === 0 ? "var(--altrex-primary)" : "#8b5cf6" }} />
+          <span style={{ fontWeight: depth === 0 ? 700 : 500, fontSize: "14px", color: "var(--altrex-text)" }}>
+            {getCategoryName(cat)}
+          </span>
+          {depth === 0 && (
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                background: "rgba(37,99,235,0.1)",
+                color: "var(--altrex-primary)",
+                padding: "1px 8px",
+                borderRadius: "10px",
+              }}
+            >
+              Root Category
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <Button
+            variant="outline"
+            onClick={() => onAddSubCategory(id)}
+            style={{ fontSize: "12px", padding: "3px 8px" }}
+          >
+            + Sub-Category
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onDeleteCategory(cat)}
+            disabled={isDeleting}
+            style={{
+              color: "var(--altrex-danger-text)",
+              borderColor: "rgba(220,38,38,0.2)",
+              fontSize: "12px",
+              padding: "3px 8px",
+            }}
+          >
+            <Trash2 size={13} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Children */}
+      {children.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {children.map((child) => (
+            <CategoryTreeNode
+              key={getCategoryId(child)}
+              cat={child}
+              depth={depth + 1}
+              childrenMap={childrenMap}
+              getCategoryId={getCategoryId}
+              getCategoryName={getCategoryName}
+              onAddSubCategory={onAddSubCategory}
+              onDeleteCategory={onDeleteCategory}
+              isDeleting={isDeleting}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
 
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
@@ -57,98 +164,41 @@ export function ItemCategoryTree() {
   // Build root categories and children map
   const { rootCategories, childrenMap } = useMemo(() => {
     const roots: ItemCategory[] = [];
-    const map = new Map<number, ItemCategory[]>();
+    const map = new Map<number | string, ItemCategory[]>();
 
-    categories.forEach((cat) => {
+    for (const cat of categories) {
       const pid = getParentId(cat);
       if (!pid) {
         roots.push(cat);
       } else {
-        if (!map.has(pid)) map.set(pid, []);
-        map.get(pid)!.push(cat);
+        const existing = map.get(pid);
+        if (existing) {
+          existing.push(cat);
+        } else {
+          map.set(pid, [cat]);
+        }
       }
-    });
+    }
 
     return { rootCategories: roots, childrenMap: map };
-  }, [categories]);
+  }, [categories, getParentId]);
 
-  const renderCategoryNode = (cat: ItemCategory, depth = 0) => {
-    const id = getCategoryId(cat);
-    const children = childrenMap.get(id) || [];
+  // Memoized handlers to prevent unnecessary re-renders of memoized CategoryTreeNode children
+  const handleAddSubCategory = useCallback((id: string | number) => {
+    setParentId(id.toString());
+    setIsOpenModal(true);
+  }, []);
 
-    return (
-      <div key={id} style={{ marginLeft: `${depth * 24}px`, marginTop: "8px" }}>
-        <div
-          className="altrex-detail-card"
-          style={{
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            background: depth === 0 ? "var(--altrex-surface)" : "var(--altrex-raised)",
-            borderLeft: depth > 0 ? "3px solid var(--altrex-primary)" : "none",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <FolderTree size={16} style={{ color: depth === 0 ? "var(--altrex-primary)" : "#8b5cf6" }} />
-            <span style={{ fontWeight: depth === 0 ? 700 : 500, fontSize: "14px", color: "var(--altrex-text)" }}>
-              {getCategoryName(cat)}
-            </span>
-            {depth === 0 && (
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  background: "rgba(37,99,235,0.1)",
-                  color: "var(--altrex-primary)",
-                  padding: "1px 8px",
-                  borderRadius: "10px",
-                }}
-              >
-                Root Category
-              </span>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setParentId(id.toString());
-                setIsOpenModal(true);
-              }}
-              style={{ fontSize: "12px", padding: "3px 8px" }}
-            >
-              + Sub-Category
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (confirm(`Are you sure you want to delete category "${getCategoryName(cat)}"?`)) {
-                  deleteCategory(id.toString());
-                }
-              }}
-              disabled={isDeleting}
-              style={{
-                color: "var(--altrex-danger-text)",
-                borderColor: "rgba(220,38,38,0.2)",
-                fontSize: "12px",
-                padding: "3px 8px",
-              }}
-            >
-              <Trash2 size={13} />
-            </Button>
-          </div>
-        </div>
-
-        {/* Children */}
-        {children.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {children.map((child) => renderCategoryNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const handleDeleteCategory = useCallback(
+    (cat: ItemCategory) => {
+      const id = getCategoryId(cat);
+      const name = getCategoryName(cat);
+      if (confirm(`Are you sure you want to delete category "${name}"?`)) {
+        deleteCategory(id.toString());
+      }
+    },
+    [deleteCategory, getCategoryId, getCategoryName],
+  );
 
   return (
     <>
@@ -189,7 +239,19 @@ export function ItemCategoryTree() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {rootCategories.map((cat) => renderCategoryNode(cat, 0))}
+          {rootCategories.map((cat) => (
+            <CategoryTreeNode
+              key={getCategoryId(cat)}
+              cat={cat}
+              depth={0}
+              childrenMap={childrenMap}
+              getCategoryId={getCategoryId}
+              getCategoryName={getCategoryName}
+              onAddSubCategory={handleAddSubCategory}
+              onDeleteCategory={handleDeleteCategory}
+              isDeleting={isDeleting}
+            />
+          ))}
         </div>
       )}
 
