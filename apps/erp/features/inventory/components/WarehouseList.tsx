@@ -148,6 +148,7 @@ export function WarehouseList() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Button
               variant="outline"
+              aria-label={`Edit warehouse ${w.warehouse_name}`}
               onClick={() => {
                 setEditingWarehouse(w);
                 setIsOpenDrawer(true);
@@ -158,6 +159,7 @@ export function WarehouseList() {
             </Button>
             <Button
               variant="outline"
+              aria-label={`Delete warehouse ${w.warehouse_name}`}
               onClick={() => {
                 if (confirm(`Are you sure you want to delete warehouse "${w.warehouse_name}"?`)) {
                   deleteWarehouse(id);
