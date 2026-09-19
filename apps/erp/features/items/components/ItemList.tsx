@@ -1,6 +1,7 @@
 "use client";
 
 import { currencyApi, taxTypesApi, uomApi } from "@/features/masters/api";
+import { sanitizeCSVValue } from "@/lib/export-csv";
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import { ArrowUpRight, DollarSign, Download, Edit, Layers, Package, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -137,11 +138,11 @@ export function ItemList() {
     });
 
     const csvLines = [
-      headers.join(","),
+      headers.map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`).join(","),
       ...rows.map((row) =>
         row
           .map((cell) => {
-            const str = String(cell ?? "").replace(/"/g, '""');
+            const str = sanitizeCSVValue(cell).replace(/"/g, '""');
             return `"${str}"`;
           })
           .join(",")

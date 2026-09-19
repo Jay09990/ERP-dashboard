@@ -1,4 +1,18 @@
 /**
+ * Sanitizes cell values to prevent CSV / Formula Injection attacks
+ * when CSV files are opened in spreadsheet applications like Excel or Google Sheets.
+ */
+export function sanitizeCSVValue(val: unknown): string {
+  if (val === null || val === undefined) return "";
+  const str = String(val);
+  const trimmed = str.trimStart();
+  if (/^[=+@\-\t\r]/.test(trimmed)) {
+    return `'${str}`;
+  }
+  return str;
+}
+
+/**
  * Helper utility to export array of objects to CSV file
  */
 export function exportToCSV<T extends Record<string, any>>(
@@ -14,7 +28,7 @@ export function exportToCSV<T extends Record<string, any>>(
   const csvRows: string[] = [];
 
   // Header row
-  const headerLabels = headers.map((h) => `"${h.label.replace(/"/g, '""')}"`);
+  const headerLabels = headers.map((h) => `"${sanitizeCSVValue(h.label).replace(/"/g, '""')}"`);
   csvRows.push(headerLabels.join(","));
 
   // Data rows
@@ -28,7 +42,7 @@ export function exportToCSV<T extends Record<string, any>>(
       } else if (typeof rawVal === "object") {
         rawVal = JSON.stringify(rawVal);
       }
-      const strVal = String(rawVal).replace(/"/g, '""');
+      const strVal = sanitizeCSVValue(rawVal).replace(/"/g, '""');
       return `"${strVal}"`;
     });
     csvRows.push(values.join(","));
