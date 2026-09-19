@@ -172,6 +172,7 @@ export function BatchList() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Button
               variant="outline"
+              aria-label={`Edit batch ${b.batch_no}`}
               onClick={() => {
                 setEditingBatch(b);
                 setIsOpenDrawer(true);
@@ -182,6 +183,7 @@ export function BatchList() {
             </Button>
             <Button
               variant="outline"
+              aria-label={`Delete batch ${b.batch_no}`}
               onClick={() => {
                 if (confirm(`Are you sure you want to delete batch "${b.batch_no}"?`)) {
                   deleteBatch(id);
