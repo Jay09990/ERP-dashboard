@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Menu, PanelLeft } from "lucide-react";
+import { Loader2, LogOut, Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
@@ -72,6 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             type="button"
             className="altrex-icon-button"
             aria-label="Toggle sidebar"
+            aria-expanded={!collapsed}
             onClick={toggleSidebar}
           >
             {collapsed ? <Menu size={20} /> : <PanelLeft size={20} />}
@@ -90,12 +91,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               id="topbar-logout"
               className="altrex-icon-button"
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={loggingOut ? "Signing out..." : "Sign out"}
+              aria-busy={loggingOut}
+              title={loggingOut ? "Signing out..." : "Sign out"}
               onClick={handleLogout}
               disabled={loggingOut}
             >
-              <LogOut size={20} />
+              {loggingOut ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                <LogOut size={20} />
+              )}
             </button>
           </div>
         </header>
