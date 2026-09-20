@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { sanitizeCSVValue } from "@/lib/export-csv";
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import {
   ArrowUpDown,
@@ -815,7 +816,18 @@ export function DocumentList({
       docType === "credit_note" ? "Cr" : "Dr",
     ]);
 
-    const csvContent = [headers.join(","), ...rows.map((r) => r.map((cell) => `"${cell}"`).join(","))].join("\n");
+    const csvContent = [
+      headers.map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`).join(","),
+      ...rows.map((r) =>
+        r
+          .map((cell) => {
+            const str = sanitizeCSVValue(cell).replace(/"/g, '""');
+            return `"${str}"`;
+          })
+          .join(",")
+      ),
+    ].join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -824,6 +836,7 @@ export function DocumentList({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleFormSubmit = (payload: any) => {
