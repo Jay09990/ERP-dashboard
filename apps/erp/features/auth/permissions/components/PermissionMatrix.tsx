@@ -2,7 +2,7 @@
 
 import { Button } from "@altrex/ui";
 import { Check, CheckSquare, Shield, Square } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PermissionItem } from "../api";
 
 interface Props {
@@ -48,19 +48,26 @@ export function PermissionMatrix({
     onSave(permissions);
   };
 
-  // Group by module_name
-  const grouped = permissions.reduce(
-    (acc, item) => {
-      const mod = item.module_name || "General";
-      if (!acc[mod]) acc[mod] = [];
-      acc[mod].push(item);
-      return acc;
-    },
-    {} as Record<string, PermissionItem[]>,
-  );
+  // Memoize grouped data and permission counts to prevent O(N) grouping and array allocations on every parent/UI re-render
+  const { grouped, totalCount, grantedCount } = useMemo(() => {
+    const accGrouped: Record<string, PermissionItem[]> = {};
+    let granted = 0;
 
-  const totalCount = permissions.length;
-  const grantedCount = permissions.filter((p) => p.is_allowed).length;
+    for (const item of permissions) {
+      if (item.is_allowed) {
+        granted++;
+      }
+      const mod = item.module_name || "General";
+      if (!accGrouped[mod]) accGrouped[mod] = [];
+      accGrouped[mod].push(item);
+    }
+
+    return {
+      grouped: accGrouped,
+      totalCount: permissions.length,
+      grantedCount: granted,
+    };
+  }, [permissions]);
 
   return (
     <>
