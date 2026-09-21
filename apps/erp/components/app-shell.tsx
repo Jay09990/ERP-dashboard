@@ -2,6 +2,7 @@
 
 import {
   ChevronRight,
+  Loader2,
   LogOut,
   Menu,
   PanelLeft,
@@ -176,8 +177,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 type="text"
                 className="altrex-nav-search-input"
                 placeholder="Search menu..."
+                aria-label="Search navigation menu"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && searchQuery) {
+                    setSearchQuery("");
+                  }
+                }}
               />
               {searchQuery && (
                 <button
@@ -412,6 +419,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             type="button"
             className="altrex-icon-button"
             aria-label="Toggle sidebar"
+            aria-expanded={!collapsed}
             onClick={toggleSidebar}
           >
             {collapsed ? <Menu size={20} /> : <PanelLeft size={20} />}
@@ -426,12 +434,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               id="topbar-logout"
               className="altrex-icon-button"
-              aria-label="Sign out"
-              title="Sign out"
+              aria-label={loggingOut ? "Signing out..." : "Sign out"}
+              aria-busy={loggingOut}
+              title={loggingOut ? "Signing out..." : "Sign out"}
               onClick={handleLogout}
               disabled={loggingOut}
             >
-              <LogOut size={19} />
+              {loggingOut ? (
+                <Loader2 className="animate-spin" size={19} />
+              ) : (
+                <LogOut size={19} />
+              )}
             </button>
           </div>
         </header>
