@@ -1,13 +1,21 @@
 "use client";
 
+import { useItems } from "@/features/items";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowUpRight, BookOpen, Building, Download, RefreshCw, Search } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  BookOpen,
+  Building,
+  Download,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { useMemo, useState } from "react";
-import { useItems } from "@/features/items";
 import { stockApi } from "../api";
 import type { StockLedgerEntry } from "../schema";
 
@@ -16,7 +24,15 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (!value || typeof value !== "object" || visited.has(value)) return [];
   visited.add(value);
 
-  const keysToTry = ["ledger", "stock_ledger", "data", "rows", "records", "result", "payload"];
+  const keysToTry = [
+    "ledger",
+    "stock_ledger",
+    "data",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ];
   for (const k of keysToTry) {
     if (Array.isArray((value as any)[k])) return (value as any)[k];
   }
@@ -40,12 +56,23 @@ export function StockLedgerView() {
     return obj;
   }, [selectedItemId, selectedWarehouseId]);
 
-  const { data: responseData, isLoading, error, refetch } = stockApi.useLedger(params);
-  const ledgerEntries = useMemo(() => extractRecords<StockLedgerEntry>(responseData), [responseData]);
+  const {
+    data: responseData,
+    isLoading,
+    error,
+    refetch,
+  } = stockApi.useLedger(params);
+  const ledgerEntries = useMemo(
+    () => extractRecords<StockLedgerEntry>(responseData),
+    [responseData],
+  );
 
   // Fetch items for dropdown filter
   const { data: itemsResponse } = useItems();
-  const itemsList = useMemo(() => extractRecords<any>(itemsResponse), [itemsResponse]);
+  const itemsList = useMemo(
+    () => extractRecords<any>(itemsResponse),
+    [itemsResponse],
+  );
 
   // Fetch warehouses for dropdown filter
   const { data: warehousesResponse } = useQuery({
@@ -83,17 +110,40 @@ export function StockLedgerView() {
         {
           key: "transaction_date",
           label: "Date",
-          transform: (v, r) => (v || r.created_at ? new Date(v || r.created_at!).toLocaleDateString("en-IN") : "—"),
+          transform: (v, r) =>
+            v || r.created_at
+              ? new Date(v || r.created_at!).toLocaleDateString("en-IN")
+              : "—",
         },
-        { key: "item_name", label: "Item", transform: (v, r) => v || `Item #${r.item_id}` },
-        { key: "warehouse_name", label: "Warehouse", transform: (v, r) => v || `Warehouse #${r.warehouse_id || "N/A"}` },
-        { key: "voucher_type", label: "Voucher Type", transform: (v) => v || "—" },
+        {
+          key: "item_name",
+          label: "Item",
+          transform: (v, r) => v || `Item #${r.item_id}`,
+        },
+        {
+          key: "warehouse_name",
+          label: "Warehouse",
+          transform: (v, r) => v || `Warehouse #${r.warehouse_id || "N/A"}`,
+        },
+        {
+          key: "voucher_type",
+          label: "Voucher Type",
+          transform: (v) => v || "—",
+        },
         { key: "voucher_no", label: "Voucher No", transform: (v) => v || "—" },
         { key: "transaction_type", label: "Type", transform: (v) => v || "IN" },
-        { key: "quantity", label: "Quantity", transform: (v) => String(v ?? 0) },
-        { key: "balance", label: "Running Balance", transform: (v) => (v != null ? String(v) : "—") },
+        {
+          key: "quantity",
+          label: "Quantity",
+          transform: (v) => String(v ?? 0),
+        },
+        {
+          key: "balance",
+          label: "Running Balance",
+          transform: (v) => (v != null ? String(v) : "—"),
+        },
       ],
-      filteredEntries
+      filteredEntries,
     );
   };
 
@@ -103,9 +153,13 @@ export function StockLedgerView() {
       label: "Date",
       render: (e: StockLedgerEntry) => {
         const rawDate = e.transaction_date || e.created_at;
-        const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("en-IN") : "—";
+        const fmtDate = rawDate
+          ? new Date(rawDate).toLocaleDateString("en-IN")
+          : "—";
         return (
-          <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+          <span
+            style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+          >
             {fmtDate}
           </span>
         );
@@ -116,7 +170,14 @@ export function StockLedgerView() {
       label: "Item Details",
       render: (e: StockLedgerEntry) => (
         <div>
-          <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "13px", display: "block" }}>
+          <span
+            style={{
+              fontWeight: 600,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "13px",
+              display: "block",
+            }}
+          >
             {e.item_name || `Item #${e.item_id}`}
           </span>
         </div>
@@ -127,9 +188,15 @@ export function StockLedgerView() {
       label: "Warehouse Location",
       render: (e: StockLedgerEntry) => (
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Building size={14} style={{ color: "var(--altrex-muted, #94a3b8)" }} />
-          <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
-            {e.warehouse_name || (e.warehouse_id ? `Warehouse #${e.warehouse_id}` : "N/A")}
+          <Building
+            size={14}
+            style={{ color: "var(--altrex-muted, #94a3b8)" }}
+          />
+          <span
+            style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+          >
+            {e.warehouse_name ||
+              (e.warehouse_id ? `Warehouse #${e.warehouse_id}` : "N/A")}
           </span>
         </div>
       ),
@@ -139,11 +206,23 @@ export function StockLedgerView() {
       label: "Reference Voucher",
       render: (e: StockLedgerEntry) => (
         <div>
-          <span style={{ fontWeight: 500, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+          <span
+            style={{
+              fontWeight: 500,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "13px",
+            }}
+          >
             {e.voucher_no || "—"}
           </span>
           {e.voucher_type && (
-            <span style={{ display: "block", color: "var(--altrex-muted, #64748b)", fontSize: "11px" }}>
+            <span
+              style={{
+                display: "block",
+                color: "var(--altrex-muted, #64748b)",
+                fontSize: "11px",
+              }}
+            >
               {e.voucher_type}
             </span>
           )}
@@ -161,14 +240,14 @@ export function StockLedgerView() {
         const bgColor = isIn
           ? "rgba(16, 185, 129, 0.1)"
           : isOut
-          ? "rgba(239, 68, 68, 0.1)"
-          : "rgba(37, 99, 235, 0.1)";
+            ? "rgba(239, 68, 68, 0.1)"
+            : "rgba(37, 99, 235, 0.1)";
         const textColor = isIn ? "#10b981" : isOut ? "#ef4444" : "#2563eb";
         const borderColor = isIn
           ? "rgba(16, 185, 129, 0.2)"
           : isOut
-          ? "rgba(239, 68, 68, 0.2)"
-          : "rgba(37, 99, 235, 0.2)";
+            ? "rgba(239, 68, 68, 0.2)"
+            : "rgba(37, 99, 235, 0.2)";
 
         return (
           <span
@@ -185,7 +264,13 @@ export function StockLedgerView() {
               border: `1px solid ${borderColor}`,
             }}
           >
-            {isIn ? <ArrowDownLeft size={13} /> : isOut ? <ArrowUpRight size={13} /> : <BookOpen size={13} />}
+            {isIn ? (
+              <ArrowDownLeft size={13} />
+            ) : isOut ? (
+              <ArrowUpRight size={13} />
+            ) : (
+              <BookOpen size={13} />
+            )}
             {type}
           </span>
         );
@@ -207,7 +292,8 @@ export function StockLedgerView() {
               color: isOut ? "#ef4444" : "#10b981",
             }}
           >
-            {isOut ? "-" : "+"}{qty.toLocaleString("en-IN")}
+            {isOut ? "-" : "+"}
+            {qty.toLocaleString("en-IN")}
           </span>
         );
       },
@@ -216,7 +302,13 @@ export function StockLedgerView() {
       key: "balance" as const,
       label: "Balance Stock",
       render: (e: StockLedgerEntry) => (
-        <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+        <span
+          style={{
+            fontWeight: 600,
+            color: "var(--altrex-text, #0f172a)",
+            fontSize: "13px",
+          }}
+        >
           {e.balance != null ? Number(e.balance).toLocaleString("en-IN") : "—"}
         </span>
       ),
@@ -228,11 +320,25 @@ export function StockLedgerView() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Overview</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Stock Movement Ledger
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
-            Audit trail of all inbound, outbound, and adjustment stock transactions.
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
+            Audit trail of all inbound, outbound, and adjustment stock
+            transactions.
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
@@ -344,7 +450,10 @@ export function StockLedgerView() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading ledger history...</span>
         </div>

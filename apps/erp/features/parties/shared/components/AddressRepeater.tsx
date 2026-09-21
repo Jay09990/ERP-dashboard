@@ -2,8 +2,14 @@
 
 import { LocationCascadeSelect } from "@/components/shared/LocationCascadeSelect";
 import { MapPin, Plus, Trash2 } from "lucide-react";
-import { Control, useFieldArray, UseFormRegister, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import { PartyFormValues } from "../schema";
+import {
+  type Control,
+  type UseFormRegister,
+  type UseFormSetValue,
+  type UseFormWatch,
+  useFieldArray,
+} from "react-hook-form";
+import type { PartyFormValues } from "../schema";
 
 interface AddressRepeaterProps {
   control: Control<PartyFormValues>;
@@ -28,7 +34,8 @@ export function AddressRepeater({
   const handleAddAddress = () => {
     append({
       address_type: "billing",
-      address_label: fields.length === 0 ? "Head Office" : `Branch ${fields.length + 1}`,
+      address_label:
+        fields.length === 0 ? "Head Office" : `Branch ${fields.length + 1}`,
       attention_to: "",
       phone: "",
       address_line1: "",
@@ -42,9 +49,24 @@ export function AddressRepeater({
 
   return (
     <div className="altrex-repeater-section">
-      <div className="altrex-repeater-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div
+        className="altrex-repeater-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
         <div>
-          <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--altrex-text)" }}>
+          <h4
+            style={{
+              margin: 0,
+              fontSize: 14,
+              fontWeight: 700,
+              color: "var(--altrex-text)",
+            }}
+          >
             Addresses ({fields.length})
           </h4>
           <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
@@ -55,7 +77,14 @@ export function AddressRepeater({
           type="button"
           onClick={handleAddAddress}
           className="altrex-button altrex-button-secondary"
-          style={{ height: 32, fontSize: 12, padding: "0 10px", display: "flex", alignItems: "center", gap: 6 }}
+          style={{
+            height: 32,
+            fontSize: 12,
+            padding: "0 10px",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
         >
           <Plus size={14} />
           <span>Add Address</span>
@@ -75,7 +104,9 @@ export function AddressRepeater({
           }}
         >
           <MapPin size={24} style={{ margin: "0 auto 8px", opacity: 0.6 }} />
-          <p style={{ margin: 0 }}>No addresses added yet. Click &quot;Add Address&quot; above.</p>
+          <p style={{ margin: 0 }}>
+            No addresses added yet. Click &quot;Add Address&quot; above.
+          </p>
         </div>
       )}
 
@@ -123,8 +154,15 @@ export function AddressRepeater({
                   >
                     {index + 1}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--altrex-text)" }}>
-                    {watch(`addresses.${index}.address_label`) || `Address #${index + 1}`}
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "var(--altrex-text)",
+                    }}
+                  >
+                    {watch(`addresses.${index}.address_label`) ||
+                      `Address #${index + 1}`}
                   </span>
                 </div>
 
@@ -132,7 +170,13 @@ export function AddressRepeater({
                   type="button"
                   onClick={() => remove(index)}
                   className="altrex-icon-button"
-                  style={{ width: 28, height: 28, minWidth: 28, minHeight: 28, color: "var(--altrex-danger-text)" }}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    minWidth: 28,
+                    minHeight: 28,
+                    color: "var(--altrex-danger-text)",
+                  }}
                   title="Remove Address"
                   aria-label="Remove Address"
                 >
@@ -140,7 +184,14 @@ export function AddressRepeater({
                 </button>
               </div>
 
-              <div className="altrex-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div
+                className="altrex-form-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                }}
+              >
                 <label className="altrex-field">
                   <span>Address Label *</span>
                   <input
@@ -188,7 +239,10 @@ export function AddressRepeater({
                   />
                 </label>
 
-                <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
+                <label
+                  className="altrex-field"
+                  style={{ gridColumn: "1 / -1" }}
+                >
                   <span>Address Line 1 *</span>
                   <input
                     type="text"
@@ -203,7 +257,10 @@ export function AddressRepeater({
                   )}
                 </label>
 
-                <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
+                <label
+                  className="altrex-field"
+                  style={{ gridColumn: "1 / -1" }}
+                >
                   <span>Address Line 2</span>
                   <input
                     type="text"
@@ -218,9 +275,15 @@ export function AddressRepeater({
                   countryId={countryId}
                   stateId={stateId}
                   cityId={cityId}
-                  onCountryChange={(val) => setValue(`addresses.${index}.country_id`, val || null)}
-                  onStateChange={(val) => setValue(`addresses.${index}.state_id`, val || null)}
-                  onCityChange={(val) => setValue(`addresses.${index}.city_id`, val || null)}
+                  onCountryChange={(val) =>
+                    setValue(`addresses.${index}.country_id`, val || null)
+                  }
+                  onStateChange={(val) =>
+                    setValue(`addresses.${index}.state_id`, val || null)
+                  }
+                  onCityChange={(val) =>
+                    setValue(`addresses.${index}.city_id`, val || null)
+                  }
                 />
 
                 <label className="altrex-field">

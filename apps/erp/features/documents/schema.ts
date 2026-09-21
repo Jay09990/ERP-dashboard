@@ -13,7 +13,10 @@ export const documentLineItemSchema = z.object({
 });
 
 export const salesDocumentSchema = z.object({
-  party_id: z.union([z.number(), z.string().min(1, "Customer/Party is required")]),
+  party_id: z.union([
+    z.number(),
+    z.string().min(1, "Customer/Party is required"),
+  ]),
   document_date: z.string().min(1, "Date is required"),
   valid_until: z.string().optional(),
   expected_delivery_date: z.string().optional(),
@@ -27,7 +30,9 @@ export const salesDocumentSchema = z.object({
   terms_conditions: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(["draft", "approved", "sent", "cancelled"]).default("draft"),
-  itemsDetails: z.array(documentLineItemSchema).min(1, "At least one line item is required"),
+  itemsDetails: z
+    .array(documentLineItemSchema)
+    .min(1, "At least one line item is required"),
 });
 
 export type DocumentLineItemValues = z.infer<typeof documentLineItemSchema>;

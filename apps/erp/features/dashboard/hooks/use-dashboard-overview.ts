@@ -111,12 +111,17 @@ export function useDashboardOverview(): DashboardOverview {
     const customers = extractRecords(customersQuery.data);
     const vendors = extractRecords(vendorsQuery.data);
 
-    const monthlyInvoices = invoices.filter((doc) => isInCurrentMonth(getDocumentDate(doc)));
+    const monthlyInvoices = invoices.filter((doc) =>
+      isInCurrentMonth(getDocumentDate(doc)),
+    );
     const monthlyPurchaseInvoices = purchaseInvoices.filter((doc) =>
       isInCurrentMonth(getDocumentDate(doc)),
     );
 
-    const monthlySales = monthlyInvoices.reduce((sum, doc) => sum + getDocumentAmount(doc), 0);
+    const monthlySales = monthlyInvoices.reduce(
+      (sum, doc) => sum + getDocumentAmount(doc),
+      0,
+    );
     const monthlyPurchases = monthlyPurchaseInvoices.reduce(
       (sum, doc) => sum + getDocumentAmount(doc),
       0,

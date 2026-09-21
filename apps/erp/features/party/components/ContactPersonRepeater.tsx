@@ -1,8 +1,8 @@
 "use client";
 
-import { useFormContext, useFieldArray } from "react-hook-form";
-import { Trash2, Plus } from "lucide-react";
 import { Input } from "@altrex/ui";
+import { Plus, Trash2 } from "lucide-react";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import type { PartyFormValues } from "../schema";
 
 export function ContactPersonRepeater() {

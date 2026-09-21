@@ -28,9 +28,15 @@ export function ItemTypeList() {
   const [typeName, setTypeName] = useState("");
 
   const getTypeId = (t: ItemType) =>
-    t.item_type_id ?? (t as any).itemTypesId ?? (t as any).item_type_id ?? (t as any).id;
+    t.item_type_id ??
+    (t as any).itemTypesId ??
+    (t as any).item_type_id ??
+    (t as any).id;
   const getTypeName = (t: ItemType) =>
-    t.item_type_name ?? (t as any).itemTypeName ?? (t as any).name ?? "Unnamed item type";
+    t.item_type_name ??
+    (t as any).itemTypeName ??
+    (t as any).name ??
+    "Unnamed item type";
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +60,13 @@ export function ItemTypeList() {
       render: (t: ItemType) => (
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Tag size={16} style={{ color: "var(--altrex-primary)" }} />
-          <span style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
+          <span
+            style={{
+              fontWeight: 600,
+              color: "var(--altrex-text)",
+              fontSize: "14px",
+            }}
+          >
             {getTypeName(t)}
           </span>
         </div>
@@ -69,7 +81,11 @@ export function ItemTypeList() {
           <Button
             variant="outline"
             onClick={() => {
-              if (confirm(`Are you sure you want to delete item type "${getTypeName(t)}"?`)) {
+              if (
+                confirm(
+                  `Are you sure you want to delete item type "${getTypeName(t)}"?`,
+                )
+              ) {
                 deleteItemType(id);
               }
             }}
@@ -96,8 +112,15 @@ export function ItemTypeList() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
             Item Types
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            Manage item classification types (e.g. Raw Material, Finished Good, Service, Asset).
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
+            Manage item classification types (e.g. Raw Material, Finished Good,
+            Service, Asset).
           </p>
         </div>
         <Button
@@ -131,13 +154,20 @@ export function ItemTypeList() {
       )}
 
       {isOpenModal && (
-        <div className="altrex-dialog-backdrop" onClick={() => setIsOpenModal(false)}>
-          <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="altrex-dialog-backdrop"
+          onClick={() => setIsOpenModal(false)}
+        >
+          <div
+            className="altrex-dialog altrex-dialog-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="altrex-dialog-header">
               <div>
                 <h3 className="altrex-dialog-title">Add Item Type</h3>
                 <p className="altrex-dialog-subtitle">
-                  Define a new item classification type for inventory management.
+                  Define a new item classification type for inventory
+                  management.
                 </p>
               </div>
               <button
@@ -162,7 +192,11 @@ export function ItemTypeList() {
                 </label>
               </div>
               <div className="altrex-dialog-footer">
-                <Button variant="outline" type="button" onClick={() => setIsOpenModal(false)}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setIsOpenModal(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreating}>

@@ -1,16 +1,16 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, LogOut, Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import { navigation } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
-import { clearToken } from "@/lib/auth/token";
 import { endpoints } from "@/lib/api/endpoints";
+import { clearToken } from "@/lib/auth/token";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -34,8 +34,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       console.error("Logout request failed:", error);
     } finally {
       clearToken();
-      setSession(null);        // clear cached permissions/user immediately
-      queryClient.clear();     // drop all cached query data — critical before a new user can log in
+      setSession(null); // clear cached permissions/user immediately
+      queryClient.clear(); // drop all cached query data — critical before a new user can log in
       router.push("/login");
     }
   };

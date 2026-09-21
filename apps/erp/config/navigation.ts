@@ -1,10 +1,14 @@
 import {
+  ArrowRightLeft,
+  BookOpen,
   Boxes,
+  Briefcase,
   Building,
   Building2,
   CalendarDays,
   CalendarRange,
   ClipboardList,
+  Clock,
   Coins,
   CreditCard,
   Database,
@@ -20,7 +24,7 @@ import {
   HelpCircle,
   Landmark,
   LayoutDashboard,
-  LucideIcon,
+  type LucideIcon,
   Map,
   MapPin,
   Network,
@@ -28,6 +32,7 @@ import {
   Percent,
   Receipt,
   Ruler,
+  Scale,
   ShieldCheck,
   ShoppingBag,
   ShoppingCart,
@@ -38,11 +43,6 @@ import {
   UserCheck,
   Users,
   Users2,
-  Clock,
-  Briefcase,
-  BookOpen,
-  ArrowRightLeft,
-  Scale,
 } from "lucide-react";
 
 export interface NavChildItem {

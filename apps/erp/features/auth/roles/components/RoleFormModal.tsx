@@ -49,8 +49,16 @@ export function RoleFormModal({ role, onClose }: Props) {
   const isPending = isCreating || isUpdating;
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="altrex-dialog-backdrop"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="altrex-dialog altrex-dialog-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
@@ -122,7 +130,8 @@ export function RoleFormModal({ role, onClose }: Props) {
                 {...form.register("description")}
               />
               <span style={{ fontSize: "11px", color: "var(--altrex-muted)" }}>
-                After creating this role, open Permissions to configure its access rights.
+                After creating this role, open Permissions to configure its
+                access rights.
               </span>
             </label>
           </form>

@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { DataTable, FilterBar, StatusPill } from "@altrex/ui";
+import { useState } from "react";
 import { useCustomers, useDeleteCustomer } from "../api";
-import { PartyForm } from "./PartyForm";
 import type { PartyFormValues } from "../schema";
+import { PartyForm } from "./PartyForm";
 
 export function CustomerList() {
   const { data: customers = [], isLoading, error } = useCustomers();
   const deleteCustomer = useDeleteCustomer();
   const [showForm, setShowForm] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<PartyFormValues | null>(null);
+  const [editingCustomer, setEditingCustomer] =
+    useState<PartyFormValues | null>(null);
 
   const handleAdd = () => {
     setEditingCustomer(null);
@@ -56,7 +57,10 @@ export function CustomerList() {
     return (
       <div className="altrex-table-state">
         <span>No customers found</span>
-        <button onClick={handleAdd} className="altrex-button altrex-button-primary mt-4">
+        <button
+          onClick={handleAdd}
+          className="altrex-button altrex-button-primary mt-4"
+        >
           Add Customer
         </button>
       </div>
@@ -70,7 +74,10 @@ export function CustomerList() {
           <span className="altrex-eyebrow">Party Management</span>
           <h1>Customers</h1>
         </div>
-        <button onClick={handleAdd} className="altrex-button altrex-button-primary">
+        <button
+          onClick={handleAdd}
+          className="altrex-button altrex-button-primary"
+        >
           Add Customer
         </button>
       </div>

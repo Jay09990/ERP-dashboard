@@ -25,9 +25,12 @@ export function UserPermissionMatrixModal({
   onClose,
 }: Props) {
   const { data: allPermissions, isLoading: isLoadingAll } = useAllPermissions();
-  const { data: userPermissions, isLoading: isLoadingUser } = useUserPermissions(userId);
-  const { data: rolePermissions, isLoading: isLoadingRole } = useRolePermissions(roleId || "");
-  const { mutate: updatePermissions, isPending: isSaving } = useUpdateUserPermissions(userId);
+  const { data: userPermissions, isLoading: isLoadingUser } =
+    useUserPermissions(userId);
+  const { data: rolePermissions, isLoading: isLoadingRole } =
+    useRolePermissions(roleId || "");
+  const { mutate: updatePermissions, isPending: isSaving } =
+    useUpdateUserPermissions(userId);
 
   const [permissions, setPermissions] = useState<PermissionItem[]>([]);
   const [activeModule, setActiveModule] = useState<string>("");
@@ -36,16 +39,20 @@ export function UserPermissionMatrixModal({
   useEffect(() => {
     if (allPermissions) {
       const roleMap = new Map(
-        (rolePermissions || []).map((p: { permission_name: string; is_allowed: boolean }) => [
-          p.permission_name,
-          p.is_allowed,
-        ]),
+        (rolePermissions || []).map(
+          (p: { permission_name: string; is_allowed: boolean }) => [
+            p.permission_name,
+            p.is_allowed,
+          ],
+        ),
       );
       const userMap = new Map(
-        (userPermissions || []).map((p: { permission_name: string; is_allowed: boolean }) => [
-          p.permission_name,
-          p.is_allowed,
-        ]),
+        (userPermissions || []).map(
+          (p: { permission_name: string; is_allowed: boolean }) => [
+            p.permission_name,
+            p.is_allowed,
+          ],
+        ),
       );
 
       const merged = allPermissions.map((p: PermissionItem) => {
@@ -67,7 +74,9 @@ export function UserPermissionMatrixModal({
   }, [allPermissions, rolePermissions, userPermissions]);
 
   const modules = useMemo(() => {
-    const mods = Array.from(new Set(permissions.map((p) => p.module_name || "General")));
+    const mods = Array.from(
+      new Set(permissions.map((p) => p.module_name || "General")),
+    );
     if (activeModule === "" && mods.length > 0) setActiveModule(mods[0]);
     return mods;
   }, [permissions]);
@@ -98,10 +107,14 @@ export function UserPermissionMatrixModal({
 
   const totalCount = permissions.length;
   const grantedCount = permissions.filter((p) => p.is_allowed).length;
-  const inheritedCount = permissions.filter((p) => p.is_allowed && p.inherited).length;
+  const inheritedCount = permissions.filter(
+    (p) => p.is_allowed && p.inherited,
+  ).length;
 
   const activeModuleItems = useMemo(() => {
-    const items = permissions.filter((p) => (p.module_name || "General") === activeModule);
+    const items = permissions.filter(
+      (p) => (p.module_name || "General") === activeModule,
+    );
     if (!permSearch.trim()) return items;
     return items.filter((p) =>
       p.permission_name.toLowerCase().includes(permSearch.toLowerCase()),
@@ -109,7 +122,9 @@ export function UserPermissionMatrixModal({
   }, [permissions, activeModule, permSearch]);
 
   const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
-  const activeModuleGranted = activeModuleItems.filter((p) => p.is_allowed).length;
+  const activeModuleGranted = activeModuleItems.filter(
+    (p) => p.is_allowed,
+  ).length;
 
   if (isLoadingAll || isLoadingUser || (roleId && isLoadingRole)) {
     return (
@@ -150,16 +165,24 @@ export function UserPermissionMatrixModal({
               <Shield size={20} />
             </div>
             <div>
-              <h2 className="altrex-dialog-title">
-                Permissions — {userName}
-              </h2>
+              <h2 className="altrex-dialog-title">Permissions — {userName}</h2>
               <p className="altrex-dialog-subtitle" style={{ margin: 0 }}>
-                <span style={{ color: "var(--altrex-primary)", fontWeight: 700 }}>
+                <span
+                  style={{ color: "var(--altrex-primary)", fontWeight: 700 }}
+                >
                   {grantedCount}
                 </span>{" "}
-                of <span style={{ fontWeight: 700 }}>{totalCount}</span> permissions granted
+                of <span style={{ fontWeight: 700 }}>{totalCount}</span>{" "}
+                permissions granted
                 {inheritedCount > 0 && (
-                  <span style={{ color: "#3b82f6", marginLeft: "8px", fontSize: "12px", fontWeight: 600 }}>
+                  <span
+                    style={{
+                      color: "#3b82f6",
+                      marginLeft: "8px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    }}
+                  >
                     ({inheritedCount} inherited from role)
                   </span>
                 )}
@@ -189,7 +212,10 @@ export function UserPermissionMatrixModal({
             <div
               style={{
                 height: "100%",
-                width: totalCount > 0 ? `${(grantedCount / totalCount) * 100}%` : "0%",
+                width:
+                  totalCount > 0
+                    ? `${(grantedCount / totalCount) * 100}%`
+                    : "0%",
                 background: "#8b5cf6",
                 borderRadius: "2px",
                 transition: "width 300ms ease",
@@ -201,7 +227,13 @@ export function UserPermissionMatrixModal({
         {/* Body — two-column layout */}
         <div
           className="altrex-dialog-body"
-          style={{ padding: "0", display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}
+          style={{
+            padding: "0",
+            display: "flex",
+            flex: 1,
+            overflow: "hidden",
+            minHeight: 0,
+          }}
         >
           {/* Module Sidebar */}
           <div
@@ -231,9 +263,13 @@ export function UserPermissionMatrixModal({
                     width: "100%",
                     padding: "10px 16px",
                     textAlign: "left",
-                    background: isActive ? "rgba(139,92,246,0.08)" : "transparent",
+                    background: isActive
+                      ? "rgba(139,92,246,0.08)"
+                      : "transparent",
                     border: "none",
-                    borderLeft: isActive ? "3px solid #8b5cf6" : "3px solid transparent",
+                    borderLeft: isActive
+                      ? "3px solid #8b5cf6"
+                      : "3px solid transparent",
                     color: isActive ? "#8b5cf6" : "var(--altrex-text)",
                     fontWeight: isActive ? 700 : 500,
                     fontSize: "13px",
@@ -258,7 +294,10 @@ export function UserPermissionMatrixModal({
                       fontSize: "11px",
                       fontWeight: 600,
                       color: modGranted > 0 ? "#8b5cf6" : "var(--altrex-muted)",
-                      background: modGranted > 0 ? "rgba(139,92,246,0.1)" : "var(--altrex-raised)",
+                      background:
+                        modGranted > 0
+                          ? "rgba(139,92,246,0.1)"
+                          : "var(--altrex-raised)",
                       padding: "1px 6px",
                       borderRadius: "8px",
                       flexShrink: 0,
@@ -272,7 +311,14 @@ export function UserPermissionMatrixModal({
           </div>
 
           {/* Permission Items */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+            }}
+          >
             {/* Module toolbar */}
             <div
               style={{
@@ -300,12 +346,18 @@ export function UserPermissionMatrixModal({
                   placeholder="Search permissions..."
                   value={permSearch}
                   onChange={(e) => setPermSearch(e.target.value)}
-                  style={{ paddingLeft: "32px", height: "34px", fontSize: "13px" }}
+                  style={{
+                    paddingLeft: "32px",
+                    height: "34px",
+                    fontSize: "13px",
+                  }}
                 />
               </div>
               <button
                 type="button"
-                onClick={() => handleToggleAllInModule(activeModule, !activeModuleAllowed)}
+                onClick={() =>
+                  handleToggleAllInModule(activeModule, !activeModuleAllowed)
+                }
                 style={{
                   background: "transparent",
                   border: "1px solid var(--altrex-border)",
@@ -345,11 +397,20 @@ export function UserPermissionMatrixModal({
                   No permissions found
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px",
+                  }}
+                >
                   {activeModuleItems.map((item) => {
                     const actionParts = item.permission_name.split(":");
                     const action = actionParts[actionParts.length - 1];
-                    const actionColors: Record<string, { bg: string; color: string }> = {
+                    const actionColors: Record<
+                      string,
+                      { bg: string; color: string }
+                    > = {
                       view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
                       create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
                       update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },

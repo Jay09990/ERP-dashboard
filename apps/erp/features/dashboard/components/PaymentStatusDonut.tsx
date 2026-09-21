@@ -36,7 +36,9 @@ function CustomPieTooltip({ active, payload }: any) {
         />
         <span style={{ fontWeight: 700 }}>{data.name}:</span>
         <span>{formattedVal}</span>
-        <span style={{ color: "var(--altrex-muted)", fontSize: 11 }}>({data.payload.percentage}%)</span>
+        <span style={{ color: "var(--altrex-muted)", fontSize: 11 }}>
+          ({data.payload.percentage}%)
+        </span>
       </div>
     </div>
   );
@@ -78,7 +80,14 @@ export function PaymentStatusDonut() {
         </span>
       </div>
 
-      <div style={{ position: "relative", width: "100%", height: 200, margin: "10px 0" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: 200,
+          margin: "10px 0",
+        }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -91,7 +100,12 @@ export function PaymentStatusDonut() {
               dataKey="value"
             >
               {statusData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--altrex-surface)" strokeWidth={2} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                  stroke="var(--altrex-surface)"
+                  strokeWidth={2}
+                />
               ))}
             </Pie>
             <Tooltip content={<CustomPieTooltip />} />
@@ -108,10 +122,24 @@ export function PaymentStatusDonut() {
             pointerEvents: "none",
           }}
         >
-          <div style={{ fontSize: 10, fontWeight: 800, color: "var(--altrex-muted)", textTransform: "uppercase" }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: "var(--altrex-muted)",
+              textTransform: "uppercase",
+            }}
+          >
             Total Volume
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: "var(--altrex-text)", marginTop: 2 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 800,
+              color: "var(--altrex-text)",
+              marginTop: 2,
+            }}
+          >
             {totalInvoicedFormatted.split(".")[0]}
           </div>
         </div>
@@ -140,7 +168,9 @@ export function PaymentStatusDonut() {
                   backgroundColor: item.color,
                 }}
               />
-              <span style={{ fontWeight: 600, color: "var(--altrex-text)" }}>{item.name}</span>
+              <span style={{ fontWeight: 600, color: "var(--altrex-text)" }}>
+                {item.name}
+              </span>
             </div>
             <div style={{ fontWeight: 700, color: "var(--altrex-text)" }}>
               {item.percentage}%

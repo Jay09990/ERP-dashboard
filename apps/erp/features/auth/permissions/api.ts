@@ -16,7 +16,9 @@ export function useAllPermissions() {
       const response = await apiClient.get<
         { permissions?: PermissionItem[] } | PermissionItem[]
       >(endpoints.auth.permissions);
-      return Array.isArray(response) ? response : (response as any).permissions || [];
+      return Array.isArray(response)
+        ? response
+        : (response as any).permissions || [];
     },
   });
 }

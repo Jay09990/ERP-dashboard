@@ -1,6 +1,5 @@
 import { jwtDecode } from "jwt-decode";
 
-
 const TOKEN_KEY = "altrex_token";
 // Non-sensitive marker cookie — NOT the token itself — purely so Edge Middleware
 // can still do a fast "probably logged in" redirect without access to localStorage.
@@ -25,7 +24,9 @@ export function clearToken() {
 /** Decodes the JWT payload without verifying it — client-side use only,
  *  for UX checks like "is this token already expired" before even firing a request.
  *  Never trust this for actual authorization; that's the backend's job. */
-export function decodeTokenPayload(token: string): { exp?: number; [k: string]: unknown } | null {
+export function decodeTokenPayload(
+  token: string,
+): { exp?: number; [k: string]: unknown } | null {
   try {
     return jwtDecode(token);
   } catch {

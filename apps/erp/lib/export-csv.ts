@@ -17,8 +17,12 @@ export function sanitizeCSVValue(val: unknown): string {
  */
 export function exportToCSV<T extends Record<string, any>>(
   filename: string,
-  headers: { key: keyof T | string; label: string; transform?: (val: any, row: T) => string }[],
-  data: T[]
+  headers: {
+    key: keyof T | string;
+    label: string;
+    transform?: (val: any, row: T) => string;
+  }[],
+  data: T[],
 ) {
   if (!data || data.length === 0) {
     alert("No data available to export.");
@@ -28,7 +32,9 @@ export function exportToCSV<T extends Record<string, any>>(
   const csvRows: string[] = [];
 
   // Header row
-  const headerLabels = headers.map((h) => `"${sanitizeCSVValue(h.label).replace(/"/g, '""')}"`);
+  const headerLabels = headers.map(
+    (h) => `"${sanitizeCSVValue(h.label).replace(/"/g, '""')}"`,
+  );
   csvRows.push(headerLabels.join(","));
 
   // Data rows
@@ -54,7 +60,10 @@ export function exportToCSV<T extends Record<string, any>>(
 
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute(
+    "download",
+    `${filename}_${new Date().toISOString().slice(0, 10)}.csv`,
+  );
   link.style.visibility = "hidden";
   document.body.appendChild(link);
   link.click();

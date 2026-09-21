@@ -38,5 +38,7 @@ export const partySchema = z.object({
 });
 
 export type PartyAddressFormValues = z.infer<typeof partyAddressSchema>;
-export type PartyContactPersonFormValues = z.infer<typeof partyContactPersonSchema>;
+export type PartyContactPersonFormValues = z.infer<
+  typeof partyContactPersonSchema
+>;
 export type PartyFormValues = z.infer<typeof partySchema>;

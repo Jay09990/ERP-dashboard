@@ -4,15 +4,31 @@ import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { Edit, FileText, Printer, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DOCUMENT_PRINT_CONFIG, numberToWordsIndian } from "./DocumentList";
 import type { DocumentType } from "./DocumentForm";
+import { DOCUMENT_PRINT_CONFIG, numberToWordsIndian } from "./DocumentList";
 
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
   for (const key of keys) {
     if (Array.isArray(value?.[key])) return value[key];
   }
-  for (const key of ["data", "result", "payload", "response", "Invoices", "Quotations", "SalesOrders", "PurchaseOrders", "CreditNotes", "DebitNotes", "PurchaseInvoices", "DeliveryChallans", "items", "rows", "records"]) {
+  for (const key of [
+    "data",
+    "result",
+    "payload",
+    "response",
+    "Invoices",
+    "Quotations",
+    "SalesOrders",
+    "PurchaseOrders",
+    "CreditNotes",
+    "DebitNotes",
+    "PurchaseInvoices",
+    "DeliveryChallans",
+    "items",
+    "rows",
+    "records",
+  ]) {
     if (value?.[key] && value[key] !== value) {
       const nested = extractList(value[key], keys);
       if (nested.length > 0) return nested;
@@ -24,7 +40,11 @@ function extractList(value: any, keys: string[]): any[] {
 function extractObject(value: any, keys: string[]): any {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   for (const key of keys) {
-    if (value[key] && typeof value[key] === "object" && !Array.isArray(value[key])) {
+    if (
+      value[key] &&
+      typeof value[key] === "object" &&
+      !Array.isArray(value[key])
+    ) {
       return extractObject(value[key], keys);
     }
   }
@@ -51,7 +71,10 @@ export function DocumentPreviewModal({
   inline = false,
 }: DocumentPreviewModalProps) {
   const docSummary = doc || propDoc || {};
-  const isVendorDoc = docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note";
+  const isVendorDoc =
+    docType === "purchase_order" ||
+    docType === "purchase_invoice" ||
+    docType === "debit_note";
   const [detail, setDetail] = useState<any>(docSummary);
   const [company, setCompany] = useState<any>({});
   const [customerData, setCustomerData] = useState<any>({});
@@ -61,7 +84,7 @@ export function DocumentPreviewModal({
   const [cityRows, setCityRows] = useState<any[]>([]);
   const [stateRows, setStateRows] = useState<any[]>([]);
   const [countryRows, setCountryRows] = useState<any[]>([]);
-   const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [documentMode, setDocumentMode] = useState<"proforma" | "tax_invoice">(
     docType === "sales_invoice" ? "tax_invoice" : "proforma",
   );
@@ -70,6 +93,19 @@ export function DocumentPreviewModal({
   );
 
   const config = DOCUMENT_PRINT_CONFIG[docType];
+
+  useEffect(() => {
+    if (inline) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [inline, onClose]);
 
   useEffect(() => {
     let isMounted = true;
@@ -88,45 +124,115 @@ export function DocumentPreviewModal({
     async function loadData() {
       setIsLoading(true);
       try {
-        const detRes = documentId != null
-          ? await apiClient.get<any>(config.endpoint(documentId)).catch(() => docSummary)
-          : docSummary;
+        const detRes =
+          documentId != null
+            ? await apiClient
+                .get<any>(config.endpoint(documentId))
+                .catch(() => docSummary)
+            : docSummary;
 
-        const docDetail = extractList(detRes, config.keys.concat(["data", "Invoices", "Quotations", "SalesOrders", "PurchaseOrders", "CreditNotes", "DebitNotes", "rows", "records", "items"]))[0] ?? (detRes && !detRes.message && typeof detRes === "object" ? detRes : docSummary);
+        const docDetail =
+          extractList(
+            detRes,
+            config.keys.concat([
+              "data",
+              "Invoices",
+              "Quotations",
+              "SalesOrders",
+              "PurchaseOrders",
+              "CreditNotes",
+              "DebitNotes",
+              "rows",
+              "records",
+              "items",
+            ]),
+          )[0] ??
+          (detRes && !detRes.message && typeof detRes === "object"
+            ? detRes
+            : docSummary);
 
-        const partyId = docSummary.party_id ?? docSummary.customer_id ?? docSummary.vendor_id ?? docDetail.party_id ?? docDetail.customer_id ?? docDetail.vendor_id;
+        const partyId =
+          docSummary.party_id ??
+          docSummary.customer_id ??
+          docSummary.vendor_id ??
+          docDetail.party_id ??
+          docDetail.customer_id ??
+          docDetail.vendor_id;
 
-        const [profRes, custRes, uomRes, taxRes, bankRes, cityRes, stateRes, countryRes] =
-          await Promise.all([
-            apiClient.get<any>(endpoints.auth.profile).catch(() => ({})),
-            partyId != null
-              ? apiClient.get<any>(endpoints.party.customer(partyId)).catch(() =>
-                  apiClient.get<any>(endpoints.party.vendor(partyId)).catch(() => ({})),
+        const [
+          profRes,
+          custRes,
+          uomRes,
+          taxRes,
+          bankRes,
+          cityRes,
+          stateRes,
+          countryRes,
+        ] = await Promise.all([
+          apiClient.get<any>(endpoints.auth.profile).catch(() => ({})),
+          partyId != null
+            ? apiClient
+                .get<any>(endpoints.party.customer(partyId))
+                .catch(() =>
+                  apiClient
+                    .get<any>(endpoints.party.vendor(partyId))
+                    .catch(() => ({})),
                 )
-              : Promise.resolve({}),
-            apiClient.get<any>(endpoints.masters.uom).catch(() => []),
-            apiClient.get<any>(endpoints.masters.taxTypes).catch(() => []),
-            apiClient.get<any>(endpoints.masters.bank).catch(() => []),
-            apiClient.get<any>(endpoints.masters.city).catch(() => []),
-            apiClient.get<any>(endpoints.masters.state).catch(() => []),
-            apiClient.get<any>(endpoints.masters.country).catch(() => []),
-          ]);
+            : Promise.resolve({}),
+          apiClient.get<any>(endpoints.masters.uom).catch(() => []),
+          apiClient.get<any>(endpoints.masters.taxTypes).catch(() => []),
+          apiClient.get<any>(endpoints.masters.bank).catch(() => []),
+          apiClient.get<any>(endpoints.masters.city).catch(() => []),
+          apiClient.get<any>(endpoints.masters.state).catch(() => []),
+          apiClient.get<any>(endpoints.masters.country).catch(() => []),
+        ]);
 
         if (!isMounted) return;
 
         setDetail(docDetail);
 
-        const profileObj = (profRes as any)?.data ?? (profRes as any)?.profile ?? (profRes as any)?.result ?? profRes;
-        const profileDetails = profileObj?.profile_details ?? profileObj?.company ?? profileObj?.profile ?? profileObj?.data ?? (profileObj?.company_name ? profileObj : {});
-        const bankDetails = profileObj?.bank_details ?? profileObj?.bank ?? (profileObj?.account_no ? profileObj : {});
+        const profileObj =
+          (profRes as any)?.data ??
+          (profRes as any)?.profile ??
+          (profRes as any)?.result ??
+          profRes;
+        const profileDetails =
+          profileObj?.profile_details ??
+          profileObj?.company ??
+          profileObj?.profile ??
+          profileObj?.data ??
+          (profileObj?.company_name ? profileObj : {});
+        const bankDetails =
+          profileObj?.bank_details ??
+          profileObj?.bank ??
+          (profileObj?.account_no ? profileObj : {});
         setCompany({
           ...profileDetails,
           ...bankDetails,
           bank_id: bankDetails?.bank_id ?? profileDetails?.bank_id ?? null,
         });
 
-        const customerList = extractList(custRes, ["customers", "vendors", "parties", "customer", "vendor", "data", "rows"]);
-        setCustomerData(customerList.length > 0 ? customerList[0] : (extractObject(custRes, ["customer", "party", "vendor", "data", "result", "payload"]) ?? {}));
+        const customerList = extractList(custRes, [
+          "customers",
+          "vendors",
+          "parties",
+          "customer",
+          "vendor",
+          "data",
+          "rows",
+        ]);
+        setCustomerData(
+          customerList.length > 0
+            ? customerList[0]
+            : (extractObject(custRes, [
+                "customer",
+                "party",
+                "vendor",
+                "data",
+                "result",
+                "payload",
+              ]) ?? {}),
+        );
 
         setUnits(extractList(uomRes, ["units", "data", "rows"]));
         setTaxRows(extractList(taxRes, ["taxes", "taxTypes", "data", "rows"]));
@@ -162,11 +268,16 @@ export function DocumentPreviewModal({
     ) ?? {};
 
   const money = (val: any) =>
-    Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+    Number(val || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    });
 
   const fmtDate = (d: string) => {
     try {
-      return d ? new Date(d).toLocaleDateString("en-GB").replace(/\//g, " - ") : "";
+      return d
+        ? new Date(d).toLocaleDateString("en-GB").replace(/\//g, " - ")
+        : "";
     } catch {
       return d ?? "";
     }
@@ -229,21 +340,22 @@ export function DocumentPreviewModal({
     docSummary.due_date ??
     "";
 
-  const items = Array.isArray(detail.itemsDetails) && detail.itemsDetails.length > 0
-    ? detail.itemsDetails
-    : Array.isArray(detail.items) && detail.items.length > 0
-    ? detail.items
-    : Array.isArray(docSummary.itemsDetails)
-    ? docSummary.itemsDetails
-    : Array.isArray(docSummary.items)
-    ? docSummary.items
-    : [];
+  const items =
+    Array.isArray(detail.itemsDetails) && detail.itemsDetails.length > 0
+      ? detail.itemsDetails
+      : Array.isArray(detail.items) && detail.items.length > 0
+        ? detail.items
+        : Array.isArray(docSummary.itemsDetails)
+          ? docSummary.itemsDetails
+          : Array.isArray(docSummary.items)
+            ? docSummary.items
+            : [];
 
   const allTaxDetails = Array.isArray(detail.taxDetails)
     ? detail.taxDetails
     : Array.isArray(docSummary.taxDetails)
-    ? docSummary.taxDetails
-    : [];
+      ? docSummary.taxDetails
+      : [];
 
   const customerName =
     customerData.party_name ??
@@ -257,13 +369,20 @@ export function DocumentPreviewModal({
     docSummary.company_name ??
     "N/A";
 
-  const addresses = Array.isArray(customerData.addresses) ? customerData.addresses : [];
+  const addresses = Array.isArray(customerData.addresses)
+    ? customerData.addresses
+    : [];
   const billingAddress =
-    addresses.find((a: any) => ["billing", "both"].includes(a.address_type)) ?? addresses[0] ?? {};
+    addresses.find((a: any) => ["billing", "both"].includes(a.address_type)) ??
+    addresses[0] ??
+    {};
   const shippingAddress =
-    addresses.find((a: any) => ["shipping", "both"].includes(a.address_type)) ?? billingAddress;
+    addresses.find((a: any) => ["shipping", "both"].includes(a.address_type)) ??
+    billingAddress;
 
-  const contactPersons: any[] = Array.isArray(customerData.contactpersons) ? customerData.contactpersons : [];
+  const contactPersons: any[] = Array.isArray(customerData.contactpersons)
+    ? customerData.contactpersons
+    : [];
   const primaryContact = contactPersons[0] ?? null;
 
   const addressText = (addr: any) => {
@@ -291,70 +410,104 @@ export function DocumentPreviewModal({
   };
 
   const placeOfSupply = () => {
-    const stateObj = lookup(stateRows, billingAddress.state_id ?? company.state_id);
+    const stateObj = lookup(
+      stateRows,
+      billingAddress.state_id ?? company.state_id,
+    );
     const code = stateObj.state_code ?? stateObj.code ?? "GJ (24)";
     const name = stateObj.state_name ?? stateObj.name ?? "Gujarat";
     return `${name} (${code.replace(/^(GJ|IN-)?/i, "")})`;
   };
 
   const hasDiscountInItems = items.some(
-    (item: any) => Number(item.discount_flat || 0) > 0 || Number(item.discount_percent || 0) > 0,
+    (item: any) =>
+      Number(item.discount_flat || 0) > 0 ||
+      Number(item.discount_percent || 0) > 0,
   );
 
-  const discountValue = detail.discount_value != null
-    ? Number(detail.discount_value)
-    : items.reduce(
-        (sum: number, item: any) =>
-          sum +
-          Number(
-            item.discount_flat ??
-              (Number(item.quantity || 0) * Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0)) *
-                (Number(item.discount_percent || 0) / 100),
-          ),
-        0,
-      );
+  const discountValue =
+    detail.discount_value != null
+      ? Number(detail.discount_value)
+      : items.reduce(
+          (sum: number, item: any) =>
+            sum +
+            Number(
+              item.discount_flat ??
+                Number(item.quantity || 0) *
+                  Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0) *
+                  (Number(item.discount_percent || 0) / 100),
+            ),
+          0,
+        );
 
-  const taxableTotal = (detail.subtotal_amount != null && detail.discount_value != null)
-    ? (Number(detail.subtotal_amount) - Number(detail.discount_value))
-    : items.reduce((sum: number, item: any) => {
-        const qty = Number(item.quantity || 0);
-        const rate = Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0);
-        const gross = Number(item.total_rate ?? (qty * rate));
-        const disc = Number(item.discount_flat ?? (gross * (Number(item.discount_percent || 0) / 100)));
-        if (item.taxable_value != null) return sum + Number(item.taxable_value);
-        if (item.total_amount != null && item.tax_amount != null) return sum + (Number(item.total_amount) - Number(item.tax_amount));
-        return sum + (gross - disc);
-      }, 0);
+  const taxableTotal =
+    detail.subtotal_amount != null && detail.discount_value != null
+      ? Number(detail.subtotal_amount) - Number(detail.discount_value)
+      : items.reduce((sum: number, item: any) => {
+          const qty = Number(item.quantity || 0);
+          const rate = Number(
+            item.unit_rate ?? item.sales_rate ?? item.rate ?? 0,
+          );
+          const gross = Number(item.total_rate ?? qty * rate);
+          const disc = Number(
+            item.discount_flat ??
+              gross * (Number(item.discount_percent || 0) / 100),
+          );
+          if (item.taxable_value != null)
+            return sum + Number(item.taxable_value);
+          if (item.total_amount != null && item.tax_amount != null)
+            return sum + (Number(item.total_amount) - Number(item.tax_amount));
+          return sum + (gross - disc);
+        }, 0);
 
   const cgstTotal = allTaxDetails
-    .filter((tax: any) => /cgst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""))
+    .filter((tax: any) =>
+      /cgst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""),
+    )
     .reduce((sum: number, tax: any) => sum + Number(tax.tax_amount || 0), 0);
 
   const sgstTotal = allTaxDetails
-    .filter((tax: any) => /sgst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""))
+    .filter((tax: any) =>
+      /sgst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""),
+    )
     .reduce((sum: number, tax: any) => sum + Number(tax.tax_amount || 0), 0);
 
   const igstTotal = allTaxDetails
-    .filter((tax: any) => /igst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""))
+    .filter((tax: any) =>
+      /igst/i.test(tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? ""),
+    )
     .reduce((sum: number, tax: any) => sum + Number(tax.tax_amount || 0), 0);
 
-  const itemTaxTotal = items.reduce((sum: number, item: any) => sum + Number(item.tax_amount || 0), 0);
-  const totalTaxAmount = detail.total_tax_amount != null
-    ? Number(detail.total_tax_amount)
-    : (cgstTotal + sgstTotal + igstTotal || itemTaxTotal);
+  const itemTaxTotal = items.reduce(
+    (sum: number, item: any) => sum + Number(item.tax_amount || 0),
+    0,
+  );
+  const totalTaxAmount =
+    detail.total_tax_amount != null
+      ? Number(detail.total_tax_amount)
+      : cgstTotal + sgstTotal + igstTotal || itemTaxTotal;
 
   const roundOff = Number(detail.round_off || docSummary.round_off || 0);
-  const total = detail.total_amount != null ? Number(detail.total_amount) : (taxableTotal + totalTaxAmount + roundOff);
+  const total =
+    detail.total_amount != null
+      ? Number(detail.total_amount)
+      : taxableTotal + totalTaxAmount + roundOff;
   const words = `${numberToWordsIndian(Math.round(total))} Only`;
 
   const bank = lookup(bankRows, company.bank_id);
-  const terms = String(detail.terms_conditions ?? docSummary.terms_conditions ?? "").split(/\r?\n/).filter(Boolean);
+  const terms = String(
+    detail.terms_conditions ?? docSummary.terms_conditions ?? "",
+  )
+    .split(/\r?\n/)
+    .filter(Boolean);
   const hasTerms = terms.length > 0;
 
   const isCreditNote = docType === "credit_note";
   const isDebitNote = docType === "debit_note";
   const isDeliveryChallan = docType === "delivery_challan";
-  const isApproved = (detail.status || "draft") === "approved" || (detail.status || "draft") === "sent";
+  const isApproved =
+    (detail.status || "draft") === "approved" ||
+    (detail.status || "draft") === "sent";
 
   const renderPaperCard = () => (
     <div
@@ -413,41 +566,82 @@ export function DocumentPreviewModal({
       ) : null}
 
       {/* Header Section */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "20px",
+        }}
+      >
         <div style={{ maxWidth: "56%" }}>
           {company.logo && (
             <img
               src={company.logo}
               alt="Company Logo"
-              style={{ maxHeight: "55px", maxWidth: "200px", objectFit: "contain", marginBottom: "6px" }}
+              style={{
+                maxHeight: "55px",
+                maxWidth: "200px",
+                objectFit: "contain",
+                marginBottom: "6px",
+              }}
             />
           )}
-          <div style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "3px" }}>
+          <div
+            style={{
+              fontSize: "18px",
+              fontWeight: 800,
+              color: "#0f172a",
+              marginBottom: "3px",
+            }}
+          >
             {company.company_name ?? "Teton Projects PVT LTD"}
           </div>
           <p style={{ margin: "2px 0", color: "#475569" }}>
-            {companyAddressText() || "Plot 88, GIDC Industrial Estate, Vatva Phase IV, Ahmedabad, Gujarat, 400057, India"}
+            {companyAddressText() ||
+              "Plot 88, GIDC Industrial Estate, Vatva Phase IV, Ahmedabad, Gujarat, 400057, India"}
           </p>
-          <p style={{ margin: "2px 0", color: "#475569" }}>+{company.phone ?? "9109811223344"}</p>
-          <p style={{ margin: "2px 0", color: "#475569" }}>{company.email ?? "sales@bharatsteel.in"}</p>
+          <p style={{ margin: "2px 0", color: "#475569" }}>
+            +{company.phone ?? "9109811223344"}
+          </p>
+          <p style={{ margin: "2px 0", color: "#475569" }}>
+            {company.email ?? "sales@bharatsteel.in"}
+          </p>
           <p style={{ margin: "2px 0", color: "#475569" }}>
             <strong>GSTIN:</strong> {company.gst_no ?? "2TAAACA123411Z5"}{" "}
-            <span>&nbsp;<strong>Website:</strong> {company.website ?? "https://tetonmep.com/"}</span>
+            <span>
+              &nbsp;<strong>Website:</strong>{" "}
+              {company.website ?? "https://tetonmep.com/"}
+            </span>
           </p>
           <p style={{ margin: "2px 0", color: "#475569" }}>
-            <strong>Contact Name:</strong> {company.contact_name ?? "Ramesh Gupta"}
+            <strong>Contact Name:</strong>{" "}
+            {company.contact_name ?? "Ramesh Gupta"}
           </p>
         </div>
 
         <div style={{ width: "40%", textAlign: "right" }}>
-          <div style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", letterSpacing: "0.5px" }}>
+          <div
+            style={{
+              fontSize: "20px",
+              fontWeight: 800,
+              color: "#0f172a",
+              letterSpacing: "0.5px",
+            }}
+          >
             {docType === "sales_invoice" || docType === "proforma"
               ? documentMode === "proforma"
                 ? "PROFORMA"
                 : "TAX INVOICE"
               : config.label}
           </div>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "#334155", marginBottom: "10px" }}>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "#334155",
+              marginBottom: "10px",
+            }}
+          >
             {docRefNo}
           </div>
 
@@ -467,11 +661,15 @@ export function DocumentPreviewModal({
               <span style={{ fontSize: "12px", fontWeight: 600 }}>
                 {isCreditNote ? "Credits Available:" : "Amount Due:"}
               </span>
-              <span style={{ fontSize: "15px", fontWeight: 800 }}>INR {money(total)}</span>
+              <span style={{ fontSize: "15px", fontWeight: 800 }}>
+                INR {money(total)}
+              </span>
             </div>
           )}
 
-          <div style={{ fontSize: "10.5px", color: "#334155", lineHeight: 1.6 }}>
+          <div
+            style={{ fontSize: "10.5px", color: "#334155", lineHeight: 1.6 }}
+          >
             <div>
               <strong>Issue Date:</strong> &nbsp;&nbsp; {fmtDate(date)}
             </div>
@@ -481,8 +679,8 @@ export function DocumentPreviewModal({
                   {docType === "quotation" || docType === "purchase_order"
                     ? "Valid Until:"
                     : isDeliveryChallan
-                    ? "Shipping Date:"
-                    : "Due Date:"}
+                      ? "Shipping Date:"
+                      : "Due Date:"}
                 </strong>{" "}
                 &nbsp;&nbsp; {fmtDate(validUntil)}
               </div>
@@ -508,18 +706,39 @@ export function DocumentPreviewModal({
         }}
       >
         <div>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#1e293b", marginBottom: "4px" }}>
-            {docType === "quotation" ? "Quote To" : isVendorDoc ? "Vendor" : "Bill To"}
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#1e293b",
+              marginBottom: "4px",
+            }}
+          >
+            {docType === "quotation"
+              ? "Quote To"
+              : isVendorDoc
+                ? "Vendor"
+                : "Bill To"}
           </div>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>{customerName}</div>
+          <div
+            style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}
+          >
+            {customerName}
+          </div>
           {primaryContact?.name && (
-            <p style={{ margin: "2px 0", color: "#475569" }}>{primaryContact.name}</p>
+            <p style={{ margin: "2px 0", color: "#475569" }}>
+              {primaryContact.name}
+            </p>
           )}
           {addressText(billingAddress) ? (
-            <p style={{ margin: "2px 0", color: "#475569" }}>{addressText(billingAddress)}</p>
+            <p style={{ margin: "2px 0", color: "#475569" }}>
+              {addressText(billingAddress)}
+            </p>
           ) : null}
           {customerData.phone && (
-            <p style={{ margin: "2px 0", color: "#475569" }}>Ph: {customerData.phone}</p>
+            <p style={{ margin: "2px 0", color: "#475569" }}>
+              Ph: {customerData.phone}
+            </p>
           )}
           {customerData.gst_no && (
             <p style={{ margin: "2px 0", color: "#475569" }}>
@@ -529,12 +748,25 @@ export function DocumentPreviewModal({
         </div>
 
         <div>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#1e293b", marginBottom: "4px" }}>
+          <div
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#1e293b",
+              marginBottom: "4px",
+            }}
+          >
             Ship To
           </div>
-          <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>{customerName}</div>
+          <div
+            style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}
+          >
+            {customerName}
+          </div>
           {addressText(shippingAddress) ? (
-            <p style={{ margin: "2px 0", color: "#475569" }}>{addressText(shippingAddress)}</p>
+            <p style={{ margin: "2px 0", color: "#475569" }}>
+              {addressText(shippingAddress)}
+            </p>
           ) : null}
         </div>
       </div>
@@ -549,39 +781,110 @@ export function DocumentPreviewModal({
         }}
       >
         <thead>
-          <tr style={{ background: "#2b5b84", color: "#ffffff", fontWeight: 700 }}>
-            <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "center", width: "4%" }}>
+          <tr
+            style={{ background: "#2b5b84", color: "#ffffff", fontWeight: 700 }}
+          >
+            <th
+              style={{
+                padding: "7px 4px",
+                border: "1px solid #2b5b84",
+                textAlign: "center",
+                width: "4%",
+              }}
+            >
               S.NO
             </th>
-            <th style={{ padding: "7px 6px", border: "1px solid #2b5b84", textAlign: "left" }}>
+            <th
+              style={{
+                padding: "7px 6px",
+                border: "1px solid #2b5b84",
+                textAlign: "left",
+              }}
+            >
               ITEM DESCRIPTION
             </th>
-            <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "center", width: "9%" }}>
+            <th
+              style={{
+                padding: "7px 4px",
+                border: "1px solid #2b5b84",
+                textAlign: "center",
+                width: "9%",
+              }}
+            >
               HSN/SAC
             </th>
-            <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "center", width: "9%" }}>
+            <th
+              style={{
+                padding: "7px 4px",
+                border: "1px solid #2b5b84",
+                textAlign: "center",
+                width: "9%",
+              }}
+            >
               QTY UOM
             </th>
             {!isDeliveryChallan && (
               <>
-                <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "10%" }}>
+                <th
+                  style={{
+                    padding: "7px 4px",
+                    border: "1px solid #2b5b84",
+                    textAlign: "right",
+                    width: "10%",
+                  }}
+                >
                   PRICE (INR)
                 </th>
                 {hasDiscountInItems && (
-                  <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "10%" }}>
+                  <th
+                    style={{
+                      padding: "7px 4px",
+                      border: "1px solid #2b5b84",
+                      textAlign: "right",
+                      width: "10%",
+                    }}
+                  >
                     DISCOUNT (INR)
                   </th>
                 )}
-                <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "11%" }}>
+                <th
+                  style={{
+                    padding: "7px 4px",
+                    border: "1px solid #2b5b84",
+                    textAlign: "right",
+                    width: "11%",
+                  }}
+                >
                   TAXABLE VALUE (INR)
                 </th>
-                <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "10%" }}>
+                <th
+                  style={{
+                    padding: "7px 4px",
+                    border: "1px solid #2b5b84",
+                    textAlign: "right",
+                    width: "10%",
+                  }}
+                >
                   CGST (INR)
                 </th>
-                <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "10%" }}>
+                <th
+                  style={{
+                    padding: "7px 4px",
+                    border: "1px solid #2b5b84",
+                    textAlign: "right",
+                    width: "10%",
+                  }}
+                >
                   SGST (INR)
                 </th>
-                <th style={{ padding: "7px 4px", border: "1px solid #2b5b84", textAlign: "right", width: "12%" }}>
+                <th
+                  style={{
+                    padding: "7px 4px",
+                    border: "1px solid #2b5b84",
+                    textAlign: "right",
+                    width: "12%",
+                  }}
+                >
                   AMOUNT (INR)
                 </th>
               </>
@@ -591,70 +894,161 @@ export function DocumentPreviewModal({
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={isDeliveryChallan ? 4 : (hasDiscountInItems ? 10 : 9)} style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>
+              <td
+                colSpan={isDeliveryChallan ? 4 : hasDiscountInItems ? 10 : 9}
+                style={{
+                  padding: "24px",
+                  textAlign: "center",
+                  color: "#64748b",
+                }}
+              >
                 Loading preview details...
               </td>
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={isDeliveryChallan ? 4 : (hasDiscountInItems ? 10 : 9)} style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>
+              <td
+                colSpan={isDeliveryChallan ? 4 : hasDiscountInItems ? 10 : 9}
+                style={{
+                  padding: "24px",
+                  textAlign: "center",
+                  color: "#64748b",
+                }}
+              >
                 No items in document.
               </td>
             </tr>
           ) : (
             items.map((item: any, idx: number) => {
               const quantity = Number(item.quantity || 0);
-              const rate = Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0);
+              const rate = Number(
+                item.unit_rate ?? item.sales_rate ?? item.rate ?? 0,
+              );
               const flatDiscount = Number(item.discount_flat ?? 0);
               const pctDiscount = Number(item.discount_percent ?? 0);
-              const grossRate = item.total_rate != null ? Number(item.total_rate) : quantity * rate;
-              const discAmt = flatDiscount > 0 ? flatDiscount : grossRate * (pctDiscount / 100);
-              const taxable = item.taxable_value != null
-                ? Number(item.taxable_value)
-                : (item.total_rate != null && (flatDiscount > 0 || pctDiscount > 0))
-                ? (grossRate - discAmt)
-                : (item.total_amount != null && item.tax_amount != null)
-                ? (Number(item.total_amount) - Number(item.tax_amount))
-                : (grossRate - discAmt);
+              const grossRate =
+                item.total_rate != null
+                  ? Number(item.total_rate)
+                  : quantity * rate;
+              const discAmt =
+                flatDiscount > 0
+                  ? flatDiscount
+                  : grossRate * (pctDiscount / 100);
+              const taxable =
+                item.taxable_value != null
+                  ? Number(item.taxable_value)
+                  : item.total_rate != null &&
+                      (flatDiscount > 0 || pctDiscount > 0)
+                    ? grossRate - discAmt
+                    : item.total_amount != null && item.tax_amount != null
+                      ? Number(item.total_amount) - Number(item.tax_amount)
+                      : grossRate - discAmt;
 
               const unit = lookup(units, item.unit_id);
               const lineId = item[config.itemIdKey];
               const itemTaxes = allTaxDetails.filter((tax: any) => {
-                const ref = tax[config.taxRefKey] ?? tax[`${docType}_item_index`];
+                const ref =
+                  tax[config.taxRefKey] ?? tax[`${docType}_item_index`];
                 return String(ref) === String(lineId ?? idx);
               });
-              const taxName = (tax: any) => tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? "";
-              const cgst = itemTaxes.find((tax: any) => /cgst/i.test(taxName(tax)));
-              const sgst = itemTaxes.find((tax: any) => /sgst/i.test(taxName(tax)));
-              const igst = itemTaxes.find((tax: any) => /igst/i.test(taxName(tax)));
-              const itemTaxSum = itemTaxes.length > 0
-                ? itemTaxes.reduce((sum: number, t: any) => sum + Number(t.tax_amount || 0), 0)
-                : Number(item.tax_amount || 0);
+              const taxName = (tax: any) =>
+                tax.tax_name ?? lookup(taxRows, tax.tax_id).tax_name ?? "";
+              const cgst = itemTaxes.find((tax: any) =>
+                /cgst/i.test(taxName(tax)),
+              );
+              const sgst = itemTaxes.find((tax: any) =>
+                /sgst/i.test(taxName(tax)),
+              );
+              const igst = itemTaxes.find((tax: any) =>
+                /igst/i.test(taxName(tax)),
+              );
+              const itemTaxSum =
+                itemTaxes.length > 0
+                  ? itemTaxes.reduce(
+                      (sum: number, t: any) => sum + Number(t.tax_amount || 0),
+                      0,
+                    )
+                  : Number(item.tax_amount || 0);
 
-              const cgstAmt = cgst ? Number(cgst.tax_amount) : (igst ? Number(igst.tax_amount) : (itemTaxes.length === 1 ? Number(itemTaxes[0].tax_amount) : (itemTaxSum > 0 && !sgst ? itemTaxSum / 2 : 0)));
-              const sgstAmt = sgst ? Number(sgst.tax_amount) : (itemTaxes.length > 1 ? Number(itemTaxes[1].tax_amount) : (itemTaxSum > 0 && !cgst && !igst ? itemTaxSum / 2 : 0));
+              const cgstAmt = cgst
+                ? Number(cgst.tax_amount)
+                : igst
+                  ? Number(igst.tax_amount)
+                  : itemTaxes.length === 1
+                    ? Number(itemTaxes[0].tax_amount)
+                    : itemTaxSum > 0 && !sgst
+                      ? itemTaxSum / 2
+                      : 0;
+              const sgstAmt = sgst
+                ? Number(sgst.tax_amount)
+                : itemTaxes.length > 1
+                  ? Number(itemTaxes[1].tax_amount)
+                  : itemTaxSum > 0 && !cgst && !igst
+                    ? itemTaxSum / 2
+                    : 0;
 
-              const cgstPctVal = cgst?.tax_percent ?? (cgstAmt > 0 && taxable > 0 ? (cgstAmt / taxable) * 100 : 9);
-              const sgstPctVal = sgst?.tax_percent ?? (sgstAmt > 0 && taxable > 0 ? (sgstAmt / taxable) * 100 : 9);
+              const cgstPctVal =
+                cgst?.tax_percent ??
+                (cgstAmt > 0 && taxable > 0 ? (cgstAmt / taxable) * 100 : 9);
+              const sgstPctVal =
+                sgst?.tax_percent ??
+                (sgstAmt > 0 && taxable > 0 ? (sgstAmt / taxable) * 100 : 9);
 
-              const lineTotal = item.total_amount != null ? Number(item.total_amount) : (taxable + itemTaxSum);
-              const uomStr = unit.unit_code ?? unit.unit_name ?? item.unit_name ?? "NOS";
+              const lineTotal =
+                item.total_amount != null
+                  ? Number(item.total_amount)
+                  : taxable + itemTaxSum;
+              const uomStr =
+                unit.unit_code ?? unit.unit_name ?? item.unit_name ?? "NOS";
 
               if (isDeliveryChallan) {
                 return (
                   <tr key={idx} style={{ borderBottom: "1px solid #cbd5e1" }}>
-                    <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>{idx + 1}</td>
-                    <td style={{ padding: "6px 6px", border: "1px solid #cbd5e1" }}>
-                      <strong>{item.item_name ?? item.description ?? "Line item"}</strong>
+                    <td
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "center",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
+                      {idx + 1}
+                    </td>
+                    <td
+                      style={{
+                        padding: "6px 6px",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
+                      <strong>
+                        {item.item_name ?? item.description ?? "Line item"}
+                      </strong>
                       {item.item_name && item.description && (
-                        <div style={{ color: "#64748b", fontSize: "8.5px" }}>{item.description}</div>
+                        <div style={{ color: "#64748b", fontSize: "8.5px" }}>
+                          {item.description}
+                        </div>
                       )}
                     </td>
-                    <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>{item.hsn_code || "—"}</td>
-                    <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>
+                    <td
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "center",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
+                      {item.hsn_code || "—"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "center",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
                       <strong>{quantity.toFixed(2)}</strong>
                       <br />
-                      <span style={{ fontSize: "8px", color: "#64748b" }}>{uomStr}</span>
+                      <span style={{ fontSize: "8px", color: "#64748b" }}>
+                        {uomStr}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -662,38 +1056,123 @@ export function DocumentPreviewModal({
 
               return (
                 <tr key={idx} style={{ borderBottom: "1px solid #cbd5e1" }}>
-                  <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>{idx + 1}</td>
-                  <td style={{ padding: "6px 6px", border: "1px solid #cbd5e1" }}>
-                    <strong>{item.item_name ?? item.description ?? "Line item"}</strong>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "center",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    {idx + 1}
+                  </td>
+                  <td
+                    style={{ padding: "6px 6px", border: "1px solid #cbd5e1" }}
+                  >
+                    <strong>
+                      {item.item_name ?? item.description ?? "Line item"}
+                    </strong>
                     {item.item_name && item.description && (
-                      <div style={{ color: "#64748b", fontSize: "8.5px" }}>{item.description}</div>
+                      <div style={{ color: "#64748b", fontSize: "8.5px" }}>
+                        {item.description}
+                      </div>
                     )}
                   </td>
-                  <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>{item.hsn_code || "—"}</td>
-                  <td style={{ padding: "6px 4px", textAlign: "center", border: "1px solid #cbd5e1" }}>
-                    {quantity.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
-                    <br />
-                    <span style={{ fontSize: "8px", color: "#64748b" }}>{uomStr}</span>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "center",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    {item.hsn_code || "—"}
                   </td>
-                  <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1" }}>{money(rate)}</td>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "center",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    {quantity.toLocaleString("en-IN", {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 2,
+                    })}
+                    <br />
+                    <span style={{ fontSize: "8px", color: "#64748b" }}>
+                      {uomStr}
+                    </span>
+                  </td>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "right",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    {money(rate)}
+                  </td>
                   {hasDiscountInItems && (
-                    <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1" }}>
+                    <td
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "right",
+                        border: "1px solid #cbd5e1",
+                      }}
+                    >
                       {money(discAmt)}
-                      {pctDiscount > 0 && <span style={{ fontSize: "8px", color: "#64748b" }}><br />{pctDiscount}%</span>}
+                      {pctDiscount > 0 && (
+                        <span style={{ fontSize: "8px", color: "#64748b" }}>
+                          <br />
+                          {pctDiscount}%
+                        </span>
+                      )}
                     </td>
                   )}
-                  <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1" }}>{money(taxable)}</td>
-                  <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1" }}>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "right",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    {money(taxable)}
+                  </td>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "right",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
                     {money(cgstAmt)}
                     <br />
-                    <span style={{ fontSize: "8px", color: "#64748b" }}>{cgstPctVal}%</span>
+                    <span style={{ fontSize: "8px", color: "#64748b" }}>
+                      {cgstPctVal}%
+                    </span>
                   </td>
-                  <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1" }}>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "right",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
                     {money(sgstAmt)}
                     <br />
-                    <span style={{ fontSize: "8px", color: "#64748b" }}>{sgstPctVal}%</span>
+                    <span style={{ fontSize: "8px", color: "#64748b" }}>
+                      {sgstPctVal}%
+                    </span>
                   </td>
-                  <td style={{ padding: "6px 4px", textAlign: "right", border: "1px solid #cbd5e1", fontWeight: 700 }}>{money(lineTotal)}</td>
+                  <td
+                    style={{
+                      padding: "6px 4px",
+                      textAlign: "right",
+                      border: "1px solid #cbd5e1",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {money(lineTotal)}
+                  </td>
                 </tr>
               );
             })
@@ -703,45 +1182,82 @@ export function DocumentPreviewModal({
 
       {/* Bottom Summary Section */}
       {!isDeliveryChallan && (
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "16px",
+          }}
+        >
           {/* Bank Details */}
-          <div style={{ fontSize: "10.5px", color: "#334155", lineHeight: 1.6 }}>
+          <div
+            style={{ fontSize: "10.5px", color: "#334155", lineHeight: 1.6 }}
+          >
             <div>
-              <strong>Bank Name:</strong> {bank.bank_name ?? company.bank_name ?? company.bank ?? "HDFC Bank"}
+              <strong>Bank Name:</strong>{" "}
+              {bank.bank_name ??
+                company.bank_name ??
+                company.bank ??
+                "HDFC Bank"}
             </div>
             <div>
-              <strong>Account Number:</strong> {company.account_no ?? company.account_number ?? "50200012345678"}
+              <strong>Account Number:</strong>{" "}
+              {company.account_no ?? company.account_number ?? "50200012345678"}
             </div>
             <div>
-              <strong>Branch Name:</strong> {company.branch_name ?? company.branch ?? "Vile Parle East, Mumbai"}
+              <strong>Branch Name:</strong>{" "}
+              {company.branch_name ??
+                company.branch ??
+                "Vile Parle East, Mumbai"}
             </div>
             <div>
-              <strong>IFSC Code:</strong> {company.ifsc_code ?? bank.ifsc_code ?? "HDFC0001234"}
+              <strong>IFSC Code:</strong>{" "}
+              {company.ifsc_code ?? bank.ifsc_code ?? "HDFC0001234"}
             </div>
           </div>
 
           {/* Financial Totals Box */}
-          <div style={{ textAlign: "right", fontSize: "11px", lineHeight: 1.7, minWidth: "320px" }}>
+          <div
+            style={{
+              textAlign: "right",
+              fontSize: "11px",
+              lineHeight: 1.7,
+              minWidth: "320px",
+            }}
+          >
             {discountValue > 0 && (
               <div>
-                <strong>Discount:</strong> &nbsp;&nbsp; (-) INR {money(discountValue)}
+                <strong>Discount:</strong> &nbsp;&nbsp; (-) INR{" "}
+                {money(discountValue)}
               </div>
             )}
             <div>
-              <strong>Total Taxable Value:</strong> &nbsp;&nbsp; INR {money(taxableTotal)}
+              <strong>Total Taxable Value:</strong> &nbsp;&nbsp; INR{" "}
+              {money(taxableTotal)}
             </div>
             <div>
-              <strong>Total Tax Amount:</strong> &nbsp;&nbsp; INR {money(totalTaxAmount)}
+              <strong>Total Tax Amount:</strong> &nbsp;&nbsp; INR{" "}
+              {money(totalTaxAmount)}
             </div>
             {roundOff !== 0 && (
               <div>
-                <strong>Rounded Off:</strong> &nbsp;&nbsp; {roundOff < 0 ? "(-)" : ""} INR {money(Math.abs(roundOff))}
+                <strong>Rounded Off:</strong> &nbsp;&nbsp;{" "}
+                {roundOff < 0 ? "(-)" : ""} INR {money(Math.abs(roundOff))}
               </div>
             )}
-            <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", marginTop: "4px" }}>
+            <div
+              style={{
+                fontSize: "12.5px",
+                fontWeight: 800,
+                color: "#0f172a",
+                marginTop: "4px",
+              }}
+            >
               Total Value (in figure): &nbsp;&nbsp; INR {money(total)}
             </div>
-            <div style={{ fontSize: "10.5px", fontWeight: 700, color: "#334155" }}>
+            <div
+              style={{ fontSize: "10.5px", fontWeight: 700, color: "#334155" }}
+            >
               Total Value (in words): &nbsp;&nbsp; INR {words}
             </div>
           </div>
@@ -750,8 +1266,21 @@ export function DocumentPreviewModal({
 
       {/* Terms & Conditions */}
       {hasTerms && (
-        <div style={{ marginTop: "24px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
-          <div style={{ fontWeight: 700, fontSize: "11px", color: "#1e293b", marginBottom: "4px" }}>
+        <div
+          style={{
+            marginTop: "24px",
+            borderTop: "1px solid #e2e8f0",
+            paddingTop: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: "11px",
+              color: "#1e293b",
+              marginBottom: "4px",
+            }}
+          >
             Terms &amp; Conditions
           </div>
           {terms.map((term: string, i: number) => (
@@ -774,13 +1303,27 @@ export function DocumentPreviewModal({
       >
         {isCreditNote && (
           <div style={{ textAlign: "left", width: "200px" }}>
-            <div style={{ borderTop: "1px solid #cbd5e1", paddingTop: "4px", fontWeight: 700, fontSize: "11px" }}>
+            <div
+              style={{
+                borderTop: "1px solid #cbd5e1",
+                paddingTop: "4px",
+                fontWeight: 700,
+                fontSize: "11px",
+              }}
+            >
               Provider Signature
             </div>
           </div>
         )}
         <div style={{ textAlign: "right", width: "200px" }}>
-          <div style={{ borderTop: "1px solid #cbd5e1", paddingTop: "4px", fontWeight: 700, fontSize: "11px" }}>
+          <div
+            style={{
+              borderTop: "1px solid #cbd5e1",
+              paddingTop: "4px",
+              fontWeight: 700,
+              fontSize: "11px",
+            }}
+          >
             {isCreditNote ? "Receiver Signature" : "Provider Signature"}
           </div>
         </div>
@@ -816,8 +1359,21 @@ export function DocumentPreviewModal({
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {(docType === "sales_invoice" || docType === "proforma") && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "6px" }}>
-                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginRight: "6px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "var(--altrex-muted)",
+                  }}
+                >
                   Convert:
                 </span>
                 <select
@@ -882,7 +1438,9 @@ export function DocumentPreviewModal({
             <button
               type="button"
               onClick={() => {
-                const printEvt = new CustomEvent("altrex-print-doc", { detail: { document: detail, docType } });
+                const printEvt = new CustomEvent("altrex-print-doc", {
+                  detail: { document: detail, docType },
+                });
                 window.dispatchEvent(printEvt);
               }}
               style={{
@@ -904,7 +1462,9 @@ export function DocumentPreviewModal({
             <button
               type="button"
               onClick={() => {
-                const printEvt = new CustomEvent("altrex-print-doc", { detail: { document: detail, docType } });
+                const printEvt = new CustomEvent("altrex-print-doc", {
+                  detail: { document: detail, docType },
+                });
                 window.dispatchEvent(printEvt);
               }}
               style={{
@@ -948,6 +1508,7 @@ export function DocumentPreviewModal({
             type="button"
             onClick={onClose}
             title="Close preview"
+            aria-label="Close preview"
             style={{
               background: "transparent",
               border: "none",
@@ -980,6 +1541,9 @@ export function DocumentPreviewModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${config?.label ?? "Document"} Preview`}
       style={{
         position: "fixed",
         inset: 0,
@@ -1005,8 +1569,21 @@ export function DocumentPreviewModal({
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {(docType === "sales_invoice" || docType === "proforma") && (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "6px" }}>
-              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                marginRight: "6px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--altrex-muted)",
+                }}
+              >
                 Convert:
               </span>
               <select
@@ -1055,7 +1632,9 @@ export function DocumentPreviewModal({
           <button
             type="button"
             onClick={() => {
-              const printEvt = new CustomEvent("altrex-print-doc", { detail: { document: detail, docType } });
+              const printEvt = new CustomEvent("altrex-print-doc", {
+                detail: { document: detail, docType },
+              });
               window.dispatchEvent(printEvt);
             }}
             style={{
@@ -1078,7 +1657,9 @@ export function DocumentPreviewModal({
           <button
             type="button"
             onClick={() => {
-              const printEvt = new CustomEvent("altrex-print-doc", { detail: { document: detail, docType } });
+              const printEvt = new CustomEvent("altrex-print-doc", {
+                detail: { document: detail, docType },
+              });
               window.dispatchEvent(printEvt);
             }}
             style={{
@@ -1122,6 +1703,7 @@ export function DocumentPreviewModal({
         <button
           type="button"
           onClick={onClose}
+          aria-label="Close preview"
           style={{
             background: "transparent",
             border: "none",

@@ -2,7 +2,17 @@
 
 import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable } from "@altrex/ui";
-import { ArrowRightLeft, CheckCircle2, Download, Plus, RefreshCw, Search, Send, Trash2, XCircle } from "lucide-react";
+import {
+  ArrowRightLeft,
+  CheckCircle2,
+  Download,
+  Plus,
+  RefreshCw,
+  Search,
+  Send,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { transferApi } from "../api";
 import type { StockTransfer } from "../schema";
@@ -13,7 +23,15 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (!value || typeof value !== "object" || visited.has(value)) return [];
   visited.add(value);
 
-  const keysToTry = ["transfers", "stock_transfers", "data", "rows", "records", "result", "payload"];
+  const keysToTry = [
+    "transfers",
+    "stock_transfers",
+    "data",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ];
   for (const k of keysToTry) {
     if (Array.isArray((value as any)[k])) return (value as any)[k];
   }
@@ -32,18 +50,30 @@ function notifyError(err: unknown, fallback: string) {
 }
 
 export function TransferList() {
-  const { data: responseData, isLoading, error, refetch } = transferApi.useList();
-  const transfers = useMemo(() => extractRecords<StockTransfer>(responseData), [responseData]);
+  const {
+    data: responseData,
+    isLoading,
+    error,
+    refetch,
+  } = transferApi.useList();
+  const transfers = useMemo(
+    () => extractRecords<StockTransfer>(responseData),
+    [responseData],
+  );
 
-  const { mutate: createTransfer, isPending: isCreating } = transferApi.useCreate();
-  const { mutate: updateStatus, isPending: isUpdatingStatus } = transferApi.useUpdateStatus();
-  const { mutate: deleteTransfer, isPending: isDeleting } = transferApi.useDelete();
+  const { mutate: createTransfer, isPending: isCreating } =
+    transferApi.useCreate();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    transferApi.useUpdateStatus();
+  const { mutate: deleteTransfer, isPending: isDeleting } =
+    transferApi.useDelete();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
 
-  const getId = (t: StockTransfer) => t.stock_transfer_id ?? t.transfer_id ?? t.id;
+  const getId = (t: StockTransfer) =>
+    t.stock_transfer_id ?? t.transfer_id ?? t.id;
 
   const filteredTransfers = useMemo(() => {
     return transfers.filter((t) => {
@@ -57,7 +87,8 @@ export function TransferList() {
         fromName.toLowerCase().includes(q) ||
         toName.toLowerCase().includes(q) ||
         notes.toLowerCase().includes(q);
-      const matchesStatus = !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus =
+        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
@@ -72,13 +103,25 @@ export function TransferList() {
           label: "Transfer Date",
           transform: (v) => (v ? new Date(v).toLocaleDateString("en-IN") : "—"),
         },
-        { key: "from_warehouse_name", label: "Source Warehouse", transform: (v, r) => v || `Warehouse #${r.from_warehouse_id}` },
-        { key: "to_warehouse_name", label: "Destination Warehouse", transform: (v, r) => v || `Warehouse #${r.to_warehouse_id}` },
+        {
+          key: "from_warehouse_name",
+          label: "Source Warehouse",
+          transform: (v, r) => v || `Warehouse #${r.from_warehouse_id}`,
+        },
+        {
+          key: "to_warehouse_name",
+          label: "Destination Warehouse",
+          transform: (v, r) => v || `Warehouse #${r.to_warehouse_id}`,
+        },
         { key: "status", label: "Status" },
-        { key: "itemsDetails", label: "Items Count", transform: (v) => String(Array.isArray(v) ? v.length : 0) },
+        {
+          key: "itemsDetails",
+          label: "Items Count",
+          transform: (v) => String(Array.isArray(v) ? v.length : 0),
+        },
         { key: "notes", label: "Notes", transform: (v) => v || "" },
       ],
-      filteredTransfers
+      filteredTransfers,
     );
   };
 
@@ -96,15 +139,32 @@ export function TransferList() {
       label: "Transfer Details",
       render: (t: StockTransfer) => {
         const rawDate = t.transfer_date || t.created_at;
-        const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("en-IN") : "—";
+        const fmtDate = rawDate
+          ? new Date(rawDate).toLocaleDateString("en-IN")
+          : "—";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ArrowRightLeft size={16} style={{ color: "var(--altrex-primary, #2563eb)" }} />
+            <ArrowRightLeft
+              size={16}
+              style={{ color: "var(--altrex-primary, #2563eb)" }}
+            />
             <div>
-              <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "14px", display: "block" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text, #0f172a)",
+                  fontSize: "14px",
+                  display: "block",
+                }}
+              >
                 {t.transfer_no || `Transfer #${getId(t)}`}
               </span>
-              <span style={{ color: "var(--altrex-muted, #64748b)", fontSize: "12px" }}>
+              <span
+                style={{
+                  color: "var(--altrex-muted, #64748b)",
+                  fontSize: "12px",
+                }}
+              >
                 Date: {fmtDate}
               </span>
             </div>
@@ -116,12 +176,23 @@ export function TransferList() {
       key: "from_warehouse_name" as const,
       label: "Route (From → To)",
       render: (t: StockTransfer) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
-          <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "13px",
+          }}
+        >
+          <span
+            style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)" }}
+          >
             {t.from_warehouse_name || `Warehouse #${t.from_warehouse_id}`}
           </span>
           <span style={{ color: "var(--altrex-muted, #94a3b8)" }}>→</span>
-          <span style={{ fontWeight: 600, color: "var(--altrex-primary, #2563eb)" }}>
+          <span
+            style={{ fontWeight: 600, color: "var(--altrex-primary, #2563eb)" }}
+          >
             {t.to_warehouse_name || `Warehouse #${t.to_warehouse_id}`}
           </span>
         </div>
@@ -133,7 +204,13 @@ export function TransferList() {
       render: (t: StockTransfer) => {
         const count = Array.isArray(t.itemsDetails) ? t.itemsDetails.length : 0;
         return (
-          <span style={{ fontWeight: 500, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+          <span
+            style={{
+              fontWeight: 500,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "13px",
+            }}
+          >
             {count} {count === 1 ? "item" : "items"}
           </span>
         );
@@ -189,7 +266,17 @@ export function TransferList() {
         const id = getId(t);
         const status = (t.status || "draft").toLowerCase();
         const label = t.transfer_no || `Transfer #${id}`;
-        if (id === undefined) return <span style={{ color: "var(--altrex-muted, #94a3b8)", fontSize: "12px" }}>—</span>;
+        if (id === undefined)
+          return (
+            <span
+              style={{
+                color: "var(--altrex-muted, #94a3b8)",
+                fontSize: "12px",
+              }}
+            >
+              —
+            </span>
+          );
 
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -199,11 +286,20 @@ export function TransferList() {
                 onClick={() =>
                   updateStatus(
                     { id, status: "in_transit" },
-                    { onError: (err) => notifyError(err, "Failed to start transit.") }
+                    {
+                      onError: (err) =>
+                        notifyError(err, "Failed to start transit."),
+                    },
                   )
                 }
                 disabled={isUpdatingStatus}
-                style={{ padding: "4px 8px", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
               >
                 <Send size={12} /> Start Transit
               </Button>
@@ -215,11 +311,22 @@ export function TransferList() {
                 onClick={() =>
                   updateStatus(
                     { id, status: "completed" },
-                    { onError: (err) => notifyError(err, "Failed to mark transfer complete.") }
+                    {
+                      onError: (err) =>
+                        notifyError(err, "Failed to mark transfer complete."),
+                    },
                   )
                 }
                 disabled={isUpdatingStatus}
-                style={{ padding: "4px 8px", fontSize: "11px", color: "#10b981", borderColor: "rgba(16,185,129,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  color: "#10b981",
+                  borderColor: "rgba(16,185,129,0.3)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
               >
                 <CheckCircle2 size={12} /> Mark Complete
               </Button>
@@ -229,15 +336,28 @@ export function TransferList() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  if (confirm("Are you sure you want to cancel this transfer?")) {
+                  if (
+                    confirm("Are you sure you want to cancel this transfer?")
+                  ) {
                     updateStatus(
                       { id, status: "cancelled" },
-                      { onError: (err) => notifyError(err, "Failed to cancel transfer.") }
+                      {
+                        onError: (err) =>
+                          notifyError(err, "Failed to cancel transfer."),
+                      },
                     );
                   }
                 }}
                 disabled={isUpdatingStatus}
-                style={{ padding: "4px 8px", fontSize: "11px", color: "#ef4444", borderColor: "rgba(239,68,68,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  color: "#ef4444",
+                  borderColor: "rgba(239,68,68,0.3)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
               >
                 <XCircle size={12} /> Cancel
               </Button>
@@ -248,14 +368,23 @@ export function TransferList() {
               onClick={() => {
                 if (confirm(`Are you sure you want to delete ${label}?`)) {
                   deleteTransfer(id, {
-                    onError: (err) => notifyError(err, "Failed to delete transfer."),
+                    onError: (err) =>
+                      notifyError(err, "Failed to delete transfer."),
                   });
                 }
               }}
               disabled={isDeleting}
               title={`Delete ${label}`}
               aria-label={`Delete ${label}`}
-              style={{ padding: "4px 8px", fontSize: "11px", color: "#ef4444", borderColor: "rgba(239,68,68,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+              style={{
+                padding: "4px 8px",
+                fontSize: "11px",
+                color: "#ef4444",
+                borderColor: "rgba(239,68,68,0.3)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
             >
               <Trash2 size={12} />
             </Button>
@@ -270,10 +399,23 @@ export function TransferList() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Movements</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Stock Transfers
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
             Manage and track inter-warehouse inventory dispatch and receipt.
           </p>
         </div>
@@ -364,7 +506,10 @@ export function TransferList() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading transfer records...</span>
         </div>

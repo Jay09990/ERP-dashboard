@@ -1,5 +1,8 @@
 /** Pulls the first record array out of varied backend list payloads. */
-export function extractRecords(value: unknown, visited = new Set<unknown>()): Record<string, unknown>[] {
+export function extractRecords(
+  value: unknown,
+  visited = new Set<unknown>(),
+): Record<string, unknown>[] {
   if (Array.isArray(value)) return value as Record<string, unknown>[];
   if (!value || typeof value !== "object" || visited.has(value)) return [];
 
@@ -66,11 +69,17 @@ export function getDocumentId(doc: Record<string, unknown>): string {
   return id == null ? "" : String(id);
 }
 
-export function isInCurrentMonth(dateValue: string | null, now = new Date()): boolean {
+export function isInCurrentMonth(
+  dateValue: string | null,
+  now = new Date(),
+): boolean {
   if (!dateValue) return false;
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return false;
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth()
+  );
 }
 
 export function formatINR(amount: number): string {

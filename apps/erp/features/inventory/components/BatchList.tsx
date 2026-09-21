@@ -27,7 +27,10 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
 
 export function BatchList() {
   const { data: responseData, isLoading, error } = batchApi.useList();
-  const batches = useMemo(() => extractRecords<Batch>(responseData), [responseData]);
+  const batches = useMemo(
+    () => extractRecords<Batch>(responseData),
+    [responseData],
+  );
 
   const { mutate: createBatch, isPending: isCreating } = batchApi.useCreate();
   const { mutate: updateBatch, isPending: isUpdating } = batchApi.useUpdate();
@@ -51,7 +54,8 @@ export function BatchList() {
         batchNo.toLowerCase().includes(search.toLowerCase()) ||
         itemName.toLowerCase().includes(search.toLowerCase()) ||
         itemCode.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus =
+        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
@@ -62,12 +66,20 @@ export function BatchList() {
       "Item_Batches",
       [
         { key: "batch_no", label: "Batch No" },
-        { key: "item_name", label: "Item Name", transform: (val, row) => val || `Item #${row.item_id}` },
+        {
+          key: "item_name",
+          label: "Item Name",
+          transform: (val, row) => val || `Item #${row.item_id}`,
+        },
         { key: "mfg_date", label: "Mfg Date", transform: (val) => val || "—" },
-        { key: "expiry_date", label: "Expiry Date", transform: (val) => val || "—" },
+        {
+          key: "expiry_date",
+          label: "Expiry Date",
+          transform: (val) => val || "—",
+        },
         { key: "status", label: "Status" },
       ],
-      filteredBatches
+      filteredBatches,
     );
   };
 
@@ -81,7 +93,7 @@ export function BatchList() {
             setIsOpenDrawer(false);
             setEditingBatch(null);
           },
-        }
+        },
       );
     } else {
       createBatch(values, {
@@ -98,8 +110,17 @@ export function BatchList() {
       label: "Batch Number",
       render: (b: Batch) => (
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Layers size={16} style={{ color: "var(--altrex-primary, #2563eb)" }} />
-          <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "14px" }}>
+          <Layers
+            size={16}
+            style={{ color: "var(--altrex-primary, #2563eb)" }}
+          />
+          <span
+            style={{
+              fontWeight: 600,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "14px",
+            }}
+          >
             {b.batch_no}
           </span>
         </div>
@@ -110,11 +131,23 @@ export function BatchList() {
       label: "Item Details",
       render: (b: Batch) => (
         <div>
-          <span style={{ fontWeight: 500, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+          <span
+            style={{
+              fontWeight: 500,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "13px",
+            }}
+          >
             {b.item_name || `Item #${b.item_id}`}
           </span>
           {b.item_code && (
-            <span style={{ display: "block", color: "var(--altrex-muted, #64748b)", fontSize: "11px" }}>
+            <span
+              style={{
+                display: "block",
+                color: "var(--altrex-muted, #64748b)",
+                fontSize: "11px",
+              }}
+            >
               Code: {b.item_code}
             </span>
           )}
@@ -125,7 +158,9 @@ export function BatchList() {
       key: "mfg_date" as const,
       label: "Mfg. Date",
       render: (b: Batch) => (
-        <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+        <span
+          style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+        >
           {b.mfg_date || "—"}
         </span>
       ),
@@ -134,7 +169,9 @@ export function BatchList() {
       key: "expiry_date" as const,
       label: "Expiry Date",
       render: (b: Batch) => (
-        <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+        <span
+          style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+        >
           {b.expiry_date || "—"}
         </span>
       ),
@@ -153,7 +190,9 @@ export function BatchList() {
               borderRadius: "12px",
               fontSize: "12px",
               fontWeight: 500,
-              backgroundColor: isActive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              backgroundColor: isActive
+                ? "rgba(16, 185, 129, 0.1)"
+                : "rgba(239, 68, 68, 0.1)",
               color: isActive ? "#10b981" : "#ef4444",
               border: `1px solid ${isActive ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
             }}
@@ -185,7 +224,11 @@ export function BatchList() {
               variant="outline"
               aria-label={`Delete batch ${b.batch_no}`}
               onClick={() => {
-                if (confirm(`Are you sure you want to delete batch "${b.batch_no}"?`)) {
+                if (
+                  confirm(
+                    `Are you sure you want to delete batch "${b.batch_no}"?`,
+                  )
+                ) {
                   deleteBatch(id);
                 }
               }}
@@ -210,10 +253,23 @@ export function BatchList() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Master</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Item Batches
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
             Track batch numbers, manufacturing dates, and expiration lifecycle.
           </p>
         </div>
@@ -297,7 +353,10 @@ export function BatchList() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading batch records...</span>
         </div>

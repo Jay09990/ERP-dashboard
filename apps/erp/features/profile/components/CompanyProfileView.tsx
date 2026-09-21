@@ -1,5 +1,6 @@
 "use client";
 
+import { bankApi, cityApi, countryApi, stateApi } from "@/features/masters/api";
 import { Button } from "@altrex/ui";
 import {
   Building2,
@@ -20,7 +21,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useCompanyProfile } from "../api";
-import { bankApi, cityApi, countryApi, stateApi } from "@/features/masters/api";
 import { ProfileForm } from "./ProfileForm";
 
 function extractRecords(value: unknown): Array<Record<string, any>> {
@@ -35,8 +35,14 @@ function extractRecords(value: unknown): Array<Record<string, any>> {
 
 function normalizeProfile(data: any): Record<string, any> {
   if (!data || typeof data !== "object") return {};
-  const profileDetails = data.profile_details ?? data.company ?? data.profile ?? data.data ?? (data.company_name ? data : {});
-  const bankDetails = data.bank_details ?? data.bank ?? (data.account_no ? data : {});
+  const profileDetails =
+    data.profile_details ??
+    data.company ??
+    data.profile ??
+    data.data ??
+    (data.company_name ? data : {});
+  const bankDetails =
+    data.bank_details ?? data.bank ?? (data.account_no ? data : {});
   return {
     ...profileDetails,
     ...bankDetails,
@@ -63,16 +69,26 @@ export function CompanyProfileView() {
   const profile = normalizeProfile(profileData);
 
   // Resolved lookup values
-  const bankObj = banks.find((b) => String(b.bank_id ?? b.id) === String(profile.bank_id ?? ""));
+  const bankObj = banks.find(
+    (b) => String(b.bank_id ?? b.id) === String(profile.bank_id ?? ""),
+  );
   const bankName = bankObj ? (bankObj.bank_name ?? bankObj.name) : "";
-  
-  const countryObj = countries.find((c) => String(c.country_id ?? c.id) === String(profile.country_id ?? ""));
-  const countryName = countryObj ? (countryObj.country_name ?? countryObj.name) : "";
 
-  const stateObj = states.find((s) => String(s.state_id ?? s.id) === String(profile.state_id ?? ""));
+  const countryObj = countries.find(
+    (c) => String(c.country_id ?? c.id) === String(profile.country_id ?? ""),
+  );
+  const countryName = countryObj
+    ? (countryObj.country_name ?? countryObj.name)
+    : "";
+
+  const stateObj = states.find(
+    (s) => String(s.state_id ?? s.id) === String(profile.state_id ?? ""),
+  );
   const stateName = stateObj ? (stateObj.state_name ?? stateObj.name) : "";
 
-  const cityObj = cities.find((c) => String(c.city_id ?? c.id) === String(profile.city_id ?? ""));
+  const cityObj = cities.find(
+    (c) => String(c.city_id ?? c.id) === String(profile.city_id ?? ""),
+  );
   const cityName = cityObj ? (cityObj.city_name ?? cityObj.name) : "";
 
   const handleCopy = (text: string, label: string) => {
@@ -103,13 +119,22 @@ export function CompanyProfileView() {
         className="altrex-detail-card"
         style={{
           padding: "28px",
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--altrex-primary) 8%, var(--altrex-surface)), var(--altrex-surface))",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--altrex-primary) 8%, var(--altrex-surface)), var(--altrex-surface))",
           borderTop: "4px solid var(--altrex-primary)",
           borderRadius: "14px",
           boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "20px",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             {/* Logo Avatar */}
             <div
@@ -128,15 +153,40 @@ export function CompanyProfileView() {
               }}
             >
               {logo ? (
-                <img src={logo} alt={companyName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                <img
+                  src={logo}
+                  alt={companyName}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
               ) : (
-                <Building2 size={38} style={{ color: "var(--altrex-primary)" }} />
+                <Building2
+                  size={38}
+                  style={{ color: "var(--altrex-primary)" }}
+                />
               )}
             </div>
 
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <h1
+                  style={{
+                    margin: 0,
+                    fontSize: "22px",
+                    fontWeight: 700,
+                    color: "var(--altrex-text)",
+                  }}
+                >
                   {companyName}
                 </h1>
                 <span
@@ -157,13 +207,27 @@ export function CompanyProfileView() {
               </div>
 
               {tradeName && (
-                <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--altrex-muted)", fontWeight: 500 }}>
+                <p
+                  style={{
+                    margin: "2px 0 0",
+                    fontSize: "13px",
+                    color: "var(--altrex-muted)",
+                    fontWeight: 500,
+                  }}
+                >
                   Trading as: <strong>{tradeName}</strong>
                 </p>
               )}
 
               {/* Identity Badges */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  marginTop: "10px",
+                }}
+              >
                 {profile.gst_no && (
                   <span
                     style={{
@@ -247,13 +311,18 @@ export function CompanyProfileView() {
           {profile.contact_name && (
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <User size={14} style={{ color: "var(--altrex-primary)" }} />
-              <span>Contact: <strong>{profile.contact_name}</strong></span>
+              <span>
+                Contact: <strong>{profile.contact_name}</strong>
+              </span>
             </span>
           )}
           {profile.email && (
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Mail size={14} style={{ color: "var(--altrex-primary)" }} />
-              <a href={`mailto:${profile.email}`} style={{ color: "inherit", textDecoration: "none" }}>
+              <a
+                href={`mailto:${profile.email}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
                 {profile.email}
               </a>
             </span>
@@ -261,7 +330,10 @@ export function CompanyProfileView() {
           {profile.phone && (
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Phone size={14} style={{ color: "var(--altrex-primary)" }} />
-              <a href={`tel:${profile.phone}`} style={{ color: "inherit", textDecoration: "none" }}>
+              <a
+                href={`tel:${profile.phone}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
                 {profile.phone}
               </a>
             </span>
@@ -270,10 +342,18 @@ export function CompanyProfileView() {
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Globe size={14} style={{ color: "var(--altrex-primary)" }} />
               <a
-                href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`}
+                href={
+                  profile.website.startsWith("http")
+                    ? profile.website
+                    : `https://${profile.website}`
+                }
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: "var(--altrex-primary)", fontWeight: 500, textDecoration: "none" }}
+                style={{
+                  color: "var(--altrex-primary)",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
               >
                 {profile.website}
               </a>
@@ -283,8 +363,13 @@ export function CompanyProfileView() {
       </div>
 
       {/* ── Details Grid ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "24px" }}>
-        
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+          gap: "24px",
+        }}
+      >
         {/* 1. Identity & Registration */}
         <div className="altrex-detail-card" style={{ padding: "24px" }}>
           <h3
@@ -301,13 +386,37 @@ export function CompanyProfileView() {
             <Building2 size={18} style={{ color: "var(--altrex-primary)" }} />
             Company Identity
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <DetailRow label="Legal Company Name" value={profile.company_name} bold />
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <DetailRow
+              label="Legal Company Name"
+              value={profile.company_name}
+              bold
+            />
             <DetailRow label="Trade / Brand Name" value={profile.trade_name} />
-            <DetailRow label="GSTIN Number" value={profile.gst_no} copyable onCopy={() => handleCopy(profile.gst_no, "gst")} isCopied={copiedField === "gst"} />
-            <DetailRow label="PAN Number" value={profile.pan_no} copyable onCopy={() => handleCopy(profile.pan_no, "pan")} isCopied={copiedField === "pan"} />
-            <DetailRow label="Registration Number" value={profile.registration_number} />
-            <DetailRow label="Primary Contact Person" value={profile.contact_name} />
+            <DetailRow
+              label="GSTIN Number"
+              value={profile.gst_no}
+              copyable
+              onCopy={() => handleCopy(profile.gst_no, "gst")}
+              isCopied={copiedField === "gst"}
+            />
+            <DetailRow
+              label="PAN Number"
+              value={profile.pan_no}
+              copyable
+              onCopy={() => handleCopy(profile.pan_no, "pan")}
+              isCopied={copiedField === "pan"}
+            />
+            <DetailRow
+              label="Registration Number"
+              value={profile.registration_number}
+            />
+            <DetailRow
+              label="Primary Contact Person"
+              value={profile.contact_name}
+            />
           </div>
         </div>
 
@@ -327,7 +436,9 @@ export function CompanyProfileView() {
             <MapPin size={18} style={{ color: "var(--altrex-primary)" }} />
             Contact & Address Details
           </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
             <DetailRow label="Official Email" value={profile.email} />
             <DetailRow label="Phone Number" value={profile.phone} />
             <DetailRow label="Website" value={profile.website} />
@@ -336,7 +447,8 @@ export function CompanyProfileView() {
             <DetailRow
               label="Location"
               value={
-                [cityName, stateName, countryName].filter(Boolean).join(", ") || profile.address
+                [cityName, stateName, countryName].filter(Boolean).join(", ") ||
+                profile.address
               }
             />
             <DetailRow label="Pincode" value={profile.pincode} />
@@ -344,7 +456,10 @@ export function CompanyProfileView() {
         </div>
 
         {/* 3. Banking & Financial Details */}
-        <div className="altrex-detail-card" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+        <div
+          className="altrex-detail-card"
+          style={{ padding: "24px", gridColumn: "1 / -1" }}
+        >
           <h3
             style={{
               margin: "0 0 16px",
@@ -359,9 +474,22 @@ export function CompanyProfileView() {
             <Landmark size={18} style={{ color: "var(--altrex-primary)" }} />
             Banking & Financial Details
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-            <DetailRow label="Bank Name" value={bankName || profile.bank_name || "Not selected"} bold />
-            <DetailRow label="Account Holder Name" value={profile.account_holder_name} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            <DetailRow
+              label="Bank Name"
+              value={bankName || profile.bank_name || "Not selected"}
+              bold
+            />
+            <DetailRow
+              label="Account Holder Name"
+              value={profile.account_holder_name}
+            />
             <DetailRow
               label="Account Number"
               value={profile.account_no}
@@ -370,7 +498,13 @@ export function CompanyProfileView() {
               isCopied={copiedField === "acc"}
               bold
             />
-            <DetailRow label="IFSC Code" value={profile.ifsc_code} copyable onCopy={() => handleCopy(profile.ifsc_code, "ifsc")} isCopied={copiedField === "ifsc"} />
+            <DetailRow
+              label="IFSC Code"
+              value={profile.ifsc_code}
+              copyable
+              onCopy={() => handleCopy(profile.ifsc_code, "ifsc")}
+              isCopied={copiedField === "ifsc"}
+            />
             <DetailRow label="Branch Name" value={profile.branch_name} />
             <DetailRow label="SWIFT Code" value={profile.swift_code} />
             <DetailRow label="UPI ID / VPA" value={profile.upi_no} />
@@ -386,7 +520,10 @@ export function CompanyProfileView() {
         </div>
 
         {/* 4. Branding & Signature */}
-        <div className="altrex-detail-card" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+        <div
+          className="altrex-detail-card"
+          style={{ padding: "24px", gridColumn: "1 / -1" }}
+        >
           <h3
             style={{
               margin: "0 0 16px",
@@ -401,10 +538,26 @@ export function CompanyProfileView() {
             <ImageIcon size={18} style={{ color: "var(--altrex-primary)" }} />
             Branding & Authorized Signature
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "24px",
+            }}
+          >
             {/* Logo Preview */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>Company Logo</span>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--altrex-muted)",
+                }}
+              >
+                Company Logo
+              </span>
               <div
                 style={{
                   height: "120px",
@@ -419,16 +572,38 @@ export function CompanyProfileView() {
                 }}
               >
                 {logo ? (
-                  <img src={logo} alt="Company Logo" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                  <img
+                    src={logo}
+                    alt="Company Logo"
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
                 ) : (
-                  <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>No logo uploaded</span>
+                  <span
+                    style={{ fontSize: "12px", color: "var(--altrex-muted)" }}
+                  >
+                    No logo uploaded
+                  </span>
                 )}
               </div>
             </div>
 
             {/* Signature Preview */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--altrex-muted)" }}>Authorized Signature</span>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--altrex-muted)",
+                }}
+              >
+                Authorized Signature
+              </span>
               <div
                 style={{
                   height: "120px",
@@ -443,9 +618,21 @@ export function CompanyProfileView() {
                 }}
               >
                 {signature ? (
-                  <img src={signature} alt="Authorized Signature" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                  <img
+                    src={signature}
+                    alt="Authorized Signature"
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
                 ) : (
-                  <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>No signature uploaded</span>
+                  <span
+                    style={{ fontSize: "12px", color: "var(--altrex-muted)" }}
+                  >
+                    No signature uploaded
+                  </span>
                 )}
               </div>
             </div>
@@ -503,11 +690,25 @@ export function CompanyProfileView() {
               }}
             >
               <div>
-                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "var(--altrex-text)" }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "var(--altrex-text)",
+                  }}
+                >
                   Update Company Profile
                 </h2>
-                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--altrex-muted)" }}>
-                  Modify company identity, address, banking details, and uploaded logos.
+                <p
+                  style={{
+                    margin: "2px 0 0",
+                    fontSize: "12px",
+                    color: "var(--altrex-muted)",
+                  }}
+                >
+                  Modify company identity, address, banking details, and
+                  uploaded logos.
                 </p>
               </div>
               <button
@@ -571,7 +772,15 @@ function DetailRow({
         gap: "12px",
       }}
     >
-      <span style={{ fontSize: "12.5px", color: "var(--altrex-muted)", fontWeight: 500 }}>{label}</span>
+      <span
+        style={{
+          fontSize: "12.5px",
+          color: "var(--altrex-muted)",
+          fontWeight: 500,
+        }}
+      >
+        {label}
+      </span>
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span
           style={{
