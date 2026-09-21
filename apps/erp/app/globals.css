@@ -12,6 +12,9 @@
   --altrex-canvas:  #f8fafc;
   --altrex-surface: #ffffff;
   --altrex-raised:  #f1f5f9;
+  --altrex-bg:      #f8fafc;
+  --altrex-bg-card: #ffffff;
+  --altrex-bg-subtle: #f1f5f9;
 
   /* Text */
   --altrex-text:   #0f172a;
@@ -60,6 +63,9 @@
   --altrex-canvas:  #0b0f17;
   --altrex-surface: #161e2e;
   --altrex-raised:  #1e293b;
+  --altrex-bg:      #0b0f17;
+  --altrex-bg-card: #161e2e;
+  --altrex-bg-subtle: #1e293b;
 
   /* Text */
   --altrex-text:  #f8fafc;
@@ -102,6 +108,12 @@
 }
 
 select option {
+  background-color: var(--altrex-surface);
+  color: var(--altrex-text);
+}
+
+/* Additional dark mode support for selects */
+[data-theme="dark"] select option {
   background-color: var(--altrex-surface);
   color: var(--altrex-text);
 }
@@ -553,10 +565,26 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
+/* Ensure inline styles don't override the base styles */
 .altrex-input:focus {
   outline: none;
   border-color: var(--altrex-primary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--altrex-primary) 20%, transparent);
+}
+
+/* Handle textarea variant */
+textarea.altrex-input {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Handle inline-style overrides gracefully */
+.altrex-input[style] {
+  /* Ensure inline styles for background, color, and border work with theme */
+  background-color: var(--altrex-raised);
+  color: var(--altrex-text);
+  border-color: var(--altrex-border);
 }
 
 .altrex-select {
@@ -756,4 +784,127 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   .altrex-document-top-details .altrex-input {
     min-width: 0;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIALOGS & DRAWERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.altrex-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: altrex-backdrop-in 150ms ease-out;
+}
+
+@keyframes altrex-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.altrex-dialog {
+  background: var(--altrex-surface);
+  border: 1px solid var(--altrex-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: altrex-dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes altrex-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.altrex-dialog-md {
+  width: 480px;
+  max-width: calc(100vw - 32px);
+}
+
+.altrex-dialog-lg {
+  width: 700px;
+  max-width: calc(100vw - 32px);
+}
+
+.altrex-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  gap: 16px;
+}
+
+.altrex-dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--altrex-text);
+}
+
+.altrex-dialog-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--altrex-muted);
+}
+
+.altrex-dialog-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.altrex-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLE STATES & LOADERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.altrex-table-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  border-radius: 8px;
+  border: 1px dashed var(--altrex-border);
+  background: var(--altrex-raised);
+  color: var(--altrex-muted);
+  font-size: 14px;
+}
+
+.altrex-table-state-error {
+  color: var(--altrex-danger-text);
+  border-color: color-mix(in srgb, var(--altrex-danger-text) 30%, var(--altrex-border));
+  background: color-mix(in srgb, var(--altrex-danger-text) 5%, var(--altrex-raised));
+}
+
+.altrex-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--altrex-border);
+  border-top-color: var(--altrex-primary);
+  border-radius: 50%;
+  animation: altrex-spin 800ms linear infinite;
+}
+
+@keyframes altrex-spin {
+  to { transform: rotate(360deg); }
 }

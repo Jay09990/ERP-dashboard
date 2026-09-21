@@ -1,7 +1,7 @@
 "use client";
 
 import { useItems } from "@/features/items/api";
-import { uomApi } from "@/features/masters/api";
+import { uomApi } from "@/features/masters";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { Button } from "@altrex/ui";
@@ -142,13 +142,20 @@ export function AdjustmentFormDrawer({
       reason: reason.trim(),
       status: "draft",
       notes: notes.trim(),
-      itemsDetails: validItems.map((i) => ({
-        item_id: Number(i.item_id),
-        batch_id: i.batch_id ? Number(i.batch_id) : null,
-        adjustment_type: i.adjustment_type,
-        quantity: Number(i.quantity),
-        unit_id: i.unit_id ? Number(i.unit_id) : null,
-      })),
+      itemsDetails: validItems.map((i) => {
+        const itemDetail: any = {
+          item_id: Number(i.item_id),
+          adjustment_type: i.adjustment_type,
+          quantity: Number(i.quantity),
+        };
+        if (i.batch_id) {
+          itemDetail.batch_id = Number(i.batch_id);
+        }
+        if (i.unit_id) {
+          itemDetail.unit_id = Number(i.unit_id);
+        }
+        return itemDetail;
+      }),
     });
   };
 
@@ -294,7 +301,7 @@ export function AdjustmentFormDrawer({
                 }}
               >
                 <thead>
-                  <tr style={{ backgroundColor: "var(--altrex-bg, #f8fafc)", borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}>
+                  <tr style={{ backgroundColor: "var(--altrex-bg-subtle, #f1f5f9)", borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "30%" }}>Item</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "20%" }}>Batch (Optional)</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "20%" }}>Adjustment Type</th>
@@ -317,7 +324,13 @@ export function AdjustmentFormDrawer({
                             value={row.item_id}
                             onChange={(e) => handleUpdateRow(index, "item_id", e.target.value)}
                             required
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">Select Item</option>
                             {itemsList.map((item: any) => {
@@ -336,7 +349,13 @@ export function AdjustmentFormDrawer({
                             className="altrex-input"
                             value={row.batch_id || ""}
                             onChange={(e) => handleUpdateRow(index, "batch_id", e.target.value || null)}
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">All / No Batch</option>
                             {itemBatches.map((b: any) => {
@@ -361,6 +380,8 @@ export function AdjustmentFormDrawer({
                               padding: "6px 8px",
                               color: row.adjustment_type === "increase" ? "#10b981" : "#ef4444",
                               fontWeight: 600,
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
                             }}
                           >
                             <option value="increase">+ Increase Stock</option>
@@ -376,7 +397,13 @@ export function AdjustmentFormDrawer({
                             value={row.quantity}
                             onChange={(e) => handleUpdateRow(index, "quantity", parseFloat(e.target.value) || 0)}
                             required
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           />
                         </td>
                         <td style={{ padding: "6px" }}>
@@ -384,7 +411,13 @@ export function AdjustmentFormDrawer({
                             className="altrex-input"
                             value={row.unit_id || ""}
                             onChange={(e) => handleUpdateRow(index, "unit_id", e.target.value || null)}
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">NOS</option>
                             {uomsList.map((u: any) => {

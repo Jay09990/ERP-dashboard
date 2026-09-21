@@ -7,7 +7,7 @@ import { Button, DataTable } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDownLeft, ArrowUpRight, BookOpen, Building, Download, RefreshCw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useItems } from "@/features/items/api";
+import { useItems } from "@/features/items";
 import { stockApi } from "../api";
 import type { StockLedgerEntry } from "../schema";
 
@@ -52,11 +52,7 @@ export function StockLedgerView() {
     queryKey: ["warehouses-select-list"],
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.inventory.warehouse);
-      const raw = res.data?.data || res.data || [];
-      if (Array.isArray(raw)) return raw;
-      if (Array.isArray(raw.warehouses)) return raw.warehouses;
-      if (Array.isArray(raw.rows)) return raw.rows;
-      return [];
+      return extractRecords<any>(res);
     },
   });
   const warehousesList: any[] = warehousesResponse || [];

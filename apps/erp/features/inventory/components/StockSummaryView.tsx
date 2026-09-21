@@ -45,11 +45,7 @@ export function StockSummaryView() {
     queryKey: ["warehouses-select-list"],
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.inventory.warehouse);
-      const raw = res.data?.data || res.data || [];
-      if (Array.isArray(raw)) return raw;
-      if (Array.isArray(raw.warehouses)) return raw.warehouses;
-      if (Array.isArray(raw.rows)) return raw.rows;
-      return [];
+      return extractRecords<any>(res);
     },
   });
 

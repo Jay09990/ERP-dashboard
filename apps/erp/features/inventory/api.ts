@@ -94,7 +94,7 @@ export const stockApi = {
       queryFn: async () => {
         const queryStr = params ? "?" + new URLSearchParams(params as any).toString() : "";
         const res = await apiClient.get<any>(`${endpoints.inventory.stockSummary}${queryStr}`);
-        return (res.data?.data || res.data || []) as StockSummary[];
+        return (res?.stockSummary ?? res?.data ?? (Array.isArray(res) ? res : [])) as StockSummary[];
       },
     });
   },
@@ -104,7 +104,7 @@ export const stockApi = {
       queryFn: async () => {
         const queryStr = params ? "?" + new URLSearchParams(params as any).toString() : "";
         const res = await apiClient.get<any>(`${endpoints.inventory.stockLedger}${queryStr}`);
-        return (res.data?.data || res.data || []) as StockLedgerEntry[];
+        return (res?.stockLedger ?? res?.data ?? (Array.isArray(res) ? res : [])) as StockLedgerEntry[];
       },
     });
   },
@@ -126,11 +126,20 @@ export const transferApi = {
       "transfers",
       endpoints.inventory.transfer
     ).useCreate(),
-  useDelete: () =>
-    useInventoryResource<StockTransfer, StockTransferFormValues, Partial<StockTransferFormValues>>(
-      "transfers",
-      endpoints.inventory.transfer
-    ).useDelete(),
+  useDelete: () => {
+    const qc = useQueryClient();
+    return useMutation({
+      mutationFn: async (id: string | number) => {
+        const res = await apiClient.delete<any>(endpoints.inventory.transferDetail(id));
+        return res;
+      },
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ["transfers"] });
+        qc.invalidateQueries({ queryKey: ["stock-summary"] });
+        qc.invalidateQueries({ queryKey: ["stock-ledger"] });
+      },
+    });
+  },
   useUpdateStatus: () => {
     const qc = useQueryClient();
     return useMutation({

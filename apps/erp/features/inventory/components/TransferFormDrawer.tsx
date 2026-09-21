@@ -1,7 +1,7 @@
 "use client";
 
-import { useItems } from "@/features/items/api";
-import { uomApi } from "@/features/masters/api";
+import { useItems } from "@/features/items";
+import { uomApi } from "@/features/masters";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { Button } from "@altrex/ui";
@@ -144,12 +144,19 @@ export function TransferFormDrawer({
       to_warehouse_id: Number(toWarehouseId),
       status: "draft",
       notes: notes.trim(),
-      itemsDetails: validItems.map((i) => ({
-        item_id: Number(i.item_id),
-        batch_id: i.batch_id ? Number(i.batch_id) : null,
-        quantity: Number(i.quantity),
-        unit_id: i.unit_id ? Number(i.unit_id) : null,
-      })),
+      itemsDetails: validItems.map((i) => {
+        const itemDetail: any = {
+          item_id: Number(i.item_id),
+          quantity: Number(i.quantity),
+        };
+        if (i.batch_id) {
+          itemDetail.batch_id = Number(i.batch_id);
+        }
+        if (i.unit_id) {
+          itemDetail.unit_id = Number(i.unit_id);
+        }
+        return itemDetail;
+      }),
     });
   };
 
@@ -306,7 +313,7 @@ export function TransferFormDrawer({
                 }}
               >
                 <thead>
-                  <tr style={{ backgroundColor: "var(--altrex-bg, #f8fafc)", borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}>
+                  <tr style={{ backgroundColor: "var(--altrex-bg-subtle, #f1f5f9)", borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "35%" }}>Item</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "25%" }}>Batch (Optional)</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--altrex-text, #0f172a)", width: "20%" }}>Quantity</th>
@@ -328,7 +335,13 @@ export function TransferFormDrawer({
                             value={row.item_id}
                             onChange={(e) => handleUpdateRow(index, "item_id", e.target.value)}
                             required
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">Select Item</option>
                             {itemsList.map((item: any) => {
@@ -347,7 +360,13 @@ export function TransferFormDrawer({
                             className="altrex-input"
                             value={row.batch_id || ""}
                             onChange={(e) => handleUpdateRow(index, "batch_id", e.target.value || null)}
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">All / No Batch</option>
                             {itemBatches.map((b: any) => {
@@ -369,7 +388,13 @@ export function TransferFormDrawer({
                             value={row.quantity}
                             onChange={(e) => handleUpdateRow(index, "quantity", parseFloat(e.target.value) || 0)}
                             required
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           />
                         </td>
                         <td style={{ padding: "6px" }}>
@@ -377,7 +402,13 @@ export function TransferFormDrawer({
                             className="altrex-input"
                             value={row.unit_id || ""}
                             onChange={(e) => handleUpdateRow(index, "unit_id", e.target.value || null)}
-                            style={{ width: "100%", padding: "6px 8px" }}
+                            style={{ 
+                              width: "100%", 
+                              padding: "6px 8px",
+                              backgroundColor: "var(--altrex-bg, #ffffff)",
+                              color: "var(--altrex-text, #0f172a)",
+                              borderColor: "var(--altrex-border, #cbd5e1)"
+                            }}
                           >
                             <option value="">NOS</option>
                             {uomsList.map((u: any) => {

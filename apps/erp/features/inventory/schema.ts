@@ -109,6 +109,8 @@ export interface StockLedgerEntry {
 }
 
 export interface StockTransferItemDetail {
+  stock_transfer_item_id?: number;
+  stock_transfer_id?: number;
   id?: number;
   transfer_detail_id?: number;
   transfer_id?: number;
@@ -123,7 +125,8 @@ export interface StockTransferItemDetail {
 }
 
 export interface StockTransfer {
-  id: number;
+  stock_transfer_id?: number;
+  id?: number;
   transfer_id?: number;
   transfer_no?: string;
   transfer_date: string;
@@ -139,6 +142,8 @@ export interface StockTransfer {
 }
 
 export interface StockAdjustmentItemDetail {
+  stock_adjustment_item_id?: number;
+  stock_adjustment_id?: number;
   id?: number;
   adjustment_detail_id?: number;
   adjustment_id?: number;
@@ -154,7 +159,8 @@ export interface StockAdjustmentItemDetail {
 }
 
 export interface StockAdjustment {
-  id: number;
+  stock_adjustment_id?: number;
+  id?: number;
   adjustment_id?: number;
   adjustment_no?: string;
   adjustment_date: string;

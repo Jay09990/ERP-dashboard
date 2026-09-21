@@ -36,7 +36,7 @@ export function AdjustmentList() {
   const [statusFilter, setStatusFilter] = useState("");
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
 
-  const getId = (a: StockAdjustment) => a.adjustment_id ?? a.id;
+  const getId = (a: StockAdjustment) => a.stock_adjustment_id ?? a.adjustment_id ?? a.id;
 
   const filteredAdjustments = useMemo(() => {
     return adjustments.filter((a) => {
@@ -180,6 +180,7 @@ export function AdjustmentList() {
       render: (a: StockAdjustment) => {
         const id = getId(a);
         const status = (a.status || "draft").toLowerCase();
+        if (id === undefined) return <span style={{ color: "var(--altrex-muted, #94a3b8)", fontSize: "12px" }}>—</span>;
 
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

@@ -2,7 +2,7 @@
 
 import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable } from "@altrex/ui";
-import { ArrowRightLeft, CheckCircle2, Download, PackageCheck, Plus, RefreshCw, Search, Send, XCircle } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, Download, Plus, RefreshCw, Search, Send, Trash2, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { transferApi } from "../api";
 import type { StockTransfer } from "../schema";
@@ -25,18 +25,25 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+function notifyError(err: unknown, fallback: string) {
+  const message =
+    (err as any)?.response?.data?.message || (err as any)?.message || fallback;
+  alert(message);
+}
+
 export function TransferList() {
   const { data: responseData, isLoading, error, refetch } = transferApi.useList();
   const transfers = useMemo(() => extractRecords<StockTransfer>(responseData), [responseData]);
 
   const { mutate: createTransfer, isPending: isCreating } = transferApi.useCreate();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = transferApi.useUpdateStatus();
+  const { mutate: deleteTransfer, isPending: isDeleting } = transferApi.useDelete();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
 
-  const getId = (t: StockTransfer) => t.transfer_id ?? t.id;
+  const getId = (t: StockTransfer) => t.stock_transfer_id ?? t.transfer_id ?? t.id;
 
   const filteredTransfers = useMemo(() => {
     return transfers.filter((t) => {
@@ -181,13 +188,20 @@ export function TransferList() {
       render: (t: StockTransfer) => {
         const id = getId(t);
         const status = (t.status || "draft").toLowerCase();
+        const label = t.transfer_no || `Transfer #${id}`;
+        if (id === undefined) return <span style={{ color: "var(--altrex-muted, #94a3b8)", fontSize: "12px" }}>—</span>;
 
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             {status === "draft" && (
               <Button
                 variant="outline"
-                onClick={() => updateStatus({ id, status: "in_transit" })}
+                onClick={() =>
+                  updateStatus(
+                    { id, status: "in_transit" },
+                    { onError: (err) => notifyError(err, "Failed to start transit.") }
+                  )
+                }
                 disabled={isUpdatingStatus}
                 style={{ padding: "4px 8px", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}
               >
@@ -198,7 +212,12 @@ export function TransferList() {
             {status === "in_transit" && (
               <Button
                 variant="outline"
-                onClick={() => updateStatus({ id, status: "completed" })}
+                onClick={() =>
+                  updateStatus(
+                    { id, status: "completed" },
+                    { onError: (err) => notifyError(err, "Failed to mark transfer complete.") }
+                  )
+                }
                 disabled={isUpdatingStatus}
                 style={{ padding: "4px 8px", fontSize: "11px", color: "#10b981", borderColor: "rgba(16,185,129,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
               >
@@ -211,7 +230,10 @@ export function TransferList() {
                 variant="outline"
                 onClick={() => {
                   if (confirm("Are you sure you want to cancel this transfer?")) {
-                    updateStatus({ id, status: "cancelled" });
+                    updateStatus(
+                      { id, status: "cancelled" },
+                      { onError: (err) => notifyError(err, "Failed to cancel transfer.") }
+                    );
                   }
                 }}
                 disabled={isUpdatingStatus}
@@ -220,6 +242,23 @@ export function TransferList() {
                 <XCircle size={12} /> Cancel
               </Button>
             )}
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (confirm(`Are you sure you want to delete ${label}?`)) {
+                  deleteTransfer(id, {
+                    onError: (err) => notifyError(err, "Failed to delete transfer."),
+                  });
+                }
+              }}
+              disabled={isDeleting}
+              title={`Delete ${label}`}
+              aria-label={`Delete ${label}`}
+              style={{ padding: "4px 8px", fontSize: "11px", color: "#ef4444", borderColor: "rgba(239,68,68,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+            >
+              <Trash2 size={12} />
+            </Button>
           </div>
         );
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useItems } from "@/features/items/api";
+import { useItems } from "@/features/items";
 import { Button } from "@altrex/ui";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
