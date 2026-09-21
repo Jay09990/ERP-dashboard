@@ -14,6 +14,24 @@ import { useSessionStore, type SessionSnapshot } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type CompanyLoginValues, companyLoginSchema } from "../schema";
 
+/**
+ * Validates post-login redirect path to prevent Open Redirect vulnerabilities.
+ * Ensures the target starts with a single slash `/`, does not contain `\\` or control characters,
+ * and stays on the same origin when resolved against a relative base.
+ */
+function isSafeRedirect(path: string): boolean {
+  if (!path || !path.startsWith("/") || path.startsWith("//") || path.includes("\\")) {
+    return false;
+  }
+  try {
+    const dummyOrigin = "http://localhost";
+    const parsed = new URL(path, dummyOrigin);
+    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
+  } catch {
+    return false;
+  }
+}
+
 export function CompanyLoginForm() {
   const router = useRouter();
   const setSession = useSessionStore((state) => state.setSession);
@@ -56,7 +74,7 @@ export function CompanyLoginForm() {
       };
       setSession(session);
       const next = new URLSearchParams(window.location.search).get("next");
-      router.push(next?.startsWith("/") && !next.startsWith("//") ? next : "/");
+      router.push(next && isSafeRedirect(next) ? next : "/");
     } catch (error) {
       setServerError(
         String((error as { message?: string }).message ?? "Sign in failed"),
