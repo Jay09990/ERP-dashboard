@@ -1,6 +1,7 @@
 "use client";
 
 import { cityApi, countryApi, stateApi } from "@/features/masters/api";
+import { useMemo } from "react";
 
 type LocationSelectProps = {
   countryId?: string | number | null;
@@ -46,12 +47,25 @@ export function LocationCascadeSelect({
   const currentCountry = toId(countryId);
   const currentState = toId(stateId);
   const currentCity = toId(cityId);
-  const countries = extractRecords(countriesData);
-  const states = extractRecords(statesData).filter(
-    (state) => toId(state.country_id) === currentCountry,
+
+  // Memoize location data extraction and filtered state/city lists to prevent expensive recursive object graph
+  // traversals and linear array allocations on every parent form re-render (e.g. typing into address fields).
+  const countries = useMemo(
+    () => extractRecords(countriesData),
+    [countriesData],
   );
-  const cities = extractRecords(citiesData).filter(
-    (city) => toId(city.state_id) === currentState,
+  const rawStates = useMemo(() => extractRecords(statesData), [statesData]);
+  const rawCities = useMemo(() => extractRecords(citiesData), [citiesData]);
+
+  const states = useMemo(
+    () =>
+      rawStates.filter((state) => toId(state.country_id) === currentCountry),
+    [rawStates, currentCountry],
+  );
+
+  const cities = useMemo(
+    () => rawCities.filter((city) => toId(city.state_id) === currentState),
+    [rawCities, currentState],
   );
 
   return (
