@@ -48,7 +48,9 @@ export function HardDeleteDialog({ company, onClose }: Props) {
       aria-modal="true"
       aria-labelledby="harddelete-title"
     >
-      <div
+      <button
+        type="button"
+        tabIndex={-1}
         aria-hidden="true"
         className="fixed inset-0 border-none bg-transparent"
         onClick={() => !isPending && onClose()}
@@ -114,7 +116,10 @@ export function HardDeleteDialog({ company, onClose }: Props) {
             </ul>
           </div>
 
-          <label className="altrex-dialog-confirm-check">
+          <label
+            className="altrex-dialog-confirm-check"
+            htmlFor="harddelete-check"
+          >
             <input
               type="checkbox"
               checked={checked}
