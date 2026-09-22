@@ -1,7 +1,7 @@
-import axios, { type AxiosError } from "axios";
-import { getToken, clearToken } from "@/lib/auth/token";
-import { useSessionStore } from "@/stores/session-store";
+import { clearToken, getToken } from "@/lib/auth/token";
 import { queryClient } from "@/lib/query-client";
+import { useSessionStore } from "@/stores/session-store";
+import axios, { type AxiosError } from "axios";
 
 // Endpoint constants already include "/api"; keep Axios same-origin so they
 // resolve to "/api/..." rather than duplicating the prefix.
@@ -29,7 +29,8 @@ http.interceptors.response.use(
       clearToken();
       useSessionStore.getState().setSession(null);
       queryClient.clear();
-      const onLoginPage = typeof window !== "undefined" && window.location.pathname === "/login";
+      const onLoginPage =
+        typeof window !== "undefined" && window.location.pathname === "/login";
       if (!onLoginPage) {
         const next = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?next=${next}`;
@@ -48,6 +49,5 @@ export const apiClient = {
     http.post<T>(url, body).then((r) => r.data),
   put: <T>(url: string, body?: unknown) =>
     http.put<T>(url, body).then((r) => r.data),
-  delete: <T>(url: string) =>
-    http.delete<T>(url).then((r) => r.data),
+  delete: <T>(url: string) => http.delete<T>(url).then((r) => r.data),
 };

@@ -3,10 +3,20 @@
 import { currencyApi, taxTypesApi, uomApi } from "@/features/masters/api";
 import { sanitizeCSVValue } from "@/lib/export-csv";
 import { Button, DataTable, FilterBar } from "@altrex/ui";
-import { ArrowUpRight, DollarSign, Download, Edit, Layers, Package, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  DollarSign,
+  Download,
+  Edit,
+  Layers,
+  Package,
+  Plus,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useDeleteItem, useItems, useItemTypes } from "../api";
+import { useDeleteItem, useItemTypes, useItems } from "../api";
 import type { Item } from "../schema";
 import { ItemFormDrawer } from "./ItemFormDrawer";
 
@@ -30,10 +40,10 @@ export function ItemList() {
   const { data: responseData, isLoading, error } = useItems();
   const items: Item[] = Array.isArray(responseData)
     ? responseData
-    : (responseData as any)?.items ??
+    : ((responseData as any)?.items ??
       (responseData as any)?.Items ??
       (responseData as any)?.data ??
-      [];
+      []);
 
   const { data: itemTypesData = [] } = useItemTypes();
   const itemTypes = extractList<any>(itemTypesData);
@@ -107,14 +117,29 @@ export function ItemList() {
     });
 
     const rows = filtered.map((i) => {
-      const salesRate = i.sales_rate != null && !isNaN(Number(i.sales_rate)) ? Number(i.sales_rate).toFixed(1) : "0.0";
-      const purchaseRate = i.purchase_rate != null && !isNaN(Number(i.purchase_rate)) ? Number(i.purchase_rate).toFixed(1) : "0.0";
-      const salesCurr = (i.sales_currency_id && currencyMap.get(i.sales_currency_id)) || "INR";
-      const purchaseCurr = (i.purchase_currency_id && currencyMap.get(i.purchase_currency_id)) || "INR";
-      const uom = (i.unit_id && uomMap.get(i.unit_id)) || (i as any).uom_name || (i as any).unit_name || "Pieces";
+      const salesRate =
+        i.sales_rate != null && !isNaN(Number(i.sales_rate))
+          ? Number(i.sales_rate).toFixed(1)
+          : "0.0";
+      const purchaseRate =
+        i.purchase_rate != null && !isNaN(Number(i.purchase_rate))
+          ? Number(i.purchase_rate).toFixed(1)
+          : "0.0";
+      const salesCurr =
+        (i.sales_currency_id && currencyMap.get(i.sales_currency_id)) || "INR";
+      const purchaseCurr =
+        (i.purchase_currency_id && currencyMap.get(i.purchase_currency_id)) ||
+        "INR";
+      const uom =
+        (i.unit_id && uomMap.get(i.unit_id)) ||
+        (i as any).uom_name ||
+        (i as any).unit_name ||
+        "Pieces";
       const qty = i.sales_qty != null ? String(i.sales_qty) : "";
       const desc = i.item_description || i.item_specification || "";
-      const type = (i.item_type && typeMap.get(i.item_type)) || (i.item_type === 2 ? "Service" : "Product");
+      const type =
+        (i.item_type && typeMap.get(i.item_type)) ||
+        (i.item_type === 2 ? "Service" : "Product");
       const hsn = i.hsn_code || "";
       const sku = i.item_code || "";
       const tax = (i.tax_id && taxMap.get(i.tax_id)) || "18.0";
@@ -138,22 +163,29 @@ export function ItemList() {
     });
 
     const csvLines = [
-      headers.map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`).join(","),
+      headers
+        .map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`)
+        .join(","),
       ...rows.map((row) =>
         row
           .map((cell) => {
             const str = sanitizeCSVValue(cell).replace(/"/g, '""');
             return `"${str}"`;
           })
-          .join(",")
+          .join(","),
       ),
     ];
 
-    const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csvLines.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `items_export_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `items_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -161,8 +193,12 @@ export function ItemList() {
   };
 
   const activeCount = items.filter((i) => i.status === "active").length;
-  const salesItemsCount = items.filter((i) => Number(i.sales_rate || 0) > 0).length;
-  const purchaseItemsCount = items.filter((i) => Number(i.purchase_rate || 0) > 0).length;
+  const salesItemsCount = items.filter(
+    (i) => Number(i.sales_rate || 0) > 0,
+  ).length;
+  const purchaseItemsCount = items.filter(
+    (i) => Number(i.purchase_rate || 0) > 0,
+  ).length;
 
   const columns = [
     {
@@ -187,11 +223,18 @@ export function ItemList() {
             <Package size={18} />
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
+            <span
+              style={{
+                fontWeight: 600,
+                color: "var(--altrex-text)",
+                fontSize: "14px",
+              }}
+            >
               {i.item_name}
             </span>
             <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>
-              Code: {i.item_code || "N/A"} {i.hsn_code ? `• HSN: ${i.hsn_code}` : ""}
+              Code: {i.item_code || "N/A"}{" "}
+              {i.hsn_code ? `• HSN: ${i.hsn_code}` : ""}
             </span>
           </div>
         </div>
@@ -202,7 +245,10 @@ export function ItemList() {
       label: "Selling Rate",
       render: (i: Item) => (
         <span style={{ fontWeight: 600, color: "#10b981", fontSize: "13px" }}>
-          ₹{Number(i.sales_rate || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          ₹
+          {Number(i.sales_rate || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+          })}
         </span>
       ),
     },
@@ -211,7 +257,10 @@ export function ItemList() {
       label: "Purchase Rate",
       render: (i: Item) => (
         <span style={{ fontWeight: 600, color: "#3b82f6", fontSize: "13px" }}>
-          ₹{Number(i.purchase_rate || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          ₹
+          {Number(i.purchase_rate || 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+          })}
         </span>
       ),
     },
@@ -229,7 +278,9 @@ export function ItemList() {
             fontSize: "12px",
             fontWeight: 600,
             background:
-              i.status === "active" ? "rgba(16, 185, 129, 0.12)" : "rgba(100, 116, 139, 0.12)",
+              i.status === "active"
+                ? "rgba(16, 185, 129, 0.12)"
+                : "rgba(100, 116, 139, 0.12)",
             color: i.status === "active" ? "#10b981" : "var(--altrex-muted)",
           }}
         >
@@ -251,14 +302,23 @@ export function ItemList() {
       render: (i: Item) => {
         const id = getItemId(i)?.toString() ?? "";
         return (
-          <div className="altrex-row-actions" style={{ display: "flex", gap: "8px" }}>
+          <div
+            className="altrex-row-actions"
+            style={{ display: "flex", gap: "8px" }}
+          >
             <Button
               variant="outline"
               onClick={() => {
                 setActiveItem(i);
                 setIsOpenDrawer(true);
               }}
-              style={{ fontSize: "12px", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+              style={{
+                fontSize: "12px",
+                padding: "4px 10px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
             >
               <Edit size={13} />
               Edit
@@ -266,7 +326,11 @@ export function ItemList() {
             <Button
               variant="outline"
               onClick={() => {
-                if (confirm(`Are you sure you want to delete item "${i.item_name}"?`)) {
+                if (
+                  confirm(
+                    `Are you sure you want to delete item "${i.item_name}"?`,
+                  )
+                ) {
                   deleteItem(id);
                 }
               }}
@@ -295,8 +359,15 @@ export function ItemList() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
             Item Management
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            Manage product catalog, HSN codes, UOM conversions, and dual sales/purchase pricing rates.
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
+            Manage product catalog, HSN codes, UOM conversions, and dual
+            sales/purchase pricing rates.
           </p>
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -309,7 +380,14 @@ export function ItemList() {
             Export CSV
           </Button>
           <Link href="/items/categories">
-            <Button variant="outline" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Button
+              variant="outline"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
               <Layers size={15} />
               Categories
             </Button>
@@ -338,7 +416,12 @@ export function ItemList() {
       >
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -355,10 +438,22 @@ export function ItemList() {
             <Package size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               TOTAL CATALOG ITEMS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {items.length}
             </div>
           </div>
@@ -366,7 +461,12 @@ export function ItemList() {
 
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -383,10 +483,22 @@ export function ItemList() {
             <ShoppingCart size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               ACTIVE ITEMS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {activeCount}
             </div>
           </div>
@@ -394,7 +506,12 @@ export function ItemList() {
 
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -411,10 +528,22 @@ export function ItemList() {
             <ArrowUpRight size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               SALES PRICED ITEMS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {salesItemsCount}
             </div>
           </div>
@@ -422,7 +551,12 @@ export function ItemList() {
 
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -439,10 +573,22 @@ export function ItemList() {
             <DollarSign size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               PURCHASE PRICED ITEMS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {purchaseItemsCount}
             </div>
           </div>

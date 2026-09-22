@@ -27,12 +27,14 @@
 .altrex-button-primary {
   background: var(--altrex-primary, #3b82f6);
   color: #ffffff !important;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--altrex-primary, #3b82f6) 40%, transparent);
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--altrex-primary, #3b82f6) 40%, transparent);
 }
 
 .altrex-button-primary:hover {
   background: var(--altrex-primary-hover, #2563eb);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--altrex-primary, #3b82f6) 55%, transparent);
+  box-shadow: 0 4px 16px
+    color-mix(in srgb, var(--altrex-primary, #3b82f6) 55%, transparent);
 }
 
 .altrex-button-neutral,
@@ -45,7 +47,11 @@
 .altrex-button-neutral:hover,
 .altrex-button-outline:hover {
   background: var(--altrex-hover);
-  border-color: color-mix(in srgb, var(--altrex-primary) 35%, var(--altrex-border));
+  border-color: color-mix(
+    in srgb,
+    var(--altrex-primary) 35%,
+    var(--altrex-border)
+  );
 }
 
 .altrex-table-wrap {
@@ -125,7 +131,11 @@
 }
 
 .altrex-table-state-error {
-  border-color: color-mix(in srgb, var(--altrex-danger-text) 45%, var(--altrex-border));
+  border-color: color-mix(
+    in srgb,
+    var(--altrex-danger-text) 45%,
+    var(--altrex-border)
+  );
   color: var(--altrex-danger-text);
 }
 
@@ -139,7 +149,9 @@
 }
 
 @keyframes altrex-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .altrex-dialog-backdrop {
@@ -165,7 +177,9 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.38);
 }
 
-.altrex-dialog-md { max-width: 560px; }
+.altrex-dialog-md {
+  max-width: 560px;
+}
 .altrex-dialog-lg {
   width: min(100%, 960px);
   max-width: 960px;
@@ -208,7 +222,11 @@
 .altrex-dialog-footer {
   justify-content: flex-end;
   border-top: 1px solid var(--altrex-border);
-  background: color-mix(in srgb, var(--altrex-raised) 50%, var(--altrex-surface));
+  background: color-mix(
+    in srgb,
+    var(--altrex-raised) 50%,
+    var(--altrex-surface)
+  );
 }
 
 .altrex-row-actions {
@@ -219,11 +237,24 @@
 }
 
 @media (max-width: 640px) {
-  .altrex-filter-bar { align-items: stretch; flex-direction: column; }
-  .altrex-dialog-backdrop { padding: 12px; }
-  .altrex-dialog { max-height: calc(100vh - 24px); }
-  .altrex-dialog-header, .altrex-dialog-body, .altrex-dialog-footer { padding: 16px; }
-  .altrex-dialog-footer > .altrex-button { flex: 1; }
+  .altrex-filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .altrex-dialog-backdrop {
+    padding: 12px;
+  }
+  .altrex-dialog {
+    max-height: calc(100vh - 24px);
+  }
+  .altrex-dialog-header,
+  .altrex-dialog-body,
+  .altrex-dialog-footer {
+    padding: 16px;
+  }
+  .altrex-dialog-footer > .altrex-button {
+    flex: 1;
+  }
 }
 
 /* ── Status Pills & Badges ── */
@@ -267,8 +298,8 @@
   min-height: 100dvh;
   place-items: center;
   padding: 32px 20px;
-  background: var(--altrex-canvas, #F5F5F4);
-  color: var(--altrex-text, #1C1C1B);
+  background: var(--altrex-canvas, #f5f5f4);
+  color: var(--altrex-text, #1c1c1b);
   overflow-y: auto;
 }
 
@@ -279,8 +310,8 @@
   margin-bottom: 28px;
   place-items: center;
   border-radius: 9px;
-  background: var(--altrex-text, #1C1C1B);
-  color: var(--altrex-canvas, #F5F5F4);
+  background: var(--altrex-text, #1c1c1b);
+  color: var(--altrex-canvas, #f5f5f4);
   font-size: 16px;
   font-weight: 800;
 }
@@ -289,17 +320,17 @@
   align-self: center;
   box-sizing: border-box;
   width: min(100%, 420px);
-  border: 1px solid var(--altrex-border, #C9C9C5);
+  border: 1px solid var(--altrex-border, #c9c9c5);
   border-radius: 12px;
   padding: 24px;
-  background: var(--altrex-surface, #FFFDF9);
-  box-shadow: 0 4px 16px rgb(28 28 27 / 0.10);
-  color: var(--altrex-text, #1C1C1B);
+  background: var(--altrex-surface, #fffdf9);
+  box-shadow: 0 4px 16px rgb(28 28 27 / 0.1);
+  color: var(--altrex-text, #1c1c1b);
 }
 
 .altrex-auth-panel h1 {
   margin: 4px 0 0;
-  color: var(--altrex-text, #1C1C1B) !important;
+  color: var(--altrex-text, #1c1c1b) !important;
   font-size: clamp(26px, 5vw, 30px);
   line-height: 1.1;
   font-weight: 800;
@@ -311,7 +342,7 @@
 .altrex-auth-panel .altrex-field,
 .altrex-auth-panel .altrex-step-label,
 .altrex-auth-panel .altrex-auth-description {
-  color: var(--altrex-text, #1C1C1B);
+  color: var(--altrex-text, #1c1c1b);
 }
 
 .altrex-auth-panel-wide {
@@ -321,7 +352,7 @@
 .altrex-auth-description {
   max-width: 560px;
   margin: 10px 0 28px;
-  color: var(--altrex-muted, #5E5E5A);
+  color: var(--altrex-muted, #5e5e5a);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -365,18 +396,18 @@
 .altrex-field {
   display: grid;
   gap: 8px;
-  color: var(--altrex-text, #1C1C1B);
+  color: var(--altrex-text, #1c1c1b);
   font-size: 13px;
   font-weight: 600;
 }
 
 .altrex-auth-panel .altrex-field {
-  color: var(--altrex-text, #1C1C1B);
+  color: var(--altrex-text, #1c1c1b);
 }
 
 .altrex-auth-panel .altrex-field > span,
 .altrex-auth-panel .altrex-field > label {
-  color: var(--altrex-text, #1C1C1B) !important;
+  color: var(--altrex-text, #1c1c1b) !important;
 }
 
 .altrex-auth-form .altrex-button {
@@ -387,27 +418,27 @@
   min-width: 0;
   width: 100%;
   min-height: 44px;
-  border-color: var(--altrex-border, #C9C9C5);
-  background: var(--altrex-raised, #FFFEFC);
-  color: var(--altrex-text, #1C1C1B);
+  border-color: var(--altrex-border, #c9c9c5);
+  background: var(--altrex-raised, #fffefc);
+  color: var(--altrex-text, #1c1c1b);
 }
 
 .altrex-auth-panel .altrex-input,
 .altrex-auth-panel .altrex-textarea,
 .altrex-auth-panel .altrex-phone-row,
 .altrex-auth-panel .altrex-password-row .altrex-input {
-  background: var(--altrex-raised, #FFFEFC) !important;
-  color: var(--altrex-text, #1C1C1B) !important;
+  background: var(--altrex-raised, #fffefc) !important;
+  color: var(--altrex-text, #1c1c1b) !important;
 }
 
 .altrex-auth-panel .altrex-input::placeholder,
 .altrex-auth-panel .altrex-textarea::placeholder {
-  color: var(--altrex-muted, #64748B);
+  color: var(--altrex-muted, #64748b);
 }
 
 .altrex-auth-form .altrex-input:focus {
-  border-color: var(--altrex-primary, #B3C2DB);
-  box-shadow: 0 0 0 2px var(--altrex-primary, #3A5788);
+  border-color: var(--altrex-primary, #b3c2db);
+  box-shadow: 0 0 0 2px var(--altrex-primary, #3a5788);
 }
 
 .altrex-auth-form button[type="submit"] {
@@ -418,13 +449,13 @@
   align-items: center;
   justify-content: center;
   padding-inline: 16px;
-  background: var(--altrex-primary, #3A5788);
-  color: var(--altrex-on-accent, #FFFEFC);
+  background: var(--altrex-primary, #3a5788);
+  color: var(--altrex-on-accent, #fffefc);
   text-align: center;
 }
 
 .altrex-auth-form button[type="submit"]:hover {
-  background: var(--altrex-primary-hover, #2E446B);
+  background: var(--altrex-primary-hover, #2e446b);
 }
 
 .altrex-form-error {
@@ -434,7 +465,7 @@
 }
 
 .altrex-auth-link {
-  color: var(--altrex-link, #4869A3);
+  color: var(--altrex-link, #4869a3);
   font-size: 13px;
   font-weight: 600;
   text-align: center;
@@ -447,10 +478,10 @@
   gap: 8px;
   margin: 0;
   padding: 12px;
-  border: 1px solid var(--altrex-danger-text, #E5B8B2);
+  border: 1px solid var(--altrex-danger-text, #e5b8b2);
   border-radius: 8px;
-  background: var(--altrex-raised, #F3E4E2);
-  color: var(--altrex-danger-text, #7A3028);
+  background: var(--altrex-raised, #f3e4e2);
+  color: var(--altrex-danger-text, #7a3028);
   font-size: 12px;
   line-height: 1.5;
 }

@@ -27,9 +27,18 @@ interface MasterListModalProps<T extends Record<string, any>> {
   }[];
   fields: FieldConfig[];
   useList: () => { data?: T[] | any; isLoading: boolean; error: any };
-  useCreate: () => { mutate: (body: any, opts?: any) => void; isPending: boolean };
-  useUpdate: () => { mutate: (args: { id: string; body: any }, opts?: any) => void; isPending: boolean };
-  useDelete: () => { mutate: (id: string, opts?: any) => void; isPending: boolean };
+  useCreate: () => {
+    mutate: (body: any, opts?: any) => void;
+    isPending: boolean;
+  };
+  useUpdate: () => {
+    mutate: (args: { id: string; body: any }, opts?: any) => void;
+    isPending: boolean;
+  };
+  useDelete: () => {
+    mutate: (id: string, opts?: any) => void;
+    isPending: boolean;
+  };
 }
 
 /** Finds the first record array in a backend response, regardless of its list key. */
@@ -76,7 +85,8 @@ export function MasterListModal<T extends Record<string, any>>({
     if (!search.trim()) return items;
     return items.filter((item) =>
       Object.values(item).some(
-        (val) => val && String(val).toLowerCase().includes(search.toLowerCase()),
+        (val) =>
+          val && String(val).toLowerCase().includes(search.toLowerCase()),
       ),
     );
   }, [items, search]);
@@ -105,9 +115,9 @@ export function MasterListModal<T extends Record<string, any>>({
       current[f.name] =
         item[f.name] ??
         (f.name === "form_type"
-          ? item.type ?? item.reason_type ?? "both"
+          ? (item.type ?? item.reason_type ?? "both")
           : f.name === "status"
-            ? item.status ?? "active"
+            ? (item.status ?? "active")
             : "");
     });
     setFormData(current);
@@ -158,7 +168,9 @@ export function MasterListModal<T extends Record<string, any>>({
             <Button
               variant="outline"
               onClick={() => {
-                if (confirm(`Are you sure you want to delete this master item?`)) {
+                if (
+                  confirm(`Are you sure you want to delete this master item?`)
+                ) {
                   deleteItem(id);
                 }
               }}
@@ -184,19 +196,34 @@ export function MasterListModal<T extends Record<string, any>>({
       <div className="altrex-page-header">
         <div>
           <span className="altrex-eyebrow">{eyebrow}</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>{title}</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
+            {title}
+          </h1>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
             {subtitle}
           </p>
         </div>
-        <Button onClick={handleOpenAdd} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+        <Button
+          onClick={handleOpenAdd}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+        >
           <Plus size={16} />
           Add Record
         </Button>
       </div>
 
       <FilterBar>
-        <Search size={17} aria-hidden="true" style={{ color: "var(--altrex-muted)", flexShrink: 0 }} />
+        <Search
+          size={17}
+          aria-hidden="true"
+          style={{ color: "var(--altrex-muted)", flexShrink: 0 }}
+        />
         <input
           className="altrex-input"
           placeholder="Search master records..."
@@ -228,14 +255,26 @@ export function MasterListModal<T extends Record<string, any>>({
       )}
 
       {isOpenModal && (
-        <div className="altrex-dialog-backdrop" role="presentation" onClick={() => setIsOpenModal(false)}>
-          <div className="altrex-dialog altrex-dialog-md" role="dialog" aria-modal="true" aria-labelledby="master-dialog-title" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="altrex-dialog-backdrop"
+          role="presentation"
+          onClick={() => setIsOpenModal(false)}
+        >
+          <div
+            className="altrex-dialog altrex-dialog-md"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="master-dialog-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="altrex-dialog-header">
               <div>
                 <h3 className="altrex-dialog-title" id="master-dialog-title">
                   {activeItem ? `Edit ${title}` : `Add New ${title}`}
                 </h3>
-                <p className="altrex-dialog-subtitle">Fill in the master entry details below.</p>
+                <p className="altrex-dialog-subtitle">
+                  Fill in the master entry details below.
+                </p>
               </div>
               <button
                 type="button"
@@ -247,7 +286,10 @@ export function MasterListModal<T extends Record<string, any>>({
               </button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="altrex-dialog-body" style={{ display: "grid", gap: "18px" }}>
+              <div
+                className="altrex-dialog-body"
+                style={{ display: "grid", gap: "18px" }}
+              >
                 {fields.map((f) => (
                   <label key={f.name} className="altrex-field">
                     <span>
@@ -257,7 +299,9 @@ export function MasterListModal<T extends Record<string, any>>({
                       <select
                         className="altrex-input altrex-select"
                         value={formData[f.name] ?? ""}
-                        onChange={(e) => setFormData({ ...formData, [f.name]: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, [f.name]: e.target.value })
+                        }
                         required={f.required}
                       >
                         <option value="">Select {f.label}...</option>
@@ -269,14 +313,25 @@ export function MasterListModal<T extends Record<string, any>>({
                       </select>
                     ) : (
                       <input
-                        type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                        type={
+                          f.type === "number"
+                            ? "number"
+                            : f.type === "date"
+                              ? "date"
+                              : "text"
+                        }
                         className="altrex-input"
-                        placeholder={f.getPlaceholder?.(formData) ?? f.placeholder}
+                        placeholder={
+                          f.getPlaceholder?.(formData) ?? f.placeholder
+                        }
                         value={formData[f.name] ?? ""}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            [f.name]: f.type === "number" ? Number(e.target.value) : e.target.value,
+                            [f.name]:
+                              f.type === "number"
+                                ? Number(e.target.value)
+                                : e.target.value,
                           })
                         }
                         required={f.required}
@@ -286,7 +341,11 @@ export function MasterListModal<T extends Record<string, any>>({
                 ))}
               </div>
               <div className="altrex-dialog-footer">
-                <Button variant="outline" type="button" onClick={() => setIsOpenModal(false)}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setIsOpenModal(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isPending}>

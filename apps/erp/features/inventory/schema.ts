@@ -7,7 +7,10 @@ export const warehouseSchema = z.object({
 });
 
 export const batchSchema = z.object({
-  item_id: z.union([z.number(), z.string().min(1, "Item selection is required")]),
+  item_id: z.union([
+    z.number(),
+    z.string().min(1, "Item selection is required"),
+  ]),
   batch_no: z.string().min(1, "Batch number is required"),
   mfg_date: z.string().optional().default(""),
   expiry_date: z.string().optional().default(""),
@@ -23,11 +26,21 @@ export const transferItemDetailSchema = z.object({
 
 export const stockTransferSchema = z.object({
   transfer_date: z.string().min(1, "Transfer date is required"),
-  from_warehouse_id: z.union([z.number(), z.string().min(1, "Source warehouse is required")]),
-  to_warehouse_id: z.union([z.number(), z.string().min(1, "Destination warehouse is required")]),
-  status: z.enum(["draft", "in_transit", "completed", "cancelled"]).default("draft"),
+  from_warehouse_id: z.union([
+    z.number(),
+    z.string().min(1, "Source warehouse is required"),
+  ]),
+  to_warehouse_id: z.union([
+    z.number(),
+    z.string().min(1, "Destination warehouse is required"),
+  ]),
+  status: z
+    .enum(["draft", "in_transit", "completed", "cancelled"])
+    .default("draft"),
   notes: z.string().optional().default(""),
-  itemsDetails: z.array(transferItemDetailSchema).min(1, "At least one item is required"),
+  itemsDetails: z
+    .array(transferItemDetailSchema)
+    .min(1, "At least one item is required"),
 });
 
 export const adjustmentItemDetailSchema = z.object({
@@ -40,11 +53,16 @@ export const adjustmentItemDetailSchema = z.object({
 
 export const stockAdjustmentSchema = z.object({
   adjustment_date: z.string().min(1, "Adjustment date is required"),
-  warehouse_id: z.union([z.number(), z.string().min(1, "Warehouse is required")]),
+  warehouse_id: z.union([
+    z.number(),
+    z.string().min(1, "Warehouse is required"),
+  ]),
   reason: z.string().optional().default(""),
   status: z.enum(["draft", "approved", "cancelled"]).default("draft"),
   notes: z.string().optional().default(""),
-  itemsDetails: z.array(adjustmentItemDetailSchema).min(1, "At least one item is required"),
+  itemsDetails: z
+    .array(adjustmentItemDetailSchema)
+    .min(1, "At least one item is required"),
 });
 
 export type WarehouseFormValues = z.infer<typeof warehouseSchema>;

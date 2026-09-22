@@ -114,8 +114,16 @@ export function UserFormDrawer({ user, onClose }: Props) {
   const isPending = isCreating || isUpdating;
 
   return (
-    <div className="altrex-dialog-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="altrex-dialog-backdrop"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="altrex-dialog altrex-dialog-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
@@ -123,7 +131,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
                 width: "40px",
                 height: "40px",
                 borderRadius: "10px",
-                background: isEdit ? "rgba(37,99,235,0.1)" : "rgba(16,185,129,0.1)",
+                background: isEdit
+                  ? "rgba(37,99,235,0.1)"
+                  : "rgba(16,185,129,0.1)",
                 color: isEdit ? "var(--altrex-primary)" : "#10b981",
                 display: "flex",
                 alignItems: "center",

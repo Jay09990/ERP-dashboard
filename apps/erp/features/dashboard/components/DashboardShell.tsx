@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { useDashboardOverview } from "../hooks/use-dashboard-overview";
 import { InvoicedVsPaidChart } from "./InvoicedVsPaidChart";
 import { PaymentStatusDonut } from "./PaymentStatusDonut";
 import { SalesVsPurchaseBarChart } from "./SalesVsPurchaseBarChart";
-import { useDashboardOverview } from "../hooks/use-dashboard-overview";
 
 function StatusChip({ status }: { status: string }) {
   const normalized = status.toLowerCase();
@@ -38,7 +38,9 @@ function StatusChip({ status }: { status: string }) {
         fontSize: 11,
         fontWeight: 700,
         textTransform: "uppercase",
-        background: isPositive ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)",
+        background: isPositive
+          ? "rgba(16, 185, 129, 0.12)"
+          : "rgba(245, 158, 11, 0.12)",
         color: isPositive ? "#10b981" : "#f59e0b",
       }}
     >
@@ -59,11 +61,17 @@ export function DashboardShell() {
           <h1>Dashboard Overview</h1>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <Link href="/parties/customers" className="altrex-button altrex-button-primary">
+          <Link
+            href="/parties/customers"
+            className="altrex-button altrex-button-primary"
+          >
             <Plus size={16} />
             <span>Add Customer</span>
           </Link>
-          <Link href="/parties/vendors" className="altrex-button altrex-button-secondary">
+          <Link
+            href="/parties/vendors"
+            className="altrex-button altrex-button-secondary"
+          >
             <Building2 size={16} />
             <span>Add Vendor</span>
           </Link>
@@ -72,14 +80,28 @@ export function DashboardShell() {
 
       {overview.hasError ? (
         <div className="altrex-table-state altrex-table-state-error">
-          Some dashboard metrics could not be loaded. Counts below use whatever responses succeeded.
+          Some dashboard metrics could not be loaded. Counts below use whatever
+          responses succeeded.
         </div>
       ) : null}
 
       {/* Top Stat Cards */}
       <div className="altrex-stat-grid">
-        <div className="altrex-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          className="altrex-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div className="altrex-stat-label">Total Monthly Sales</div>
             <div
               style={{
@@ -105,8 +127,21 @@ export function DashboardShell() {
           </span>
         </div>
 
-        <div className="altrex-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          className="altrex-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div className="altrex-stat-label">Total Purchases</div>
             <div
               style={{
@@ -132,8 +167,21 @@ export function DashboardShell() {
           </span>
         </div>
 
-        <div className="altrex-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          className="altrex-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div className="altrex-stat-label">Active Quotations</div>
             <div
               style={{
@@ -149,12 +197,29 @@ export function DashboardShell() {
               <FileText size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{overview.isLoading ? "…" : overview.activeQuotations}</div>
-          <span className="altrex-stat-helper">Open / pending customer quotes</span>
+          <div className="altrex-stat-value">
+            {overview.isLoading ? "…" : overview.activeQuotations}
+          </div>
+          <span className="altrex-stat-helper">
+            Open / pending customer quotes
+          </span>
         </div>
 
-        <div className="altrex-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          className="altrex-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div className="altrex-stat-label">Pending Deliveries</div>
             <div
               style={{
@@ -170,7 +235,9 @@ export function DashboardShell() {
               <Package size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{overview.isLoading ? "…" : overview.pendingDeliveries}</div>
+          <div className="altrex-stat-value">
+            {overview.isLoading ? "…" : overview.pendingDeliveries}
+          </div>
           <span className="altrex-stat-helper">Challans not yet completed</span>
         </div>
       </div>
@@ -203,7 +270,14 @@ export function DashboardShell() {
           <SalesVsPurchaseBarChart />
         </div>
 
-        <div style={{ gridColumn: "span 1", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div
+          style={{
+            gridColumn: "span 1",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
           <Link
             href="/parties/customers"
             className="altrex-card"
@@ -232,9 +306,19 @@ export function DashboardShell() {
               <Users size={20} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Customers Directory</div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "var(--altrex-text)",
+                }}
+              >
+                Customers Directory
+              </div>
               <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-                {overview.isLoading ? "Loading…" : `${overview.customerCount} customer${overview.customerCount === 1 ? "" : "s"}`}
+                {overview.isLoading
+                  ? "Loading…"
+                  : `${overview.customerCount} customer${overview.customerCount === 1 ? "" : "s"}`}
               </span>
             </div>
             <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
@@ -268,9 +352,19 @@ export function DashboardShell() {
               <Building2 size={20} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Vendors & Suppliers</div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "var(--altrex-text)",
+                }}
+              >
+                Vendors & Suppliers
+              </div>
               <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-                {overview.isLoading ? "Loading…" : `${overview.vendorCount} vendor${overview.vendorCount === 1 ? "" : "s"}`}
+                {overview.isLoading
+                  ? "Loading…"
+                  : `${overview.vendorCount} vendor${overview.vendorCount === 1 ? "" : "s"}`}
               </span>
             </div>
             <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
@@ -304,8 +398,18 @@ export function DashboardShell() {
               <FileCheck size={20} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--altrex-text)" }}>Users & Access Control</div>
-              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>Role permissions & team credentials</span>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "var(--altrex-text)",
+                }}
+              >
+                Users & Access Control
+              </div>
+              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
+                Role permissions & team credentials
+              </span>
             </div>
             <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
           </Link>
@@ -314,12 +418,28 @@ export function DashboardShell() {
 
       {/* Bento Grid Row 3: Recent Activity & Operations */}
       <div className="altrex-card" style={{ borderRadius: 12, padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--altrex-text)" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 16,
+              fontWeight: 800,
+              color: "var(--altrex-text)",
+            }}
+          >
             Recent Activity & Operations
           </h2>
           {!overview.isLoading && overview.recentActivity.length > 0 ? (
-            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>Latest {overview.recentActivity.length}</span>
+            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
+              Latest {overview.recentActivity.length}
+            </span>
           ) : null}
         </div>
 
@@ -339,13 +459,31 @@ export function DashboardShell() {
           >
             <Clock
               size={32}
-              style={{ margin: "0 auto 10px", color: "var(--altrex-muted)", opacity: 0.5, display: "block" }}
+              style={{
+                margin: "0 auto 10px",
+                color: "var(--altrex-muted)",
+                opacity: 0.5,
+                display: "block",
+              }}
             />
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               No recent transactional logs
             </div>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--altrex-muted)" }}>
-              Activity appears here as quotations, orders, invoices, and challans are created.
+            <p
+              style={{
+                margin: "4px 0 0",
+                fontSize: 12,
+                color: "var(--altrex-muted)",
+              }}
+            >
+              Activity appears here as quotations, orders, invoices, and
+              challans are created.
             </p>
           </div>
         ) : (
@@ -381,19 +519,41 @@ export function DashboardShell() {
                   <FileText size={16} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "var(--altrex-text)" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "var(--altrex-text)",
+                      }}
+                    >
                       {item.label}
                       {item.id ? ` #${item.id}` : ""}
                     </span>
                     <StatusChip status={item.status} />
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--altrex-muted)", marginTop: 2 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--altrex-muted)",
+                      marginTop: 2,
+                    }}
+                  >
                     {item.dateLabel}
                     {item.amountLabel ? ` · ${item.amountLabel}` : ""}
                   </div>
                 </div>
-                <ArrowRight size={15} style={{ color: "var(--altrex-muted)", flexShrink: 0 }} />
+                <ArrowRight
+                  size={15}
+                  style={{ color: "var(--altrex-muted)", flexShrink: 0 }}
+                />
               </Link>
             ))}
           </div>

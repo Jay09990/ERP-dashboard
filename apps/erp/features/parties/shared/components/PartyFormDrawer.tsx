@@ -1,15 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import { currencyApi } from "@/features/masters/api";
+import { type PartyFormValues, partySchema } from "../schema";
+import type { PartyRecord, PartyType } from "../types";
 import { AddressRepeater } from "./AddressRepeater";
 import { ContactPersonRepeater } from "./ContactPersonRepeater";
-import { partySchema, PartyFormValues } from "../schema";
-import { PartyRecord, PartyType } from "../types";
 
 interface PartyFormDrawerProps {
   partyType: PartyType;
@@ -35,7 +35,9 @@ export function PartyFormDrawer({
 
   // Currency master data is shared with Items and transactional documents.
   const { data: currencyData = [] } = currencyApi.useList();
-  const currencies = Array.isArray(currencyData) ? currencyData : (currencyData as any).data || [];
+  const currencies = Array.isArray(currencyData)
+    ? currencyData
+    : (currencyData as any).data || [];
 
   const {
     register,
@@ -138,14 +140,17 @@ export function PartyFormDrawer({
     const parseFk = (val: any) => {
       if (!val) return null;
       const s = String(val);
-      if (s.startsWith("fb_") || s.startsWith("fallback") || isNaN(Number(s))) return null;
+      if (s.startsWith("fb_") || s.startsWith("fallback") || isNaN(Number(s)))
+        return null;
       return Number(s);
     };
 
     const formattedData: PartyFormValues = {
       ...data,
       currency_id: data.currency_id ? Number(data.currency_id) : 1,
-      opening_balance: data.opening_balance ? String(data.opening_balance) : "0",
+      opening_balance: data.opening_balance
+        ? String(data.opening_balance)
+        : "0",
       authorized_signature: data.authorized_signature || "",
       addresses: (data.addresses || []).map((addr) => ({
         ...addr,
@@ -266,10 +271,7 @@ export function PartyFormDrawer({
                 gap: 14,
               }}
             >
-              <label
-                className="altrex-field"
-                style={{ gridColumn: "1 / -1" }}
-              >
+              <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
                 <span>
                   {partyType === "customer"
                     ? "Customer Name *"
@@ -487,8 +489,8 @@ export function PartyFormDrawer({
               {isSubmitting
                 ? "Saving..."
                 : isEdit
-                ? `Update ${partyType === "customer" ? "Customer" : "Vendor"}`
-                : `Create ${partyType === "customer" ? "Customer" : "Vendor"}`}
+                  ? `Update ${partyType === "customer" ? "Customer" : "Vendor"}`
+                  : `Create ${partyType === "customer" ? "Customer" : "Vendor"}`}
             </button>
           </div>
         </form>

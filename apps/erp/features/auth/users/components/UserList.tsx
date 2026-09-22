@@ -3,18 +3,20 @@
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import { KeyRound, Plus, Shield, Trash2, UserPlus, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
+import { UserPermissionMatrixModal } from "../../permissions/components/UserPermissionMatrixModal";
 import { useDeleteUser, useUsers } from "../api";
 import type { User } from "../schema";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { UserFormDrawer } from "./UserFormDrawer";
-import { UserPermissionMatrixModal } from "../../permissions/components/UserPermissionMatrixModal";
 
 export function UserList() {
   const [search, setSearch] = useState("");
   const [activeUser, setActiveUser] = useState<User | null>(null);
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
   const [isOpenPasswordModal, setIsOpenPasswordModal] = useState(false);
-  const [activePermissionUser, setActivePermissionUser] = useState<User | null>(null);
+  const [activePermissionUser, setActivePermissionUser] = useState<User | null>(
+    null,
+  );
 
   const { data: responseData, isLoading, error } = useUsers();
   const users: User[] = Array.isArray(responseData)
@@ -41,8 +43,7 @@ export function UserList() {
         u.email?.toLowerCase().includes(search.toLowerCase()) ||
         u.phone?.toLowerCase().includes(search.toLowerCase());
 
-      const matchStatus =
-        statusFilter === "all" || u.status === statusFilter;
+      const matchStatus = statusFilter === "all" || u.status === statusFilter;
 
       return matchSearch && matchStatus;
     });
@@ -50,7 +51,9 @@ export function UserList() {
 
   const activeCount = users.filter((u) => u.status === "active").length;
   const inactiveCount = users.filter((u) => u.status === "inactive").length;
-  const uniqueRolesCount = new Set(users.map((u) => getRoleId(u)).filter(Boolean)).size;
+  const uniqueRolesCount = new Set(
+    users.map((u) => getRoleId(u)).filter(Boolean),
+  ).size;
 
   const getInitials = (firstName: string, lastName?: string) => {
     const f = firstName?.[0] || "";
@@ -100,7 +103,13 @@ export function UserList() {
               {getInitials(fn, ln)}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text)",
+                  fontSize: "14px",
+                }}
+              >
                 {fullName}
               </span>
               <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>
@@ -128,10 +137,7 @@ export function UserList() {
               u.status === "active"
                 ? "rgba(16, 185, 129, 0.12)"
                 : "rgba(100, 116, 139, 0.12)",
-            color:
-              u.status === "active"
-                ? "#10b981"
-                : "var(--altrex-muted)",
+            color: u.status === "active" ? "#10b981" : "var(--altrex-muted)",
           }}
         >
           <span
@@ -162,7 +168,10 @@ export function UserList() {
         const userId = getUserId(u)?.toString() ?? "";
         const fn = getFirstName(u);
         return (
-          <div className="altrex-row-actions" style={{ display: "flex", gap: "8px" }}>
+          <div
+            className="altrex-row-actions"
+            style={{ display: "flex", gap: "8px" }}
+          >
             <Button
               variant="outline"
               onClick={() => {
@@ -193,7 +202,9 @@ export function UserList() {
               variant="outline"
               onClick={() => {
                 if (
-                  confirm(`Are you sure you want to delete user ${fn || u.email}?`)
+                  confirm(
+                    `Are you sure you want to delete user ${fn || u.email}?`,
+                  )
                 ) {
                   deleteUser(userId);
                 }
@@ -222,8 +233,15 @@ export function UserList() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
             User Management
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            Manage user accounts, credentials, status, and custom security roles.
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
+            Manage user accounts, credentials, status, and custom security
+            roles.
           </p>
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -281,10 +299,22 @@ export function UserList() {
             <UserPlus size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               TOTAL USERS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {users.length}
             </div>
           </div>
@@ -314,10 +344,22 @@ export function UserList() {
             <Shield size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               ACTIVE USERS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {activeCount}
             </div>
           </div>
@@ -347,10 +389,22 @@ export function UserList() {
             <UserX size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               INACTIVE USERS
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {inactiveCount}
             </div>
           </div>
@@ -380,10 +434,22 @@ export function UserList() {
             <KeyRound size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               ROLES ASSIGNED
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {uniqueRolesCount}
             </div>
           </div>
@@ -450,7 +516,10 @@ export function UserList() {
       {activePermissionUser && (
         <UserPermissionMatrixModal
           userId={(getUserId(activePermissionUser) ?? "").toString()}
-          userName={`${getFirstName(activePermissionUser)} ${getLastName(activePermissionUser)}`.trim() || activePermissionUser.email}
+          userName={
+            `${getFirstName(activePermissionUser)} ${getLastName(activePermissionUser)}`.trim() ||
+            activePermissionUser.email
+          }
           roleId={(getRoleId(activePermissionUser) ?? "").toString()}
           onClose={() => {
             setActivePermissionUser(null);
@@ -460,4 +529,3 @@ export function UserList() {
     </>
   );
 }
-

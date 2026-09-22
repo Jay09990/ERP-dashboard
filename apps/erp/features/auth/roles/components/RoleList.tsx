@@ -3,10 +3,10 @@
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import { Lock, Plus, Settings, Shield, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { PermissionMatrixModal } from "../../permissions/components/PermissionMatrixModal";
 import { useDeleteRole, useRoles } from "../api";
 import type { Role } from "../schema";
 import { RoleFormModal } from "./RoleFormModal";
-import { PermissionMatrixModal } from "../../permissions/components/PermissionMatrixModal";
 
 const ROLE_COLORS = [
   { bg: "rgba(37, 99, 235, 0.12)", text: "#2563eb" },
@@ -26,7 +26,9 @@ export function RoleList() {
   const [search, setSearch] = useState("");
   const [activeRole, setActiveRole] = useState<Role | null>(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
-  const [activePermissionRole, setActivePermissionRole] = useState<Role | null>(null);
+  const [activePermissionRole, setActivePermissionRole] = useState<Role | null>(
+    null,
+  );
 
   const { data: responseData, isLoading, error } = useRoles();
   const roles: Role[] = Array.isArray(responseData)
@@ -34,15 +36,16 @@ export function RoleList() {
     : ((responseData as any)?.roles ?? (responseData as any)?.data ?? []);
   const { mutate: deleteRole, isPending: isDeleting } = useDeleteRole();
 
-  const filtered = useMemo(() =>
-    search.trim()
-      ? roles.filter(
-          (r) =>
-            r.role_name?.toLowerCase().includes(search.toLowerCase()) ||
-            r.description?.toLowerCase().includes(search.toLowerCase()),
-        )
-      : roles,
-    [roles, search]
+  const filtered = useMemo(
+    () =>
+      search.trim()
+        ? roles.filter(
+            (r) =>
+              r.role_name?.toLowerCase().includes(search.toLowerCase()) ||
+              r.description?.toLowerCase().includes(search.toLowerCase()),
+          )
+        : roles,
+    [roles, search],
   );
 
   const columns = [
@@ -69,11 +72,23 @@ export function RoleList() {
               <Shield size={17} />
             </div>
             <div>
-              <div style={{ fontWeight: 600, color: "var(--altrex-text)", fontSize: "14px" }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text)",
+                  fontSize: "14px",
+                }}
+              >
                 {r.role_name}
               </div>
               {r.description && (
-                <div style={{ fontSize: "12px", color: "var(--altrex-muted)", marginTop: "2px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--altrex-muted)",
+                    marginTop: "2px",
+                  }}
+                >
                   {r.description}
                 </div>
               )}
@@ -86,14 +101,23 @@ export function RoleList() {
       key: "role_id" as const,
       label: "Actions",
       render: (r: Role) => (
-        <div className="altrex-row-actions" style={{ display: "flex", gap: "8px" }}>
+        <div
+          className="altrex-row-actions"
+          style={{ display: "flex", gap: "8px" }}
+        >
           <Button
             variant="outline"
             onClick={() => {
               setActiveRole(r);
               setIsOpenModal(true);
             }}
-            style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12px", padding: "4px 10px" }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              fontSize: "12px",
+              padding: "4px 10px",
+            }}
           >
             <Settings size={13} />
             Edit
@@ -148,8 +172,15 @@ export function RoleList() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
             Roles & Permissions
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            Define access roles and configure permission levels for your organization.
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
+            Define access roles and configure permission levels for your
+            organization.
           </p>
         </div>
         <Button
@@ -175,7 +206,12 @@ export function RoleList() {
       >
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -192,10 +228,22 @@ export function RoleList() {
             <Shield size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               TOTAL ROLES
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {roles.length}
             </div>
           </div>
@@ -203,7 +251,12 @@ export function RoleList() {
 
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -220,10 +273,22 @@ export function RoleList() {
             <Lock size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               CUSTOM ROLES
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {roles.length}
             </div>
           </div>
@@ -231,7 +296,12 @@ export function RoleList() {
 
         <div
           className="altrex-detail-card"
-          style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
         >
           <div
             style={{
@@ -248,10 +318,22 @@ export function RoleList() {
             <Users size={20} />
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "var(--altrex-muted)", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+                fontWeight: 600,
+              }}
+            >
               ROLES IN USE
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--altrex-text)" }}>
+            <div
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
               {roles.length}
             </div>
           </div>

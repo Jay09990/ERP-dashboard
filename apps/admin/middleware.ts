@@ -16,9 +16,15 @@ export function middleware(request: NextRequest) {
   const publicRoutes = ["/login", "/register", "/company-register"];
   const isPublicRoute = publicRoutes.some((route) => pathname === route);
 
-  if (isPublicRoute && (searchParams.has("logout") || searchParams.has("clear"))) {
+  if (
+    isPublicRoute &&
+    (searchParams.has("logout") || searchParams.has("clear"))
+  ) {
     const response = NextResponse.next();
-    response.cookies.set("altrex_auth", "", { path: "/", expires: new Date(0) });
+    response.cookies.set("altrex_auth", "", {
+      path: "/",
+      expires: new Date(0),
+    });
     return response;
   }
 
@@ -29,7 +35,12 @@ export function middleware(request: NextRequest) {
 
   // If user is authenticated and trying to access auth routes
   // Allow navigation to company-register for initial setup flow
-  if (sessionCookie && isPublicRoute && !searchParams.has("logout") && !searchParams.has("clear")) {
+  if (
+    sessionCookie &&
+    isPublicRoute &&
+    !searchParams.has("logout") &&
+    !searchParams.has("clear")
+  ) {
     // Allow access to company-register for initial setup
     if (pathname === "/company-register") {
       return NextResponse.next();

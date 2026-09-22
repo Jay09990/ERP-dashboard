@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { DataTable, FilterBar, StatusPill } from "@altrex/ui";
-import { useVendors, useDeleteVendor } from "../api";
-import { PartyForm } from "./PartyForm";
+import { useState } from "react";
+import { useDeleteVendor, useVendors } from "../api";
 import type { PartyFormValues } from "../schema";
+import { PartyForm } from "./PartyForm";
 
 export function VendorList() {
   const { data: vendors = [], isLoading, error } = useVendors();
   const deleteVendor = useDeleteVendor();
   const [showForm, setShowForm] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<PartyFormValues | null>(null);
+  const [editingVendor, setEditingVendor] = useState<PartyFormValues | null>(
+    null,
+  );
 
   const handleAdd = () => {
     setEditingVendor(null);
@@ -56,7 +58,10 @@ export function VendorList() {
     return (
       <div className="altrex-table-state">
         <span>No vendors found</span>
-        <button onClick={handleAdd} className="altrex-button altrex-button-primary mt-4">
+        <button
+          onClick={handleAdd}
+          className="altrex-button altrex-button-primary mt-4"
+        >
           Add Vendor
         </button>
       </div>
@@ -70,7 +75,10 @@ export function VendorList() {
           <span className="altrex-eyebrow">Party Management</span>
           <h1>Vendors</h1>
         </div>
-        <button onClick={handleAdd} className="altrex-button altrex-button-primary">
+        <button
+          onClick={handleAdd}
+          className="altrex-button altrex-button-primary"
+        >
           Add Vendor
         </button>
       </div>

@@ -27,7 +27,9 @@ function CustomBarTooltip({ active, payload, label }: any) {
         color: "var(--altrex-text, #0f172a)",
       }}
     >
-      <div style={{ fontWeight: 700, marginBottom: 4 }}>{label} Financial Comparison</div>
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>
+        {label} Financial Comparison
+      </div>
       {payload.map((entry: any, idx: number) => {
         const valStr = new Intl.NumberFormat("en-IN", {
           style: "currency",
@@ -36,7 +38,15 @@ function CustomBarTooltip({ active, payload, label }: any) {
         }).format(entry.value);
 
         return (
-          <div key={`bar-${idx}`} style={{ display: "flex", alignItems: "center", gap: 6, margin: "2px 0" }}>
+          <div
+            key={`bar-${idx}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              margin: "2px 0",
+            }}
+          >
             <span
               style={{
                 display: "inline-block",
@@ -71,9 +81,22 @@ export function SalesVsPurchaseBarChart() {
         padding: 20,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, color: "var(--altrex-text)" }}>
+          <h3
+            style={{
+              fontSize: 14,
+              fontWeight: 800,
+              margin: 0,
+              color: "var(--altrex-text)",
+            }}
+          >
             Monthly Sales vs Purchases Comparison
           </h3>
           <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
@@ -84,8 +107,15 @@ export function SalesVsPurchaseBarChart() {
 
       <div style={{ width: "100%", height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyComparison} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--altrex-line)" vertical={false} />
+          <BarChart
+            data={monthlyComparison}
+            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--altrex-line)"
+              vertical={false}
+            />
             <XAxis
               dataKey="month"
               stroke="var(--altrex-muted)"
@@ -109,10 +139,24 @@ export function SalesVsPurchaseBarChart() {
               verticalAlign="top"
               align="right"
               iconType="circle"
-              wrapperStyle={{ paddingBottom: 10, fontSize: 12, fontWeight: 600 }}
+              wrapperStyle={{
+                paddingBottom: 10,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
             />
-            <Bar dataKey="sales" name="Sales Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="purchases" name="Purchases Spend" fill="#a855f7" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="sales"
+              name="Sales Revenue"
+              fill="#10b981"
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar
+              dataKey="purchases"
+              name="Purchases Spend"
+              fill="#a855f7"
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

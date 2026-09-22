@@ -31,7 +31,9 @@ export const partySchema = z.object({
   pan_no: z.string().optional(),
   address: z.string().optional(),
   addresses: z.array(addressSchema).min(1, "At least one address is required"),
-  contactPersons: z.array(contactPersonSchema).min(1, "At least one contact person is required"),
+  contactPersons: z
+    .array(contactPersonSchema)
+    .min(1, "At least one contact person is required"),
 });
 
 export type PartyType = "customer" | "vendor";

@@ -110,7 +110,8 @@ export const endpoints = {
     transferStatus: (id: string | number, status: string) =>
       `/api/inventory/transfer/${id}/${status}`,
     adjustment: "/api/inventory/adjustment",
-    adjustmentDetail: (id: string | number) => `/api/inventory/adjustment/${id}`,
+    adjustmentDetail: (id: string | number) =>
+      `/api/inventory/adjustment/${id}`,
     adjustmentStatus: (id: string | number, status: string) =>
       `/api/inventory/adjustment/${id}/${status}`,
   },

@@ -1,6 +1,8 @@
 "use client";
 
 import { LocationCascadeSelect } from "@/components/shared/LocationCascadeSelect";
+import { bankApi } from "@/features/masters/api";
+import { useSessionStore } from "@/stores/session-store";
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -20,15 +22,17 @@ import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useCompanyProfile, useUpdateCompanyProfile } from "../api";
 import { type ProfileValues, profileSchema } from "../schema";
-import { useSessionStore } from "@/stores/session-store";
-import { bankApi } from "@/features/masters/api";
 
 type Tab = "identity" | "contact" | "banking" | "branding";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "identity", label: "Company Identity", icon: <Building2 size={15} /> },
   { id: "contact", label: "Contact & Location", icon: <MapPin size={15} /> },
-  { id: "banking", label: "Banking & Financials", icon: <Landmark size={15} /> },
+  {
+    id: "banking",
+    label: "Banking & Financials",
+    icon: <Landmark size={15} />,
+  },
   { id: "branding", label: "Branding & Logos", icon: <ImageIcon size={15} /> },
 ];
 
@@ -53,7 +57,14 @@ function FileDropZone({
 
   return (
     <div>
-      <div style={{ marginBottom: "8px", fontSize: "13px", fontWeight: 600, color: "var(--altrex-text)" }}>
+      <div
+        style={{
+          marginBottom: "8px",
+          fontSize: "13px",
+          fontWeight: 600,
+          color: "var(--altrex-text)",
+        }}
+      >
         {label}
       </div>
       {value ? (
@@ -117,7 +128,13 @@ function FileDropZone({
           }}
         >
           <Upload size={24} style={{ color: "var(--altrex-muted)" }} />
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--altrex-text)" }}>
+          <span
+            style={{
+              fontSize: "13px",
+              fontWeight: 600,
+              color: "var(--altrex-text)",
+            }}
+          >
             Click or drag to upload
           </span>
           <span style={{ fontSize: "11px", color: "var(--altrex-muted)" }}>
@@ -139,7 +156,10 @@ function FileDropZone({
   );
 }
 
-function extractBankList(value: unknown, visited = new Set<unknown>()): Array<Record<string, any>> {
+function extractBankList(
+  value: unknown,
+  visited = new Set<unknown>(),
+): Array<Record<string, any>> {
   if (Array.isArray(value)) return value as Array<Record<string, any>>;
   if (!value || typeof value !== "object" || visited.has(value)) return [];
 
@@ -160,8 +180,14 @@ type ProfileFormProps = {
 
 function normalizeProfile(data: any): Record<string, any> {
   if (!data || typeof data !== "object") return {};
-  const profileDetails = data.profile_details ?? data.company ?? data.profile ?? data.data ?? (data.company_name ? data : {});
-  const bankDetails = data.bank_details ?? data.bank ?? (data.account_no ? data : {});
+  const profileDetails =
+    data.profile_details ??
+    data.company ??
+    data.profile ??
+    data.data ??
+    (data.company_name ? data : {});
+  const bankDetails =
+    data.bank_details ?? data.bank ?? (data.account_no ? data : {});
   return {
     ...profileDetails,
     ...bankDetails,
@@ -169,7 +195,11 @@ function normalizeProfile(data: any): Record<string, any> {
   };
 }
 
-export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFormProps = {}) {
+export function ProfileForm({
+  onSuccess,
+  onCancel,
+  isModal = false,
+}: ProfileFormProps = {}) {
   const { data: profile, isLoading } = useCompanyProfile();
   const { mutate: updateProfile, isPending } = useUpdateCompanyProfile();
   const session = useSessionStore((state) => state.session);
@@ -180,9 +210,12 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
   const bankList = extractBankList(banksData);
 
   const getBankId = (b: Record<string, any>) => String(b.bank_id ?? b.id ?? "");
-  const getBankName = (b: Record<string, any>) => String(b.bank_name ?? b.name ?? b.title ?? `Bank #${getBankId(b)}`);
-  const getBankIfsc = (b: Record<string, any>) => (b.ifsc_code ?? b.ifsc ? String(b.ifsc_code ?? b.ifsc) : "");
-  const getBankBranch = (b: Record<string, any>) => (b.branch_name ?? b.branch ? String(b.branch_name ?? b.branch) : "");
+  const getBankName = (b: Record<string, any>) =>
+    String(b.bank_name ?? b.name ?? b.title ?? `Bank #${getBankId(b)}`);
+  const getBankIfsc = (b: Record<string, any>) =>
+    (b.ifsc_code ?? b.ifsc) ? String(b.ifsc_code ?? b.ifsc) : "";
+  const getBankBranch = (b: Record<string, any>) =>
+    (b.branch_name ?? b.branch) ? String(b.branch_name ?? b.branch) : "";
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -226,11 +259,17 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
     // Coerce bank_id to string (backend expects "1", not 1 or null)
     const payload = {
       ...values,
-      bank_id: values.bank_id != null && values.bank_id !== "" ? String(values.bank_id) : null,
+      bank_id:
+        values.bank_id != null && values.bank_id !== ""
+          ? String(values.bank_id)
+          : null,
       city_id: values.city_id != null ? String(values.city_id) : null,
       state_id: values.state_id != null ? String(values.state_id) : null,
       country_id: values.country_id != null ? String(values.country_id) : null,
-      opening_balance: values.opening_balance != null && values.opening_balance !== "" ? String(values.opening_balance) : null,
+      opening_balance:
+        values.opening_balance != null && values.opening_balance !== ""
+          ? String(values.opening_balance)
+          : null,
     };
     updateProfile(payload as ProfileValues, {
       onSuccess: () => {
@@ -264,7 +303,8 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
           display: "flex",
           alignItems: "center",
           gap: "24px",
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--altrex-primary) 6%, var(--altrex-surface)), var(--altrex-surface))",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--altrex-primary) 6%, var(--altrex-surface)), var(--altrex-surface))",
           borderTop: "3px solid var(--altrex-primary)",
         }}
       >
@@ -284,38 +324,75 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
           }}
         >
           {logo ? (
-            <img src={logo} alt="Company logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            <img
+              src={logo}
+              alt="Company logo"
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
           ) : (
             <Building2 size={32} style={{ color: "var(--altrex-primary)" }} />
           )}
         </div>
 
         <div style={{ flex: 1 }}>
-          <h2 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 700, color: "var(--altrex-text)" }}>
+          <h2
+            style={{
+              margin: "0 0 4px",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "var(--altrex-text)",
+            }}
+          >
             {companyName || "Company Name"}
           </h2>
           {gstNo && (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--altrex-muted)" }}>
-              <span style={{
-                padding: "2px 8px",
-                borderRadius: "6px",
-                background: "rgba(37,99,235,0.1)",
-                color: "var(--altrex-primary)",
-                fontWeight: 600,
-                fontSize: "11px",
-              }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "12px",
+                color: "var(--altrex-muted)",
+              }}
+            >
+              <span
+                style={{
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  background: "rgba(37,99,235,0.1)",
+                  color: "var(--altrex-primary)",
+                  fontWeight: 600,
+                  fontSize: "11px",
+                }}
+              >
                 GST: {gstNo}
               </span>
             </div>
           )}
           <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
             {form.watch("email") && (
-              <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--altrex-muted)" }}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  fontSize: "12px",
+                  color: "var(--altrex-muted)",
+                }}
+              >
                 <Mail size={12} /> {form.watch("email")}
               </span>
             )}
             {form.watch("phone") && (
-              <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--altrex-muted)" }}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  fontSize: "12px",
+                  color: "var(--altrex-muted)",
+                }}
+              >
                 <Phone size={12} /> {form.watch("phone")}
               </span>
             )}
@@ -363,8 +440,14 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
               padding: "10px 16px",
               background: "transparent",
               border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid var(--altrex-primary)" : "2px solid transparent",
-              color: activeTab === tab.id ? "var(--altrex-primary)" : "var(--altrex-muted)",
+              borderBottom:
+                activeTab === tab.id
+                  ? "2px solid var(--altrex-primary)"
+                  : "2px solid transparent",
+              color:
+                activeTab === tab.id
+                  ? "var(--altrex-primary)"
+                  : "var(--altrex-muted)",
               fontWeight: activeTab === tab.id ? 700 : 500,
               fontSize: "13px",
               cursor: "pointer",
@@ -383,40 +466,71 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
         {/* ── Company Identity Tab ── */}
         {activeTab === "identity" && (
           <section className="altrex-detail-card">
-            <h2 className="altrex-detail-card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <h2
+              className="altrex-detail-card-title"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
               <Building2 size={16} style={{ color: "var(--altrex-primary)" }} />
               Company Identity
             </h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+              }}
+            >
               <label className="altrex-field">
                 <span>
                   Company Name{" "}
                   <span style={{ color: "var(--altrex-danger-text)" }}>*</span>
                 </span>
-                <input className="altrex-input" {...form.register("company_name")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("company_name")}
+                />
                 {form.formState.errors.company_name && (
-                  <p className="altrex-form-error">{form.formState.errors.company_name.message}</p>
+                  <p className="altrex-form-error">
+                    {form.formState.errors.company_name.message}
+                  </p>
                 )}
               </label>
               <label className="altrex-field">
                 <span>Trade Name</span>
-                <input className="altrex-input" {...form.register("trade_name")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("trade_name")}
+                />
               </label>
               <label className="altrex-field">
                 <span>GST Number</span>
-                <input className="altrex-input" placeholder="e.g. 27AAPFU0939F1ZV" {...form.register("gst_no")} />
+                <input
+                  className="altrex-input"
+                  placeholder="e.g. 27AAPFU0939F1ZV"
+                  {...form.register("gst_no")}
+                />
               </label>
               <label className="altrex-field">
                 <span>PAN Number</span>
-                <input className="altrex-input" placeholder="e.g. AAPFU0939F" {...form.register("pan_no")} />
+                <input
+                  className="altrex-input"
+                  placeholder="e.g. AAPFU0939F"
+                  {...form.register("pan_no")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Registration Number</span>
-                <input className="altrex-input" {...form.register("registration_number")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("registration_number")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Contact Name</span>
-                <input className="altrex-input" {...form.register("contact_name")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("contact_name")}
+                />
               </label>
             </div>
           </section>
@@ -425,38 +539,81 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
         {/* ── Contact & Location Tab ── */}
         {activeTab === "contact" && (
           <section className="altrex-detail-card">
-            <h2 className="altrex-detail-card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <h2
+              className="altrex-detail-card-title"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
               <MapPin size={16} style={{ color: "var(--altrex-primary)" }} />
               Contact & Location
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                }}
+              >
                 <label className="altrex-field">
                   <span>Email</span>
-                  <input className="altrex-input" type="email" {...form.register("email")} />
+                  <input
+                    className="altrex-input"
+                    type="email"
+                    {...form.register("email")}
+                  />
                   {form.formState.errors.email && (
-                    <p className="altrex-form-error">{form.formState.errors.email.message}</p>
+                    <p className="altrex-form-error">
+                      {form.formState.errors.email.message}
+                    </p>
                   )}
                 </label>
                 <label className="altrex-field">
                   <span>Phone</span>
-                  <input className="altrex-input" type="tel" {...form.register("phone")} />
+                  <input
+                    className="altrex-input"
+                    type="tel"
+                    {...form.register("phone")}
+                  />
                 </label>
-                <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
+                <label
+                  className="altrex-field"
+                  style={{ gridColumn: "1 / -1" }}
+                >
                   <span>Website</span>
-                  <input className="altrex-input" type="url" placeholder="https://" {...form.register("website")} />
+                  <input
+                    className="altrex-input"
+                    type="url"
+                    placeholder="https://"
+                    {...form.register("website")}
+                  />
                 </label>
               </div>
-              <div style={{ height: "1px", background: "var(--altrex-line)" }} />
+              <div
+                style={{ height: "1px", background: "var(--altrex-line)" }}
+              />
               <label className="altrex-field">
                 <span>Address Line 1</span>
-                <input className="altrex-input" {...form.register("address_line1")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("address_line1")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Address Line 2</span>
-                <input className="altrex-input" {...form.register("address_line2")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("address_line2")}
+                />
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                }}
+              >
                 <LocationCascadeSelect
                   countryId={form.watch("country_id")}
                   stateId={form.watch("state_id")}
@@ -467,7 +624,10 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
                 />
                 <label className="altrex-field">
                   <span>Pincode</span>
-                  <input className="altrex-input" {...form.register("pincode")} />
+                  <input
+                    className="altrex-input"
+                    {...form.register("pincode")}
+                  />
                 </label>
               </div>
             </div>
@@ -477,12 +637,23 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
         {/* ── Banking & Financials Tab ── */}
         {activeTab === "banking" && (
           <section className="altrex-detail-card">
-            <h2 className="altrex-detail-card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <CreditCard size={16} style={{ color: "var(--altrex-primary)" }} />
+            <h2
+              className="altrex-detail-card-title"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <CreditCard
+                size={16}
+                style={{ color: "var(--altrex-primary)" }}
+              />
               Banking & Financials
             </h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+              }}
+            >
               {/* Bank Name — dropdown from Bank Master */}
               <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
                 <span>Bank Name</span>
@@ -493,23 +664,39 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
                     <div style={{ position: "relative" }}>
                       <select
                         className="altrex-input"
-                        style={{ appearance: "none", paddingRight: "32px", cursor: "pointer" }}
+                        style={{
+                          appearance: "none",
+                          paddingRight: "32px",
+                          cursor: "pointer",
+                        }}
                         value={field.value != null ? String(field.value) : ""}
                         onChange={(e) => {
                           const selectedId = e.target.value || null;
                           field.onChange(selectedId);
                           if (selectedId) {
-                            const selectedBank = bankList.find((b) => getBankId(b) === selectedId);
+                            const selectedBank = bankList.find(
+                              (b) => getBankId(b) === selectedId,
+                            );
                             if (selectedBank) {
                               const ifsc = getBankIfsc(selectedBank);
                               const branch = getBankBranch(selectedBank);
-                              if (ifsc) form.setValue("ifsc_code", ifsc, { shouldDirty: true });
-                              if (branch) form.setValue("branch_name", branch, { shouldDirty: true });
+                              if (ifsc)
+                                form.setValue("ifsc_code", ifsc, {
+                                  shouldDirty: true,
+                                });
+                              if (branch)
+                                form.setValue("branch_name", branch, {
+                                  shouldDirty: true,
+                                });
                             }
                           }
                         }}
                       >
-                        <option value="">{isBanksLoading ? "Loading banks..." : "-- Select Bank --"}</option>
+                        <option value="">
+                          {isBanksLoading
+                            ? "Loading banks..."
+                            : "-- Select Bank --"}
+                        </option>
                         {bankList.map((b) => {
                           const id = getBankId(b);
                           const name = getBankName(b);
@@ -526,8 +713,20 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
                       </select>
                       {/* Chevron icon */}
                       <svg
-                        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "var(--altrex-muted)" }}
-                        width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          pointerEvents: "none",
+                          color: "var(--altrex-muted)",
+                        }}
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
                       >
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
@@ -535,53 +734,99 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
                   )}
                 />
                 {bankList.length === 0 && !isBanksLoading && (
-                  <p style={{ fontSize: "11px", color: "var(--altrex-muted)", marginTop: "4px" }}>
-                    No banks found. Add banks in <strong>Masters → Banks</strong> first.
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--altrex-muted)",
+                      marginTop: "4px",
+                    }}
+                  >
+                    No banks found. Add banks in{" "}
+                    <strong>Masters → Banks</strong> first.
                   </p>
                 )}
                 {/* Show selected bank details as hint */}
-                {form.watch("bank_id") && (() => {
-                  const currentBankId = String(form.watch("bank_id"));
-                  const b = bankList.find((x) => getBankId(x) === currentBankId);
-                  if (!b) return null;
-                  const ifsc = getBankIfsc(b);
-                  const branch = getBankBranch(b);
-                  return (
-                    <div style={{
-                      marginTop: "6px", padding: "8px 10px", borderRadius: "8px",
-                      background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.15)",
-                      display: "flex", gap: "16px", fontSize: "11px", color: "var(--altrex-muted)",
-                    }}>
-                      {ifsc && <span><strong>IFSC:</strong> {ifsc}</span>}
-                      {branch && <span><strong>Branch:</strong> {branch}</span>}
-                    </div>
-                  );
-                })()}
+                {form.watch("bank_id") &&
+                  (() => {
+                    const currentBankId = String(form.watch("bank_id"));
+                    const b = bankList.find(
+                      (x) => getBankId(x) === currentBankId,
+                    );
+                    if (!b) return null;
+                    const ifsc = getBankIfsc(b);
+                    const branch = getBankBranch(b);
+                    return (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          padding: "8px 10px",
+                          borderRadius: "8px",
+                          background: "rgba(37,99,235,0.06)",
+                          border: "1px solid rgba(37,99,235,0.15)",
+                          display: "flex",
+                          gap: "16px",
+                          fontSize: "11px",
+                          color: "var(--altrex-muted)",
+                        }}
+                      >
+                        {ifsc && (
+                          <span>
+                            <strong>IFSC:</strong> {ifsc}
+                          </span>
+                        )}
+                        {branch && (
+                          <span>
+                            <strong>Branch:</strong> {branch}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
               </label>
 
               <label className="altrex-field">
                 <span>Account Holder Name</span>
-                <input className="altrex-input" {...form.register("account_holder_name")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("account_holder_name")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Account Number</span>
-                <input className="altrex-input" {...form.register("account_no")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("account_no")}
+                />
               </label>
               <label className="altrex-field">
                 <span>IFSC Code</span>
-                <input className="altrex-input" placeholder="e.g. SBIN0001234" {...form.register("ifsc_code")} />
+                <input
+                  className="altrex-input"
+                  placeholder="e.g. SBIN0001234"
+                  {...form.register("ifsc_code")}
+                />
               </label>
               <label className="altrex-field">
                 <span>SWIFT Code</span>
-                <input className="altrex-input" {...form.register("swift_code")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("swift_code")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Branch Name</span>
-                <input className="altrex-input" {...form.register("branch_name")} />
+                <input
+                  className="altrex-input"
+                  {...form.register("branch_name")}
+                />
               </label>
               <label className="altrex-field">
                 <span>UPI Number / VPA</span>
-                <input className="altrex-input" placeholder="e.g. company@upi" {...form.register("upi_no")} />
+                <input
+                  className="altrex-input"
+                  placeholder="e.g. company@upi"
+                  {...form.register("upi_no")}
+                />
               </label>
               <label className="altrex-field">
                 <span>Opening Balance</span>
@@ -600,14 +845,31 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
         {/* ── Branding & Logos Tab ── */}
         {activeTab === "branding" && (
           <section className="altrex-detail-card">
-            <h2 className="altrex-detail-card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <h2
+              className="altrex-detail-card-title"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
               <ImageIcon size={16} style={{ color: "var(--altrex-primary)" }} />
               Branding & Logos
             </h2>
-            <p style={{ fontSize: "13px", color: "var(--altrex-muted)", marginTop: 0, marginBottom: "24px" }}>
-              Upload your company logo and authorized signature — these will appear on invoices and documents.
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--altrex-muted)",
+                marginTop: 0,
+                marginBottom: "24px",
+              }}
+            >
+              Upload your company logo and authorized signature — these will
+              appear on invoices and documents.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "32px",
+              }}
+            >
               <Controller
                 control={form.control}
                 name="logo"
@@ -652,7 +914,13 @@ export function ProfileForm({ onSuccess, onCancel, isModal = false }: ProfileFor
         }}
       >
         {isDirty && (
-          <span style={{ fontSize: "13px", color: "var(--altrex-muted)", marginRight: "auto" }}>
+          <span
+            style={{
+              fontSize: "13px",
+              color: "var(--altrex-muted)",
+              marginRight: "auto",
+            }}
+          >
             You have unsaved changes
           </span>
         )}

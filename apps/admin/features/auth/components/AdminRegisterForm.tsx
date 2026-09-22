@@ -1,10 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";

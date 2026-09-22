@@ -1,2 +1,2 @@
-import { PartyRecord } from "../shared";
+import type { PartyRecord } from "../shared";
 export type Vendor = PartyRecord;

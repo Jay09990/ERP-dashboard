@@ -2,7 +2,15 @@
 
 import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable } from "@altrex/ui";
-import { CheckCircle2, Download, Plus, RefreshCw, Scale, Search, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Download,
+  Plus,
+  RefreshCw,
+  Scale,
+  Search,
+  XCircle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { adjustmentApi } from "../api";
 import type { StockAdjustment } from "../schema";
@@ -13,7 +21,15 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (!value || typeof value !== "object" || visited.has(value)) return [];
   visited.add(value);
 
-  const keysToTry = ["adjustments", "stock_adjustments", "data", "rows", "records", "result", "payload"];
+  const keysToTry = [
+    "adjustments",
+    "stock_adjustments",
+    "data",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ];
   for (const k of keysToTry) {
     if (Array.isArray((value as any)[k])) return (value as any)[k];
   }
@@ -26,17 +42,28 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
 }
 
 export function AdjustmentList() {
-  const { data: responseData, isLoading, error, refetch } = adjustmentApi.useList();
-  const adjustments = useMemo(() => extractRecords<StockAdjustment>(responseData), [responseData]);
+  const {
+    data: responseData,
+    isLoading,
+    error,
+    refetch,
+  } = adjustmentApi.useList();
+  const adjustments = useMemo(
+    () => extractRecords<StockAdjustment>(responseData),
+    [responseData],
+  );
 
-  const { mutate: createAdjustment, isPending: isCreating } = adjustmentApi.useCreate();
-  const { mutate: updateStatus, isPending: isUpdatingStatus } = adjustmentApi.useUpdateStatus();
+  const { mutate: createAdjustment, isPending: isCreating } =
+    adjustmentApi.useCreate();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    adjustmentApi.useUpdateStatus();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
 
-  const getId = (a: StockAdjustment) => a.stock_adjustment_id ?? a.adjustment_id ?? a.id;
+  const getId = (a: StockAdjustment) =>
+    a.stock_adjustment_id ?? a.adjustment_id ?? a.id;
 
   const filteredAdjustments = useMemo(() => {
     return adjustments.filter((a) => {
@@ -50,7 +77,8 @@ export function AdjustmentList() {
         whName.toLowerCase().includes(q) ||
         reason.toLowerCase().includes(q) ||
         notes.toLowerCase().includes(q);
-      const matchesStatus = !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus =
+        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
@@ -65,13 +93,21 @@ export function AdjustmentList() {
           label: "Adjustment Date",
           transform: (v) => (v ? new Date(v).toLocaleDateString("en-IN") : "—"),
         },
-        { key: "warehouse_name", label: "Warehouse", transform: (v, r) => v || `Warehouse #${r.warehouse_id}` },
+        {
+          key: "warehouse_name",
+          label: "Warehouse",
+          transform: (v, r) => v || `Warehouse #${r.warehouse_id}`,
+        },
         { key: "reason", label: "Reason", transform: (v) => v || "—" },
         { key: "status", label: "Status" },
-        { key: "itemsDetails", label: "Items Count", transform: (v) => String(Array.isArray(v) ? v.length : 0) },
+        {
+          key: "itemsDetails",
+          label: "Items Count",
+          transform: (v) => String(Array.isArray(v) ? v.length : 0),
+        },
         { key: "notes", label: "Notes", transform: (v) => v || "" },
       ],
-      filteredAdjustments
+      filteredAdjustments,
     );
   };
 
@@ -89,15 +125,32 @@ export function AdjustmentList() {
       label: "Adjustment Details",
       render: (a: StockAdjustment) => {
         const rawDate = a.adjustment_date || a.created_at;
-        const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("en-IN") : "—";
+        const fmtDate = rawDate
+          ? new Date(rawDate).toLocaleDateString("en-IN")
+          : "—";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Scale size={16} style={{ color: "var(--altrex-primary, #2563eb)" }} />
+            <Scale
+              size={16}
+              style={{ color: "var(--altrex-primary, #2563eb)" }}
+            />
             <div>
-              <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "14px", display: "block" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text, #0f172a)",
+                  fontSize: "14px",
+                  display: "block",
+                }}
+              >
                 {a.adjustment_no || `Adjustment #${getId(a)}`}
               </span>
-              <span style={{ color: "var(--altrex-muted, #64748b)", fontSize: "12px" }}>
+              <span
+                style={{
+                  color: "var(--altrex-muted, #64748b)",
+                  fontSize: "12px",
+                }}
+              >
                 Date: {fmtDate}
               </span>
             </div>
@@ -109,7 +162,13 @@ export function AdjustmentList() {
       key: "warehouse_name" as const,
       label: "Warehouse",
       render: (a: StockAdjustment) => (
-        <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+        <span
+          style={{
+            fontWeight: 600,
+            color: "var(--altrex-text, #0f172a)",
+            fontSize: "13px",
+          }}
+        >
           {a.warehouse_name || `Warehouse #${a.warehouse_id}`}
         </span>
       ),
@@ -118,7 +177,9 @@ export function AdjustmentList() {
       key: "reason" as const,
       label: "Reason",
       render: (a: StockAdjustment) => (
-        <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+        <span
+          style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+        >
           {a.reason || "—"}
         </span>
       ),
@@ -129,7 +190,13 @@ export function AdjustmentList() {
       render: (a: StockAdjustment) => {
         const count = Array.isArray(a.itemsDetails) ? a.itemsDetails.length : 0;
         return (
-          <span style={{ fontWeight: 500, color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
+          <span
+            style={{
+              fontWeight: 500,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "13px",
+            }}
+          >
             {count} {count === 1 ? "item" : "items"}
           </span>
         );
@@ -180,7 +247,17 @@ export function AdjustmentList() {
       render: (a: StockAdjustment) => {
         const id = getId(a);
         const status = (a.status || "draft").toLowerCase();
-        if (id === undefined) return <span style={{ color: "var(--altrex-muted, #94a3b8)", fontSize: "12px" }}>—</span>;
+        if (id === undefined)
+          return (
+            <span
+              style={{
+                color: "var(--altrex-muted, #94a3b8)",
+                fontSize: "12px",
+              }}
+            >
+              —
+            </span>
+          );
 
         return (
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -190,19 +267,39 @@ export function AdjustmentList() {
                   variant="outline"
                   onClick={() => updateStatus({ id, status: "approved" })}
                   disabled={isUpdatingStatus}
-                  style={{ padding: "4px 8px", fontSize: "11px", color: "#10b981", borderColor: "rgba(16,185,129,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "11px",
+                    color: "#10b981",
+                    borderColor: "rgba(16,185,129,0.3)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
                 >
                   <CheckCircle2 size={12} /> Approve
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    if (confirm("Are you sure you want to cancel this adjustment?")) {
+                    if (
+                      confirm(
+                        "Are you sure you want to cancel this adjustment?",
+                      )
+                    ) {
                       updateStatus({ id, status: "cancelled" });
                     }
                   }}
                   disabled={isUpdatingStatus}
-                  style={{ padding: "4px 8px", fontSize: "11px", color: "#ef4444", borderColor: "rgba(239,68,68,0.3)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "11px",
+                    color: "#ef4444",
+                    borderColor: "rgba(239,68,68,0.3)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
                 >
                   <XCircle size={12} /> Cancel
                 </Button>
@@ -219,10 +316,23 @@ export function AdjustmentList() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Movements</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Stock Adjustments
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
             Audit and adjust physical stock counts, damages, or discrepancies.
           </p>
         </div>
@@ -312,7 +422,10 @@ export function AdjustmentList() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading adjustment records...</span>
         </div>

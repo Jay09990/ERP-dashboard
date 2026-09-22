@@ -15,7 +15,9 @@ export function AuthCard({
 }) {
   return (
     <main className="altrex-auth-page">
-      <section className={`altrex-auth-panel${wide ? " altrex-auth-panel-wide" : ""}`}>
+      <section
+        className={`altrex-auth-panel${wide ? " altrex-auth-panel-wide" : ""}`}
+      >
         <div className="altrex-auth-mark" aria-hidden="true">
           A
         </div>
@@ -80,8 +82,12 @@ export function DataTable<T extends Record<string, any>>({
                 typeof rowKey === "function"
                   ? rowKey(row, index)
                   : rowKey
-                  ? row[rowKey]
-                  : row.id ?? row.user_id ?? row.role_id ?? row.company_id ?? index;
+                    ? row[rowKey]
+                    : (row.id ??
+                      row.user_id ??
+                      row.role_id ??
+                      row.company_id ??
+                      index);
               return (
                 <tr key={String(computedKey)}>
                   {columns.map((column) => (

@@ -1,4 +1,8 @@
-import { PartyFormValues, PartyAddressFormValues, PartyContactPersonFormValues } from "./schema";
+import {
+  type PartyAddressFormValues,
+  type PartyContactPersonFormValues,
+  PartyFormValues,
+} from "./schema";
 
 export type PartyType = "customer" | "vendor";
 

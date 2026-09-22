@@ -17,9 +17,15 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) => pathname === route);
 
   // If visiting login with clear/logout query param, clear cookie and render login page
-  if (isPublicRoute && (searchParams.has("logout") || searchParams.has("clear"))) {
+  if (
+    isPublicRoute &&
+    (searchParams.has("logout") || searchParams.has("clear"))
+  ) {
     const response = NextResponse.next();
-    response.cookies.set("altrex_auth", "", { path: "/", expires: new Date(0) });
+    response.cookies.set("altrex_auth", "", {
+      path: "/",
+      expires: new Date(0),
+    });
     return response;
   }
 
@@ -29,7 +35,12 @@ export function middleware(request: NextRequest) {
   }
 
   // If user is authenticated and trying to access auth routes (without clear flag)
-  if (sessionCookie && isPublicRoute && !searchParams.has("logout") && !searchParams.has("clear")) {
+  if (
+    sessionCookie &&
+    isPublicRoute &&
+    !searchParams.has("logout") &&
+    !searchParams.has("clear")
+  ) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

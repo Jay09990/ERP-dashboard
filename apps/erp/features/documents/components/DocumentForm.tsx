@@ -1,9 +1,9 @@
 "use client";
 
-import { apiClient } from "@/lib/api/client";
-import { endpoints } from "@/lib/api/endpoints";
 import { useItems } from "@/features/items/api";
 import { taxTypesApi } from "@/features/masters/api";
+import { apiClient } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
 import { useSessionStore } from "@/stores/session-store";
 import { Button } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
@@ -83,8 +83,12 @@ export function DocumentForm({
   const sessionCompanyId = Number(session?.company?.id || 1);
 
   const isVendorDoc =
-    docType === "purchase_order" || docType === "purchase_invoice" || docType === "debit_note";
-  const partyEndpoint = isVendorDoc ? endpoints.party.vendors : endpoints.party.customers;
+    docType === "purchase_order" ||
+    docType === "purchase_invoice" ||
+    docType === "debit_note";
+  const partyEndpoint = isVendorDoc
+    ? endpoints.party.vendors
+    : endpoints.party.customers;
 
   // Fetch Parties
   const { data: partiesData = [] } = useQuery({
@@ -103,14 +107,24 @@ export function DocumentForm({
     error: itemsError,
   } = useItems();
   const itemsData = useMemo(
-    () => extractList(itemsResponse, ["items", "Items", "rows", "records", "list"]),
+    () =>
+      extractList(itemsResponse, ["items", "Items", "rows", "records", "list"]),
     [itemsResponse],
   );
 
   const { data: taxTypesData = [] } = taxTypesApi.useList();
   // Memoize taxTypes to avoid recreating array references on every render
   const taxTypes = useMemo(
-    () => extractList(taxTypesData, ["taxes", "taxTypes", "tax_types", "rows", "records", "list", "data"]),
+    () =>
+      extractList(taxTypesData, [
+        "taxes",
+        "taxTypes",
+        "tax_types",
+        "rows",
+        "records",
+        "list",
+        "data",
+      ]),
     [taxTypesData],
   );
 
@@ -138,7 +152,14 @@ export function DocumentForm({
     queryKey: ["sales-invoices-dropdown"],
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.documents.invoice);
-      return extractList(res, ["invoices", "invoice", "data", "rows", "records", "list"]);
+      return extractList(res, [
+        "invoices",
+        "invoice",
+        "data",
+        "rows",
+        "records",
+        "list",
+      ]);
     },
     enabled: docType === "credit_note",
   });
@@ -148,7 +169,15 @@ export function DocumentForm({
     queryKey: ["purchase-invoices-dropdown"],
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.documents.purchaseInvoice);
-      return extractList(res, ["purchase_invoices", "purchase_invoice", "invoices", "data", "rows", "records", "list"]);
+      return extractList(res, [
+        "purchase_invoices",
+        "purchase_invoice",
+        "invoices",
+        "data",
+        "rows",
+        "records",
+        "list",
+      ]);
     },
     enabled: docType === "debit_note",
   });
@@ -158,23 +187,46 @@ export function DocumentForm({
     queryKey: ["cr-dr-reasons-dropdown"],
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.masters.crDrReason);
-      return extractList(res, ["reasons", "crDrReasons", "cr_dr_reasons", "data", "rows", "records", "list"]);
+      return extractList(res, [
+        "reasons",
+        "crDrReasons",
+        "cr_dr_reasons",
+        "data",
+        "rows",
+        "records",
+        "list",
+      ]);
     },
     enabled: docType === "credit_note" || docType === "debit_note",
   });
 
   const filteredReasons = useMemo(() => {
     return crDrReasonsRes.filter((r: any) => {
-      const typeStr = String(r.form_type ?? r.type ?? r.reason_type ?? r.applicable_to ?? r.applicable_on ?? "both").toLowerCase();
+      const typeStr = String(
+        r.form_type ??
+          r.type ??
+          r.reason_type ??
+          r.applicable_to ??
+          r.applicable_on ??
+          "both",
+      ).toLowerCase();
       if (!typeStr || typeStr === "both" || typeStr === "all") return true;
-      if (docType === "credit_note") return typeStr === "credit" || typeStr === "credit_note" || typeStr === "cr";
-      if (docType === "debit_note") return typeStr === "debit" || typeStr === "debit_note" || typeStr === "dr";
+      if (docType === "credit_note")
+        return (
+          typeStr === "credit" || typeStr === "credit_note" || typeStr === "cr"
+        );
+      if (docType === "debit_note")
+        return (
+          typeStr === "debit" || typeStr === "debit_note" || typeStr === "dr"
+        );
       return true;
     });
   }, [crDrReasonsRes, docType]);
 
   // Form states
-  const [partyId, setPartyId] = useState<string>(initialData?.party_id?.toString() || "");
+  const [partyId, setPartyId] = useState<string>(
+    initialData?.party_id?.toString() || "",
+  );
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>(
     initialData?.invoice_id?.toString() ||
       initialData?.purchase_invoice_id?.toString() ||
@@ -205,17 +257,26 @@ export function DocumentForm({
       new Date().toISOString().split("T")[0],
   );
   const [validUntil, setValidUntil] = useState<string>(
-    initialData?.valid_until || initialData?.due_date || initialData?.expected_delivery_date || "",
+    initialData?.valid_until ||
+      initialData?.due_date ||
+      initialData?.expected_delivery_date ||
+      "",
   );
-  const [customerPoNo, setCustomerPoNo] = useState<string>(initialData?.customer_po_no || "");
-  const [customerPoDate, setCustomerPoDate] = useState<string>(initialData?.customer_po_date || "");
+  const [customerPoNo, setCustomerPoNo] = useState<string>(
+    initialData?.customer_po_no || "",
+  );
+  const [customerPoDate, setCustomerPoDate] = useState<string>(
+    initialData?.customer_po_date || "",
+  );
   const [poNo, setPoNo] = useState<string>(initialData?.po_no || "");
   const [poDate, setPoDate] = useState<string>(initialData?.po_date || "");
   const [notes, setNotes] = useState<string>(initialData?.notes || "");
-  const [terms, setTerms] = useState<string>(initialData?.terms_conditions || "");
-  const [status, setStatus] = useState<"draft" | "approved" | "sent" | "cancelled">(
-    initialData?.status || "draft",
+  const [terms, setTerms] = useState<string>(
+    initialData?.terms_conditions || "",
   );
+  const [status, setStatus] = useState<
+    "draft" | "approved" | "sent" | "cancelled"
+  >(initialData?.status || "draft");
 
   // Line items state
   const [lineItems, setLineItems] = useState<
@@ -278,10 +339,29 @@ export function DocumentForm({
             tax.purchase_invoice_item_index ??
             tax.credit_note_item_index ??
             tax.debit_note_item_index;
-          return String(ref) === String(item.quotation_item_id ?? item.sales_order_item_id ?? item.proforma_item_id ?? item.delivery_challan_item_id ?? item.invoice_item_id ?? item.purchase_order_item_id ?? item.purchase_invoice_item_id ?? item.credit_note_item_id ?? item.debit_note_item_id ?? item.item_id ?? itemIndex);
+          return (
+            String(ref) ===
+            String(
+              item.quotation_item_id ??
+                item.sales_order_item_id ??
+                item.proforma_item_id ??
+                item.delivery_challan_item_id ??
+                item.invoice_item_id ??
+                item.purchase_order_item_id ??
+                item.purchase_invoice_item_id ??
+                item.credit_note_item_id ??
+                item.debit_note_item_id ??
+                item.item_id ??
+                itemIndex,
+            )
+          );
         })
         .map((tax: any) => Number(tax.tax_id))
-        .filter((taxId: number) => Number.isFinite(taxId) && taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId)),
+        .filter(
+          (taxId: number) =>
+            Number.isFinite(taxId) &&
+            taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId),
+        ),
     })) || [
       {
         item_id: "",
@@ -324,9 +404,14 @@ export function DocumentForm({
     setLineItems((prev) =>
       prev.map((line, i) => {
         if (i !== idx) return line;
-        const rate = isVendorDoc ? Number(item?.purchase_rate || 0) : Number(item?.sales_rate || 0);
+        const rate = isVendorDoc
+          ? Number(item?.purchase_rate || 0)
+          : Number(item?.sales_rate || 0);
         const rawTaxId = item?.tax_id ? Number(item.tax_id) : null;
-        const isValidTax = rawTaxId != null && Number.isFinite(rawTaxId) && taxTypesMap.has(String(rawTaxId));
+        const isValidTax =
+          rawTaxId != null &&
+          Number.isFinite(rawTaxId) &&
+          taxTypesMap.has(String(rawTaxId));
         return {
           ...line,
           item_id: selectedId,
@@ -359,7 +444,10 @@ export function DocumentForm({
    * Auto-populates line items from the invoice's itemsDetails so every
    * item carries the required invoice_item_id (or purchase_invoice_item_id).
    */
-  const handleInvoiceSelect = async (invoiceIdStr: string, sourceList: any[]) => {
+  const handleInvoiceSelect = async (
+    invoiceIdStr: string,
+    sourceList: any[],
+  ) => {
     setSelectedInvoiceId(invoiceIdStr);
     if (!invoiceIdStr) {
       // Reset to a single blank line when invoice is deselected
@@ -381,11 +469,16 @@ export function DocumentForm({
 
     let inv = sourceList.find(
       (i: any) =>
-        String(i.invoice_id ?? i.purchase_invoice_id ?? i.pi_id ?? i.id) === invoiceIdStr,
+        String(i.invoice_id ?? i.purchase_invoice_id ?? i.pi_id ?? i.id) ===
+        invoiceIdStr,
     );
 
-    let invItems: any[] = Array.isArray(inv?.itemsDetails) ? inv.itemsDetails : [];
-    let invTaxDetails: any[] = Array.isArray(inv?.taxDetails) ? inv.taxDetails : [];
+    let invItems: any[] = Array.isArray(inv?.itemsDetails)
+      ? inv.itemsDetails
+      : [];
+    let invTaxDetails: any[] = Array.isArray(inv?.taxDetails)
+      ? inv.taxDetails
+      : [];
 
     // If summary item list doesn't include itemsDetails, fetch single invoice detail from API
     if (invItems.length === 0) {
@@ -409,13 +502,13 @@ export function DocumentForm({
           invItems = Array.isArray(detailedInv.itemsDetails)
             ? detailedInv.itemsDetails
             : Array.isArray(detailedInv.items)
-            ? detailedInv.items
-            : [];
+              ? detailedInv.items
+              : [];
           invTaxDetails = Array.isArray(detailedInv.taxDetails)
             ? detailedInv.taxDetails
             : Array.isArray(detailedInv.taxes)
-            ? detailedInv.taxes
-            : [];
+              ? detailedInv.taxes
+              : [];
         }
       } catch (err) {
         console.error("Failed to fetch invoice details:", err);
@@ -428,12 +521,18 @@ export function DocumentForm({
       invItems.map((item: any) => {
         // Resolve taxes that belong to this item
         const itemInvItemId =
-          item.invoice_item_id ?? item.purchase_invoice_item_id ?? item.pi_item_id ?? item.id;
+          item.invoice_item_id ??
+          item.purchase_invoice_item_id ??
+          item.pi_item_id ??
+          item.id;
         const taxIds = invTaxDetails
           .filter(
             (td: any) =>
-              String(td.invoice_item_id ?? td.purchase_invoice_item_id ?? td.pi_item_id) ===
-              String(itemInvItemId),
+              String(
+                td.invoice_item_id ??
+                  td.purchase_invoice_item_id ??
+                  td.pi_item_id,
+              ) === String(itemInvItemId),
           )
           .map((td: any) => Number(td.tax_id))
           .filter(
@@ -444,7 +543,8 @@ export function DocumentForm({
 
         return {
           invoice_item_id: item.invoice_item_id ?? undefined,
-          purchase_invoice_item_id: item.purchase_invoice_item_id ?? item.pi_item_id ?? undefined,
+          purchase_invoice_item_id:
+            item.purchase_invoice_item_id ?? item.pi_item_id ?? undefined,
           item_id: item.item_id?.toString() || "",
           description: item.description || "",
           quantity: Number(item.quantity || 1),
@@ -465,7 +565,8 @@ export function DocumentForm({
     let taxAmt = 0;
 
     lineItems.forEach((line) => {
-      const lineSub = line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
+      const lineSub =
+        line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
       sub += lineSub;
 
       line.selected_taxes.forEach((taxId) => {
@@ -492,39 +593,39 @@ export function DocumentForm({
       docType === "sales_order"
         ? "sales_order_item_id"
         : docType === "purchase_order"
-        ? "purchase_order_item_id"
-        : docType === "proforma"
-        ? "proforma_item_id"
-        : docType === "delivery_challan"
-        ? "delivery_challan_item_id"
-        : docType === "sales_invoice"
-        ? "invoice_item_id"
-        : docType === "purchase_invoice"
-        ? "purchase_invoice_item_id"
-        : docType === "credit_note"
-        ? "credit_note_item_id"
-        : docType === "debit_note"
-        ? "debit_note_item_id"
-        : "quotation_item_id";
+          ? "purchase_order_item_id"
+          : docType === "proforma"
+            ? "proforma_item_id"
+            : docType === "delivery_challan"
+              ? "delivery_challan_item_id"
+              : docType === "sales_invoice"
+                ? "invoice_item_id"
+                : docType === "purchase_invoice"
+                  ? "purchase_invoice_item_id"
+                  : docType === "credit_note"
+                    ? "credit_note_item_id"
+                    : docType === "debit_note"
+                      ? "debit_note_item_id"
+                      : "quotation_item_id";
 
     const docIdKey =
       docType === "sales_order"
         ? "sales_order_id"
         : docType === "purchase_order"
-        ? "purchase_order_id"
-        : docType === "proforma"
-        ? "proforma_id"
-        : docType === "delivery_challan"
-        ? "delivery_challan_id"
-        : docType === "sales_invoice"
-        ? "invoice_id"
-        : docType === "purchase_invoice"
-        ? "purchase_invoice_id"
-        : docType === "credit_note"
-        ? "credit_note_id"
-        : docType === "debit_note"
-        ? "debit_note_id"
-        : "quotation_id";
+          ? "purchase_order_id"
+          : docType === "proforma"
+            ? "proforma_id"
+            : docType === "delivery_challan"
+              ? "delivery_challan_id"
+              : docType === "sales_invoice"
+                ? "invoice_id"
+                : docType === "purchase_invoice"
+                  ? "purchase_invoice_id"
+                  : docType === "credit_note"
+                    ? "credit_note_id"
+                    : docType === "debit_note"
+                      ? "debit_note_id"
+                      : "quotation_id";
 
     const parentDocId =
       initialData?.[docIdKey] ??
@@ -541,7 +642,8 @@ export function DocumentForm({
       initialData?.id;
 
     const itemsDetailsPayload = lineItems.map((line, lineIdx) => {
-      const lineSub = line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
+      const lineSub =
+        line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
       let lineTaxPercent = 0;
       let lineTaxAmt = 0;
 
@@ -564,7 +666,9 @@ export function DocumentForm({
         (initialData?.itemsDetails?.[lineIdx] as any)?.purchase_invoice_item_id;
 
       return {
-        ...(line[itemIdKey as keyof typeof line] ? { [itemIdKey]: line[itemIdKey as keyof typeof line] } : {}),
+        ...(line[itemIdKey as keyof typeof line]
+          ? { [itemIdKey]: line[itemIdKey as keyof typeof line] }
+          : {}),
         ...(parentDocId != null ? { [docIdKey]: Number(parentDocId) } : {}),
         ...(docType === "credit_note" && srcCreditItemId != null
           ? { invoice_item_id: Number(srcCreditItemId) }
@@ -591,39 +695,39 @@ export function DocumentForm({
       docType === "sales_order"
         ? "sales_order_item_index"
         : docType === "purchase_order"
-        ? "purchase_order_item_index"
-        : docType === "proforma"
-        ? "proforma_item_index"
-        : docType === "delivery_challan"
-        ? "delivery_challan_item_index"
-        : docType === "sales_invoice"
-        ? "invoice_item_index"
-        : docType === "purchase_invoice"
-        ? "purchase_invoice_item_index"
-        : docType === "credit_note"
-        ? "credit_note_item_index"
-        : docType === "debit_note"
-        ? "debit_note_item_index"
-        : "quotation_item_index";
+          ? "purchase_order_item_index"
+          : docType === "proforma"
+            ? "proforma_item_index"
+            : docType === "delivery_challan"
+              ? "delivery_challan_item_index"
+              : docType === "sales_invoice"
+                ? "invoice_item_index"
+                : docType === "purchase_invoice"
+                  ? "purchase_invoice_item_index"
+                  : docType === "credit_note"
+                    ? "credit_note_item_index"
+                    : docType === "debit_note"
+                      ? "debit_note_item_index"
+                      : "quotation_item_index";
 
     const taxDetailIdKey =
       docType === "sales_order"
         ? "sales_order_tax_detail_id"
         : docType === "purchase_order"
-        ? "purchase_order_tax_detail_id"
-        : docType === "proforma"
-        ? "proforma_tax_detail_id"
-        : docType === "delivery_challan"
-        ? "delivery_challan_tax_detail_id"
-        : docType === "sales_invoice"
-        ? "invoice_tax_detail_id"
-        : docType === "purchase_invoice"
-        ? "purchase_invoice_tax_detail_id"
-        : docType === "credit_note"
-        ? "credit_note_tax_detail_id"
-        : docType === "debit_note"
-        ? "debit_note_tax_detail_id"
-        : "quotation_tax_detail_id";
+          ? "purchase_order_tax_detail_id"
+          : docType === "proforma"
+            ? "proforma_tax_detail_id"
+            : docType === "delivery_challan"
+              ? "delivery_challan_tax_detail_id"
+              : docType === "sales_invoice"
+                ? "invoice_tax_detail_id"
+                : docType === "purchase_invoice"
+                  ? "purchase_invoice_tax_detail_id"
+                  : docType === "credit_note"
+                    ? "credit_note_tax_detail_id"
+                    : docType === "debit_note"
+                      ? "debit_note_tax_detail_id"
+                      : "quotation_tax_detail_id";
 
     const isEditMode = Boolean(
       initialData?.quotation_id ||
@@ -662,12 +766,14 @@ export function DocumentForm({
               tax.quotation_item_id ??
               tax.quotation_item_index;
             return (
-              String(ref) === String(line[itemIdKey as keyof typeof line] ?? idx) &&
+              String(ref) ===
+                String(line[itemIdKey as keyof typeof line] ?? idx) &&
               Number(tax.tax_id) === numericTaxId
             );
           });
 
-          const detailId = existingTax?.[taxDetailIdKey] ?? existingTax?.tax_detail_id;
+          const detailId =
+            existingTax?.[taxDetailIdKey] ?? existingTax?.tax_detail_id;
 
           taxDetailsPayload.push({
             ...(detailId ? { tax_detail_id: Number(detailId) } : {}),
@@ -684,20 +790,20 @@ export function DocumentForm({
       docType === "sales_order"
         ? "sales_order_date"
         : docType === "purchase_order"
-        ? "purchase_order_date"
-        : docType === "proforma"
-        ? "proforma_date"
-        : docType === "delivery_challan"
-        ? "delivery_date"
-        : docType === "sales_invoice"
-        ? "invoice_date"
-        : docType === "purchase_invoice"
-        ? "pi_date"
-        : docType === "credit_note"
-        ? "credit_date"
-        : docType === "debit_note"
-        ? "debit_date"
-        : "quotation_date";
+          ? "purchase_order_date"
+          : docType === "proforma"
+            ? "proforma_date"
+            : docType === "delivery_challan"
+              ? "delivery_date"
+              : docType === "sales_invoice"
+                ? "invoice_date"
+                : docType === "purchase_invoice"
+                  ? "pi_date"
+                  : docType === "credit_note"
+                    ? "credit_date"
+                    : docType === "debit_note"
+                      ? "debit_date"
+                      : "quotation_date";
 
     const payload = {
       party_id: Number(partyId),
@@ -762,10 +868,16 @@ export function DocumentForm({
         ? { expected_delivery_date: validUntil || undefined }
         : {}),
       currency_id: 1,
-      round_off: Number((Math.round(grandTotal) - grandTotal).toFixed(2)).toFixed(2),
+      round_off: Number(
+        (Math.round(grandTotal) - grandTotal).toFixed(2),
+      ).toFixed(2),
       notes: notes
-        ? (reasonText ? `${notes}\nReason: ${reasonText}` : notes)
-        : (reasonText ? `Reason: ${reasonText}` : ""),
+        ? reasonText
+          ? `${notes}\nReason: ${reasonText}`
+          : notes
+        : reasonText
+          ? `Reason: ${reasonText}`
+          : "",
       terms_conditions: terms,
       status,
       user_id: sessionUserId,
@@ -832,7 +944,11 @@ export function DocumentForm({
           className="altrex-dialog-body altrex-document-body"
           style={{ flex: 1, overflowY: "auto", padding: "20px", minWidth: 0 }}
         >
-          <form id="doc-form" onSubmit={handleSubmit} style={{ display: "grid", gap: "20px", minWidth: 0 }}>
+          <form
+            id="doc-form"
+            onSubmit={handleSubmit}
+            style={{ display: "grid", gap: "20px", minWidth: 0 }}
+          >
             {/* Top Details */}
             <div
               style={{
@@ -847,7 +963,9 @@ export function DocumentForm({
               className="altrex-document-top-details"
             >
               <label className="altrex-field">
-                <span>{isVendorDoc ? "Vendor / Supplier *" : "Customer / Party *"}</span>
+                <span>
+                  {isVendorDoc ? "Vendor / Supplier *" : "Customer / Party *"}
+                </span>
                 <select
                   className="altrex-input altrex-select"
                   value={partyId}
@@ -856,7 +974,10 @@ export function DocumentForm({
                 >
                   <option value="">Select Party...</option>
                   {partiesData.map((p: any) => (
-                    <option key={p.party_id ?? p.id} value={(p.party_id ?? p.id).toString()}>
+                    <option
+                      key={p.party_id ?? p.id}
+                      value={(p.party_id ?? p.id).toString()}
+                    >
                       {p.company_name ?? p.party_name ?? p.name}
                     </option>
                   ))}
@@ -868,22 +989,22 @@ export function DocumentForm({
                   {docType === "debit_note"
                     ? "Debit Date *"
                     : docType === "credit_note"
-                    ? "Credit Date *"
-                    : docType === "quotation"
-                    ? "Quotation Date *"
-                    : docType === "sales_order"
-                    ? "Order Date *"
-                    : docType === "proforma"
-                    ? "Proforma Date *"
-                    : docType === "delivery_challan"
-                    ? "Delivery Date *"
-                    : docType === "sales_invoice"
-                    ? "Invoice Date *"
-                    : docType === "purchase_order"
-                    ? "PO Date *"
-                    : docType === "purchase_invoice"
-                    ? "Purchase Invoice Date *"
-                    : "Document Date *"}
+                      ? "Credit Date *"
+                      : docType === "quotation"
+                        ? "Quotation Date *"
+                        : docType === "sales_order"
+                          ? "Order Date *"
+                          : docType === "proforma"
+                            ? "Proforma Date *"
+                            : docType === "delivery_challan"
+                              ? "Delivery Date *"
+                              : docType === "sales_invoice"
+                                ? "Invoice Date *"
+                                : docType === "purchase_order"
+                                  ? "PO Date *"
+                                  : docType === "purchase_invoice"
+                                    ? "Purchase Invoice Date *"
+                                    : "Document Date *"}
                 </span>
                 <input
                   type="date"
@@ -910,7 +1031,13 @@ export function DocumentForm({
                   className="altrex-input altrex-select"
                   value={status}
                   onChange={(e) =>
-                    setStatus(e.target.value as "draft" | "approved" | "sent" | "cancelled")
+                    setStatus(
+                      e.target.value as
+                        | "draft"
+                        | "approved"
+                        | "sent"
+                        | "cancelled",
+                    )
                   }
                 >
                   <option value="draft">Draft</option>
@@ -972,21 +1099,29 @@ export function DocumentForm({
                   <select
                     className="altrex-input altrex-select"
                     value={selectedInvoiceId}
-                    onChange={(e) => handleInvoiceSelect(e.target.value, salesInvoicesRes)}
+                    onChange={(e) =>
+                      handleInvoiceSelect(e.target.value, salesInvoicesRes)
+                    }
                   >
                     <option value="">Select Sales Invoice...</option>
                     {salesInvoicesRes
                       .filter(
                         (inv: any) =>
                           !partyId ||
-                          String(inv.party_id ?? inv.customer_id ?? inv.party?.party_id) === String(partyId),
+                          String(
+                            inv.party_id ??
+                              inv.customer_id ??
+                              inv.party?.party_id,
+                          ) === String(partyId),
                       )
                       .map((inv: any) => {
                         const invId = inv.invoice_id ?? inv.id;
-                        const invNo = inv.invoice_no ?? inv.doc_no ?? `#${invId}`;
+                        const invNo =
+                          inv.invoice_no ?? inv.doc_no ?? `#${invId}`;
                         return (
                           <option key={invId} value={invId.toString()}>
-                            {invNo} {inv.total_amount ? `(₹${inv.total_amount})` : ""}
+                            {invNo}{" "}
+                            {inv.total_amount ? `(₹${inv.total_amount})` : ""}
                           </option>
                         );
                       })}
@@ -1000,21 +1135,33 @@ export function DocumentForm({
                   <select
                     className="altrex-input altrex-select"
                     value={selectedInvoiceId}
-                    onChange={(e) => handleInvoiceSelect(e.target.value, purchaseInvoicesRes)}
+                    onChange={(e) =>
+                      handleInvoiceSelect(e.target.value, purchaseInvoicesRes)
+                    }
                   >
                     <option value="">Select Purchase Invoice...</option>
                     {purchaseInvoicesRes
                       .filter(
                         (inv: any) =>
                           !partyId ||
-                          String(inv.party_id ?? inv.vendor_id ?? inv.party?.party_id) === String(partyId),
+                          String(
+                            inv.party_id ??
+                              inv.vendor_id ??
+                              inv.party?.party_id,
+                          ) === String(partyId),
                       )
                       .map((inv: any) => {
-                        const invId = inv.purchase_invoice_id ?? inv.pi_id ?? inv.id;
-                        const invNo = inv.purchase_invoice_no ?? inv.pi_no ?? inv.doc_no ?? `#${invId}`;
+                        const invId =
+                          inv.purchase_invoice_id ?? inv.pi_id ?? inv.id;
+                        const invNo =
+                          inv.purchase_invoice_no ??
+                          inv.pi_no ??
+                          inv.doc_no ??
+                          `#${invId}`;
                         return (
                           <option key={invId} value={invId.toString()}>
-                            {invNo} {inv.total_amount ? `(₹${inv.total_amount})` : ""}
+                            {invNo}{" "}
+                            {inv.total_amount ? `(₹${inv.total_amount})` : ""}
                           </option>
                         );
                       })}
@@ -1031,16 +1178,25 @@ export function DocumentForm({
                     onChange={(e) => {
                       setReasonId(e.target.value);
                       const selectedObj = filteredReasons.find(
-                        (r: any) => String(r.reason_id ?? r.id) === e.target.value,
+                        (r: any) =>
+                          String(r.reason_id ?? r.id) === e.target.value,
                       );
                       if (selectedObj) {
-                        setReasonText(selectedObj.reason_name ?? selectedObj.reason ?? selectedObj.name ?? "");
+                        setReasonText(
+                          selectedObj.reason_name ??
+                            selectedObj.reason ??
+                            selectedObj.name ??
+                            "",
+                        );
                       }
                     }}
                   >
                     <option value="">Select Reason...</option>
                     {filteredReasons.map((r: any) => (
-                      <option key={r.reason_id ?? r.id} value={(r.reason_id ?? r.id).toString()}>
+                      <option
+                        key={r.reason_id ?? r.id}
+                        value={(r.reason_id ?? r.id).toString()}
+                      >
                         {r.reason_name ?? r.reason ?? r.name}
                       </option>
                     ))}
@@ -1051,11 +1207,29 @@ export function DocumentForm({
 
             {/* Line Items Table Repeater */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--altrex-text)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "10px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    color: "var(--altrex-text)",
+                  }}
+                >
                   Line Items & Products
                 </span>
-                <Button type="button" variant="outline" onClick={handleAddLine} style={{ fontSize: "12px", padding: "4px 10px" }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddLine}
+                  style={{ fontSize: "12px", padding: "4px 10px" }}
+                >
                   <Plus size={14} /> Add Line Item
                 </Button>
               </div>
@@ -1087,7 +1261,9 @@ export function DocumentForm({
                           <select
                             className="altrex-input altrex-select"
                             value={line.item_id}
-                            onChange={(e) => handleItemSelect(idx, e.target.value)}
+                            onChange={(e) =>
+                              handleItemSelect(idx, e.target.value)
+                            }
                             required
                             style={{ height: "34px", fontSize: "13px" }}
                           >
@@ -1095,14 +1271,17 @@ export function DocumentForm({
                               {isItemsLoading
                                 ? "Loading products..."
                                 : itemsError
-                                ? "Unable to load products"
-                                : itemsData.length === 0
-                                ? "No products available"
-                                : "Select Product..."}
+                                  ? "Unable to load products"
+                                  : itemsData.length === 0
+                                    ? "No products available"
+                                    : "Select Product..."}
                             </option>
                             {!itemsError &&
                               itemsData.map((i: any) => (
-                                <option key={i.item_id ?? i.id} value={(i.item_id ?? i.id).toString()}>
+                                <option
+                                  key={i.item_id ?? i.id}
+                                  value={(i.item_id ?? i.id).toString()}
+                                >
                                   {i.item_name ?? i.name ?? i.product_name}
                                 </option>
                               ))}
@@ -1117,7 +1296,11 @@ export function DocumentForm({
                             value={line.quantity}
                             onChange={(e) =>
                               setLineItems((prev) =>
-                                prev.map((l, i) => (i === idx ? { ...l, quantity: Number(e.target.value) } : l)),
+                                prev.map((l, i) =>
+                                  i === idx
+                                    ? { ...l, quantity: Number(e.target.value) }
+                                    : l,
+                                ),
                               )
                             }
                             style={{ height: "34px", fontSize: "13px" }}
@@ -1131,7 +1314,14 @@ export function DocumentForm({
                             value={line.unit_rate}
                             onChange={(e) =>
                               setLineItems((prev) =>
-                                prev.map((l, i) => (i === idx ? { ...l, unit_rate: Number(e.target.value) } : l)),
+                                prev.map((l, i) =>
+                                  i === idx
+                                    ? {
+                                        ...l,
+                                        unit_rate: Number(e.target.value),
+                                      }
+                                    : l,
+                                ),
                               )
                             }
                             style={{ height: "34px", fontSize: "13px" }}
@@ -1145,7 +1335,16 @@ export function DocumentForm({
                             value={line.discount_percent}
                             onChange={(e) =>
                               setLineItems((prev) =>
-                                prev.map((l, i) => (i === idx ? { ...l, discount_percent: Number(e.target.value) } : l)),
+                                prev.map((l, i) =>
+                                  i === idx
+                                    ? {
+                                        ...l,
+                                        discount_percent: Number(
+                                          e.target.value,
+                                        ),
+                                      }
+                                    : l,
+                                ),
                               )
                             }
                             style={{ height: "34px", fontSize: "13px" }}
@@ -1159,10 +1358,21 @@ export function DocumentForm({
                             value={line.discount_flat}
                             onChange={(e) =>
                               setLineItems((prev) =>
-                                prev.map((l, i) => (i === idx ? { ...l, discount_flat: Number(e.target.value) } : l)),
+                                prev.map((l, i) =>
+                                  i === idx
+                                    ? {
+                                        ...l,
+                                        discount_flat: Number(e.target.value),
+                                      }
+                                    : l,
+                                ),
                               )
                             }
-                            style={{ height: "34px", fontSize: "13px", marginTop: "4px" }}
+                            style={{
+                              height: "34px",
+                              fontSize: "13px",
+                              marginTop: "4px",
+                            }}
                           />
                         </td>
                         <td>
@@ -1177,37 +1387,56 @@ export function DocumentForm({
                             }}
                           >
                             {taxTypes.length === 0 ? (
-                              <span style={{ fontSize: "11px", color: "var(--altrex-muted)" }}>
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  color: "var(--altrex-muted)",
+                                }}
+                              >
                                 No tax types configured
                               </span>
-                            ) : taxTypes.map((t: any) => {
-                              const tid = t.tax_id ?? t.id;
-                              const isChecked = line.selected_taxes.includes(tid);
-                              return (
-                                <button
-                                  key={tid}
-                                  type="button"
-                                  onClick={() => handleToggleTax(idx, tid)}
-                                  style={{
-                                    fontSize: "10px",
-                                    fontWeight: 600,
-                                    padding: "2px 6px",
-                                    minWidth: 0,
-                                    maxWidth: "100%",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    borderRadius: "4px",
-                                    border: isChecked ? "1px solid var(--altrex-primary)" : "1px solid var(--altrex-border)",
-                                    background: isChecked ? "rgba(37,99,235,0.1)" : "transparent",
-                                    color: isChecked ? "var(--altrex-primary)" : "var(--altrex-muted)",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  {t.tax_name} ({getTaxValue(t)}{String(t.tax_type).toLowerCase() === "fixed" ? "" : "%"})
-                                </button>
-                              );
-                            })}
+                            ) : (
+                              taxTypes.map((t: any) => {
+                                const tid = t.tax_id ?? t.id;
+                                const isChecked =
+                                  line.selected_taxes.includes(tid);
+                                return (
+                                  <button
+                                    key={tid}
+                                    type="button"
+                                    onClick={() => handleToggleTax(idx, tid)}
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: 600,
+                                      padding: "2px 6px",
+                                      minWidth: 0,
+                                      maxWidth: "100%",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      borderRadius: "4px",
+                                      border: isChecked
+                                        ? "1px solid var(--altrex-primary)"
+                                        : "1px solid var(--altrex-border)",
+                                      background: isChecked
+                                        ? "rgba(37,99,235,0.1)"
+                                        : "transparent",
+                                      color: isChecked
+                                        ? "var(--altrex-primary)"
+                                        : "var(--altrex-muted)",
+                                      cursor: "pointer",
+                                    }}
+                                  >
+                                    {t.tax_name} ({getTaxValue(t)}
+                                    {String(t.tax_type).toLowerCase() ===
+                                    "fixed"
+                                      ? ""
+                                      : "%"}
+                                    )
+                                  </button>
+                                );
+                              })
+                            )}
                           </div>
                         </td>
                         <td>
@@ -1217,7 +1446,10 @@ export function DocumentForm({
                             aria-label={`Remove line item ${idx + 1}`}
                             onClick={() => handleRemoveLine(idx)}
                             disabled={lineItems.length === 1}
-                            style={{ color: "var(--altrex-danger-text)", padding: "4px 8px" }}
+                            style={{
+                              color: "var(--altrex-danger-text)",
+                              padding: "4px 8px",
+                            }}
                           >
                             <Trash2 size={13} />
                           </Button>
@@ -1232,7 +1464,12 @@ export function DocumentForm({
             {/* Calculations Summary & Notes */}
             <div
               className="altrex-document-summary"
-              style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 300px", gap: "20px", minWidth: 0 }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) 300px",
+                gap: "20px",
+                minWidth: 0,
+              }}
             >
               <div style={{ display: "grid", gap: "12px" }}>
                 <label className="altrex-field">
@@ -1269,16 +1506,45 @@ export function DocumentForm({
                   gap: "10px",
                 }}
               >
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--altrex-muted)", textTransform: "uppercase" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "var(--altrex-muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
                   Estimated Document Totals
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "13px",
+                  }}
+                >
                   <span>Subtotal:</span>
-                  <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    ₹
+                    {subtotal.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "13px",
+                  }}
+                >
                   <span>Est. Taxes:</span>
-                  <span style={{ fontWeight: 600, color: "#8b5cf6" }}>₹{estimatedTax.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span style={{ fontWeight: 600, color: "#8b5cf6" }}>
+                    ₹
+                    {estimatedTax.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
                 <div
                   style={{
@@ -1291,7 +1557,12 @@ export function DocumentForm({
                   }}
                 >
                   <span>Grand Total:</span>
-                  <span style={{ color: "var(--altrex-primary)" }}>₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span style={{ color: "var(--altrex-primary)" }}>
+                    ₹
+                    {grandTotal.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
                 </div>
               </div>
             </div>

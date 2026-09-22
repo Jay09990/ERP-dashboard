@@ -1,14 +1,22 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { PartyFormValues, PartyRecord } from "../shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { PartyFormValues, PartyRecord } from "../shared";
 
 function extractPartyArray(res: any): PartyRecord[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
-  for (const key of ["data", "customers", "parties", "rows", "records", "result", "payload"]) {
+  for (const key of [
+    "data",
+    "customers",
+    "parties",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ]) {
     if (Array.isArray(res[key])) return res[key];
     if (res[key] && res[key] !== res) {
       const nested = extractPartyArray(res[key]);
@@ -31,12 +39,16 @@ function extractPartySingle(res: any): PartyRecord | null {
 
 function normalizeParty(record: any): PartyRecord | null {
   if (!record || typeof record !== "object") return null;
-  const normalized = record as PartyRecord & { company_name?: string; name?: string };
+  const normalized = record as PartyRecord & {
+    company_name?: string;
+    name?: string;
+  };
   return {
     ...normalized,
     id: normalized.id ?? normalized.party_id ?? "",
     party_id: normalized.party_id ?? normalized.id ?? "",
-    party_name: normalized.party_name ?? normalized.company_name ?? normalized.name ?? "",
+    party_name:
+      normalized.party_name ?? normalized.company_name ?? normalized.name ?? "",
     phone: normalized.phone ?? "",
   };
 }
@@ -83,7 +95,10 @@ export function useCreateCustomer() {
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string | number; body: PartyFormValues }) =>
+    mutationFn: ({
+      id,
+      body,
+    }: { id: string | number; body: PartyFormValues }) =>
       apiClient.put<PartyRecord>(endpoints.party.customer(id), body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });

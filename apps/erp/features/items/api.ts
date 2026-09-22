@@ -95,17 +95,22 @@ export function useDeleteItemType() {
 // Item Categories
 export function useItemCategories(params?: Record<string, string>) {
   const qc = useQueryClient();
-  return createResourceHooks<ItemCategory, ItemCategoryValues, ItemCategoryValues>(
-    "item-categories",
-    endpoints.items.itemCategories,
-    apiClient,
-    qc,
-  ).useList(params);
+  return createResourceHooks<
+    ItemCategory,
+    ItemCategoryValues,
+    ItemCategoryValues
+  >("item-categories", endpoints.items.itemCategories, apiClient, qc).useList(
+    params,
+  );
 }
 
 export function useCreateItemCategory() {
   const qc = useQueryClient();
-  return createResourceHooks<ItemCategory, ItemCategoryValues, ItemCategoryValues>(
+  return createResourceHooks<
+    ItemCategory,
+    ItemCategoryValues,
+    ItemCategoryValues
+  >(
     "item-categories",
     endpoints.items.itemCategories,
     apiClient,
@@ -115,7 +120,11 @@ export function useCreateItemCategory() {
 
 export function useUpdateItemCategory() {
   const qc = useQueryClient();
-  return createResourceHooks<ItemCategory, ItemCategoryValues, ItemCategoryValues>(
+  return createResourceHooks<
+    ItemCategory,
+    ItemCategoryValues,
+    ItemCategoryValues
+  >(
     "item-categories",
     endpoints.items.itemCategories,
     apiClient,
@@ -125,7 +134,11 @@ export function useUpdateItemCategory() {
 
 export function useDeleteItemCategory() {
   const qc = useQueryClient();
-  return createResourceHooks<ItemCategory, ItemCategoryValues, ItemCategoryValues>(
+  return createResourceHooks<
+    ItemCategory,
+    ItemCategoryValues,
+    ItemCategoryValues
+  >(
     "item-categories",
     endpoints.items.itemCategories,
     apiClient,

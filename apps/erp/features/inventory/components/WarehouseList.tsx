@@ -13,7 +13,14 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (!value || typeof value !== "object" || visited.has(value)) return [];
   visited.add(value);
 
-  const keysToTry = ["warehouses", "data", "rows", "records", "result", "payload"];
+  const keysToTry = [
+    "warehouses",
+    "data",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ];
   for (const k of keysToTry) {
     if (Array.isArray((value as any)[k])) return (value as any)[k];
   }
@@ -27,16 +34,24 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
 
 export function WarehouseList() {
   const { data: responseData, isLoading, error } = warehouseApi.useList();
-  const warehouses = useMemo(() => extractRecords<Warehouse>(responseData), [responseData]);
+  const warehouses = useMemo(
+    () => extractRecords<Warehouse>(responseData),
+    [responseData],
+  );
 
-  const { mutate: createWarehouse, isPending: isCreating } = warehouseApi.useCreate();
-  const { mutate: updateWarehouse, isPending: isUpdating } = warehouseApi.useUpdate();
-  const { mutate: deleteWarehouse, isPending: isDeleting } = warehouseApi.useDelete();
+  const { mutate: createWarehouse, isPending: isCreating } =
+    warehouseApi.useCreate();
+  const { mutate: updateWarehouse, isPending: isUpdating } =
+    warehouseApi.useUpdate();
+  const { mutate: deleteWarehouse, isPending: isDeleting } =
+    warehouseApi.useDelete();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
-  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(
+    null,
+  );
 
   const getId = (w: Warehouse) => w.warehouse_id ?? w.id;
 
@@ -49,7 +64,8 @@ export function WarehouseList() {
       const matchesSearch =
         name.toLowerCase().includes(search.toLowerCase()) ||
         addr.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus =
+        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
@@ -65,10 +81,11 @@ export function WarehouseList() {
         {
           key: "created_at",
           label: "Created At",
-          transform: (val) => (val ? new Date(val).toLocaleDateString("en-IN") : "—"),
+          transform: (val) =>
+            val ? new Date(val).toLocaleDateString("en-IN") : "—",
         },
       ],
-      filteredWarehouses
+      filteredWarehouses,
     );
   };
 
@@ -82,7 +99,7 @@ export function WarehouseList() {
             setIsOpenDrawer(false);
             setEditingWarehouse(null);
           },
-        }
+        },
       );
     } else {
       createWarehouse(values, {
@@ -99,8 +116,17 @@ export function WarehouseList() {
       label: "Warehouse Name",
       render: (w: Warehouse) => (
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Building size={16} style={{ color: "var(--altrex-primary, #2563eb)" }} />
-          <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "14px" }}>
+          <Building
+            size={16}
+            style={{ color: "var(--altrex-primary, #2563eb)" }}
+          />
+          <span
+            style={{
+              fontWeight: 600,
+              color: "var(--altrex-text, #0f172a)",
+              fontSize: "14px",
+            }}
+          >
             {w.warehouse_name}
           </span>
         </div>
@@ -110,7 +136,9 @@ export function WarehouseList() {
       key: "address" as const,
       label: "Address / Location",
       render: (w: Warehouse) => (
-        <span style={{ color: "var(--altrex-muted, #64748b)", fontSize: "13px" }}>
+        <span
+          style={{ color: "var(--altrex-muted, #64748b)", fontSize: "13px" }}
+        >
           {w.address || "—"}
         </span>
       ),
@@ -129,7 +157,9 @@ export function WarehouseList() {
               borderRadius: "12px",
               fontSize: "12px",
               fontWeight: 500,
-              backgroundColor: isActive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              backgroundColor: isActive
+                ? "rgba(16, 185, 129, 0.1)"
+                : "rgba(239, 68, 68, 0.1)",
               color: isActive ? "#10b981" : "#ef4444",
               border: `1px solid ${isActive ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
             }}
@@ -161,7 +191,11 @@ export function WarehouseList() {
               variant="outline"
               aria-label={`Delete warehouse ${w.warehouse_name}`}
               onClick={() => {
-                if (confirm(`Are you sure you want to delete warehouse "${w.warehouse_name}"?`)) {
+                if (
+                  confirm(
+                    `Are you sure you want to delete warehouse "${w.warehouse_name}"?`,
+                  )
+                ) {
                   deleteWarehouse(id);
                 }
               }}
@@ -186,10 +220,23 @@ export function WarehouseList() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Master</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Warehouses & Storage Facilities
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
             Manage warehouse locations, stores, and depot master records.
           </p>
         </div>
@@ -274,7 +321,10 @@ export function WarehouseList() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading warehouses...</span>
         </div>

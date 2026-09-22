@@ -17,7 +17,7 @@ export const itemSchema = z.object({
   item_type: z.union([z.number(), z.string()]).optional(),
   item_parent_category: z.union([z.number(), z.string(), z.null()]).optional(),
   item_category: z.union([z.number(), z.string(), z.null()]).optional(),
-  
+
   // Units & conversion
   unit_id: z.union([z.number(), z.string()]).optional(),
   conv_unit_id: z.union([z.number(), z.string(), z.null()]).optional(),

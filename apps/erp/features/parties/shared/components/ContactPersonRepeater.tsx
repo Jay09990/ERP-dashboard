@@ -1,8 +1,12 @@
 "use client";
 
 import { Plus, Trash2, User } from "lucide-react";
-import { Control, useFieldArray, UseFormRegister } from "react-hook-form";
-import { PartyFormValues } from "../schema";
+import {
+  type Control,
+  type UseFormRegister,
+  useFieldArray,
+} from "react-hook-form";
+import type { PartyFormValues } from "../schema";
 
 interface ContactPersonRepeaterProps {
   control: Control<PartyFormValues>;

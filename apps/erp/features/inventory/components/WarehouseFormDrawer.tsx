@@ -60,26 +60,49 @@ export function WarehouseFormDrawer({
           borderColor: "var(--altrex-border, #e2e8f0)",
         }}
       >
-        <div className="altrex-dialog-header" style={{ borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}>
+        <div
+          className="altrex-dialog-header"
+          style={{ borderBottom: "1px solid var(--altrex-border, #e2e8f0)" }}
+        >
           <div>
-            <h3 className="altrex-dialog-title" style={{ color: "var(--altrex-text, #0f172a)" }}>
+            <h3
+              className="altrex-dialog-title"
+              style={{ color: "var(--altrex-text, #0f172a)" }}
+            >
               {initialData ? "Edit Warehouse" : "Add Warehouse"}
             </h3>
-            <p className="altrex-dialog-subtitle" style={{ color: "var(--altrex-muted, #64748b)" }}>
+            <p
+              className="altrex-dialog-subtitle"
+              style={{ color: "var(--altrex-muted, #64748b)" }}
+            >
               {initialData
                 ? "Update warehouse details and status."
                 : "Register a new storage location or warehouse facility."}
             </p>
           </div>
-          <button type="button" className="altrex-icon-button" onClick={onClose}>
+          <button
+            type="button"
+            className="altrex-icon-button"
+            onClick={onClose}
+          >
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="altrex-dialog-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            className="altrex-dialog-body"
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
             <label className="altrex-field">
-              <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", marginBottom: "4px", display: "block" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text, #0f172a)",
+                  marginBottom: "4px",
+                  display: "block",
+                }}
+              >
                 Warehouse Name *
               </span>
               <input
@@ -100,7 +123,14 @@ export function WarehouseFormDrawer({
             </label>
 
             <label className="altrex-field">
-              <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", marginBottom: "4px", display: "block" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text, #0f172a)",
+                  marginBottom: "4px",
+                  display: "block",
+                }}
+              >
                 Address / Location
               </span>
               <textarea
@@ -122,13 +152,22 @@ export function WarehouseFormDrawer({
             </label>
 
             <label className="altrex-field">
-              <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", marginBottom: "4px", display: "block" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text, #0f172a)",
+                  marginBottom: "4px",
+                  display: "block",
+                }}
+              >
                 Status
               </span>
               <select
                 className="altrex-input"
                 value={status}
-                onChange={(e) => setStatus(e.target.value as "active" | "inactive")}
+                onChange={(e) =>
+                  setStatus(e.target.value as "active" | "inactive")
+                }
                 style={{
                   width: "100%",
                   padding: "8px 12px",
@@ -144,12 +183,22 @@ export function WarehouseFormDrawer({
             </label>
           </div>
 
-          <div className="altrex-dialog-footer" style={{ borderTop: "1px solid var(--altrex-border, #e2e8f0)", padding: "16px" }}>
+          <div
+            className="altrex-dialog-footer"
+            style={{
+              borderTop: "1px solid var(--altrex-border, #e2e8f0)",
+              padding: "16px",
+            }}
+          >
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : initialData ? "Update Warehouse" : "Save Warehouse"}
+              {isPending
+                ? "Saving..."
+                : initialData
+                  ? "Update Warehouse"
+                  : "Save Warehouse"}
             </Button>
           </div>
         </form>

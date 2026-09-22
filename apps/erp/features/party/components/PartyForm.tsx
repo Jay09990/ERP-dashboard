@@ -1,9 +1,9 @@
 "use client";
 
+import { Input } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Input } from "@altrex/ui";
-import { partySchema, type PartyFormValues, type PartyType } from "../schema";
+import { type PartyFormValues, type PartyType, partySchema } from "../schema";
 import { AddressRepeater } from "./AddressRepeater";
 import { ContactPersonRepeater } from "./ContactPersonRepeater";
 

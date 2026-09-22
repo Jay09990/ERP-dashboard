@@ -5,7 +5,14 @@ import { endpoints } from "@/lib/api/endpoints";
 import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Boxes, Building, Download, PackageCheck, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  Boxes,
+  Building,
+  Download,
+  PackageCheck,
+  Search,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { stockApi } from "../api";
 import type { StockSummary } from "../schema";
@@ -15,7 +22,15 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   if (!value || typeof value !== "object" || visited.has(value)) return [];
   visited.add(value);
 
-  const keysToTry = ["stock", "summary", "data", "rows", "records", "result", "payload"];
+  const keysToTry = [
+    "stock",
+    "summary",
+    "data",
+    "rows",
+    "records",
+    "result",
+    "payload",
+  ];
   for (const k of keysToTry) {
     if (Array.isArray((value as any)[k])) return (value as any)[k];
   }
@@ -38,7 +53,10 @@ export function StockSummaryView() {
   }, [selectedWarehouseId]);
 
   const { data: responseData, isLoading, error } = stockApi.useSummary(params);
-  const stockItems = useMemo(() => extractRecords<StockSummary>(responseData), [responseData]);
+  const stockItems = useMemo(
+    () => extractRecords<StockSummary>(responseData),
+    [responseData],
+  );
 
   // Fetch warehouses for dropdown filter
   const { data: warehousesResponse } = useQuery({
@@ -87,13 +105,29 @@ export function StockSummaryView() {
     exportToCSV<StockSummary>(
       "Stock_Summary",
       [
-        { key: "item_name", label: "Item Name", transform: (v, r) => v || `Item #${r.item_id}` },
+        {
+          key: "item_name",
+          label: "Item Name",
+          transform: (v, r) => v || `Item #${r.item_id}`,
+        },
         { key: "item_code", label: "Item Code", transform: (v) => v || "—" },
-        { key: "warehouse_name", label: "Warehouse", transform: (v, r) => v || `Warehouse #${r.warehouse_id || "N/A"}` },
-        { key: "current_stock", label: "Current Stock", transform: (v, r) => String(v ?? r.quantity ?? 0) },
-        { key: "uom", label: "Unit", transform: (v, r) => v || r.unit_name || "NOS" },
+        {
+          key: "warehouse_name",
+          label: "Warehouse",
+          transform: (v, r) => v || `Warehouse #${r.warehouse_id || "N/A"}`,
+        },
+        {
+          key: "current_stock",
+          label: "Current Stock",
+          transform: (v, r) => String(v ?? r.quantity ?? 0),
+        },
+        {
+          key: "uom",
+          label: "Unit",
+          transform: (v, r) => v || r.unit_name || "NOS",
+        },
       ],
-      filteredStock
+      filteredStock,
     );
   };
 
@@ -103,13 +137,28 @@ export function StockSummaryView() {
       label: "Item Name & Code",
       render: (s: StockSummary) => (
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Boxes size={16} style={{ color: "var(--altrex-primary, #2563eb)" }} />
+          <Boxes
+            size={16}
+            style={{ color: "var(--altrex-primary, #2563eb)" }}
+          />
           <div>
-            <span style={{ fontWeight: 600, color: "var(--altrex-text, #0f172a)", fontSize: "14px", display: "block" }}>
+            <span
+              style={{
+                fontWeight: 600,
+                color: "var(--altrex-text, #0f172a)",
+                fontSize: "14px",
+                display: "block",
+              }}
+            >
               {s.item_name || `Item #${s.item_id}`}
             </span>
             {s.item_code && (
-              <span style={{ color: "var(--altrex-muted, #64748b)", fontSize: "12px" }}>
+              <span
+                style={{
+                  color: "var(--altrex-muted, #64748b)",
+                  fontSize: "12px",
+                }}
+              >
                 Code: {s.item_code}
               </span>
             )}
@@ -122,9 +171,17 @@ export function StockSummaryView() {
       label: "Warehouse Location",
       render: (s: StockSummary) => (
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Building size={14} style={{ color: "var(--altrex-muted, #94a3b8)" }} />
-          <span style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}>
-            {s.warehouse_name || (s.warehouse_id ? `Warehouse #${s.warehouse_id}` : "All Warehouses")}
+          <Building
+            size={14}
+            style={{ color: "var(--altrex-muted, #94a3b8)" }}
+          />
+          <span
+            style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+          >
+            {s.warehouse_name ||
+              (s.warehouse_id
+                ? `Warehouse #${s.warehouse_id}`
+                : "All Warehouses")}
           </span>
         </div>
       ),
@@ -179,10 +236,23 @@ export function StockSummaryView() {
       <div className="altrex-page-header" style={{ marginBottom: "20px" }}>
         <div>
           <span className="altrex-eyebrow">Inventory Overview</span>
-          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--altrex-text, #0f172a)" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: 700,
+              margin: 0,
+              color: "var(--altrex-text, #0f172a)",
+            }}
+          >
             Stock Summary
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted, #64748b)", fontSize: "14px" }}>
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted, #64748b)",
+              fontSize: "14px",
+            }}
+          >
             Real-time item-wise stock balances across all warehouse locations.
           </p>
         </div>
@@ -229,10 +299,22 @@ export function StockSummaryView() {
             <Boxes size={24} />
           </div>
           <div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--altrex-muted, #64748b)" }}>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--altrex-muted, #64748b)",
+              }}
+            >
               Tracked Items
             </span>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--altrex-text, #0f172a)" }}>
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "var(--altrex-text, #0f172a)",
+              }}
+            >
               {totalItemsCount}
             </div>
           </div>
@@ -260,10 +342,22 @@ export function StockSummaryView() {
             <PackageCheck size={24} />
           </div>
           <div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--altrex-muted, #64748b)" }}>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--altrex-muted, #64748b)",
+              }}
+            >
               Total Stock Quantity
             </span>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--altrex-text, #0f172a)" }}>
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "var(--altrex-text, #0f172a)",
+              }}
+            >
               {totalQuantitySum.toLocaleString("en-IN")}
             </div>
           </div>
@@ -291,10 +385,18 @@ export function StockSummaryView() {
             <AlertTriangle size={24} />
           </div>
           <div>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--altrex-muted, #64748b)" }}>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--altrex-muted, #64748b)",
+              }}
+            >
               Low Stock Alerts
             </span>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "#ef4444" }}>
+            <div
+              style={{ fontSize: "20px", fontWeight: 700, color: "#ef4444" }}
+            >
               {lowStockCount}
             </div>
           </div>
@@ -367,7 +469,10 @@ export function StockSummaryView() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state" style={{ color: "var(--altrex-muted, #64748b)" }}>
+        <div
+          className="altrex-table-state"
+          style={{ color: "var(--altrex-muted, #64748b)" }}
+        >
           <span className="altrex-spinner" />
           <span>Loading stock summary...</span>
         </div>

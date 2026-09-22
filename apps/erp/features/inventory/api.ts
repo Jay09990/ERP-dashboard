@@ -3,16 +3,16 @@ import { createResourceHooks } from "@/lib/api/create-resource-hooks";
 import { endpoints } from "@/lib/api/endpoints";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
-  Warehouse,
   Batch,
-  StockSummary,
-  StockLedgerEntry,
-  StockTransfer,
-  StockAdjustment,
-  WarehouseFormValues,
   BatchFormValues,
-  StockTransferFormValues,
+  StockAdjustment,
   StockAdjustmentFormValues,
+  StockLedgerEntry,
+  StockSummary,
+  StockTransfer,
+  StockTransferFormValues,
+  Warehouse,
+  WarehouseFormValues,
 } from "./schema";
 
 export function useInventoryResource<T, TCreate, TUpdate>(
@@ -20,7 +20,12 @@ export function useInventoryResource<T, TCreate, TUpdate>(
   endpoint: string,
 ) {
   const qc = useQueryClient();
-  const hooks = createResourceHooks<T, TCreate, TUpdate>(key, endpoint, apiClient, qc);
+  const hooks = createResourceHooks<T, TCreate, TUpdate>(
+    key,
+    endpoint,
+    apiClient,
+    qc,
+  );
 
   return {
     useList: (params?: Record<string, string>) => hooks.useList(params),
@@ -33,57 +38,62 @@ export function useInventoryResource<T, TCreate, TUpdate>(
 
 export const warehouseApi = {
   useList: (params?: Record<string, string>) =>
-    useInventoryResource<Warehouse, WarehouseFormValues, Partial<WarehouseFormValues>>(
-      "warehouses",
-      endpoints.inventory.warehouse
-    ).useList(params),
+    useInventoryResource<
+      Warehouse,
+      WarehouseFormValues,
+      Partial<WarehouseFormValues>
+    >("warehouses", endpoints.inventory.warehouse).useList(params),
   useDetail: (id: string | number) =>
-    useInventoryResource<Warehouse, WarehouseFormValues, Partial<WarehouseFormValues>>(
-      "warehouses",
-      endpoints.inventory.warehouse
-    ).useDetail(id),
+    useInventoryResource<
+      Warehouse,
+      WarehouseFormValues,
+      Partial<WarehouseFormValues>
+    >("warehouses", endpoints.inventory.warehouse).useDetail(id),
   useCreate: () =>
-    useInventoryResource<Warehouse, WarehouseFormValues, Partial<WarehouseFormValues>>(
-      "warehouses",
-      endpoints.inventory.warehouse
-    ).useCreate(),
+    useInventoryResource<
+      Warehouse,
+      WarehouseFormValues,
+      Partial<WarehouseFormValues>
+    >("warehouses", endpoints.inventory.warehouse).useCreate(),
   useUpdate: () =>
-    useInventoryResource<Warehouse, WarehouseFormValues, Partial<WarehouseFormValues>>(
-      "warehouses",
-      endpoints.inventory.warehouse
-    ).useUpdate(),
+    useInventoryResource<
+      Warehouse,
+      WarehouseFormValues,
+      Partial<WarehouseFormValues>
+    >("warehouses", endpoints.inventory.warehouse).useUpdate(),
   useDelete: () =>
-    useInventoryResource<Warehouse, WarehouseFormValues, Partial<WarehouseFormValues>>(
-      "warehouses",
-      endpoints.inventory.warehouse
-    ).useDelete(),
+    useInventoryResource<
+      Warehouse,
+      WarehouseFormValues,
+      Partial<WarehouseFormValues>
+    >("warehouses", endpoints.inventory.warehouse).useDelete(),
 };
 
 export const batchApi = {
   useList: (params?: Record<string, string>) =>
     useInventoryResource<Batch, BatchFormValues, Partial<BatchFormValues>>(
       "batches",
-      endpoints.inventory.batch
+      endpoints.inventory.batch,
     ).useList(params),
   useDetail: (id: string | number) =>
     useInventoryResource<Batch, BatchFormValues, Partial<BatchFormValues>>(
       "batches",
-      endpoints.inventory.batch
+      endpoints.inventory.batch,
     ).useDetail(id),
   useCreate: () =>
     useInventoryResource<Batch, BatchFormValues, Partial<BatchFormValues>>(
       "batches",
-      endpoints.inventory.batch
+      endpoints.inventory.batch,
     ).useCreate(),
   useUpdate: () =>
     useInventoryResource<Batch, BatchFormValues, Partial<BatchFormValues>>(
       "batches",
-      endpoints.inventory.batch
+      endpoints.inventory.batch,
     ).useUpdate(),
   useDelete: () =>
     useInventoryResource<Batch, BatchFormValues, Partial<BatchFormValues>>(
       "batches",
-      endpoints.inventory.batch
+      endpoints.inventory.batch,
     ).useDelete(),
 };
 
@@ -92,9 +102,15 @@ export const stockApi = {
     return useQuery<StockSummary[]>({
       queryKey: ["stock-summary", params],
       queryFn: async () => {
-        const queryStr = params ? "?" + new URLSearchParams(params as any).toString() : "";
-        const res = await apiClient.get<any>(`${endpoints.inventory.stockSummary}${queryStr}`);
-        return (res?.stockSummary ?? res?.data ?? (Array.isArray(res) ? res : [])) as StockSummary[];
+        const queryStr = params
+          ? "?" + new URLSearchParams(params as any).toString()
+          : "";
+        const res = await apiClient.get<any>(
+          `${endpoints.inventory.stockSummary}${queryStr}`,
+        );
+        return (res?.stockSummary ??
+          res?.data ??
+          (Array.isArray(res) ? res : [])) as StockSummary[];
       },
     });
   },
@@ -102,9 +118,15 @@ export const stockApi = {
     return useQuery<StockLedgerEntry[]>({
       queryKey: ["stock-ledger", params],
       queryFn: async () => {
-        const queryStr = params ? "?" + new URLSearchParams(params as any).toString() : "";
-        const res = await apiClient.get<any>(`${endpoints.inventory.stockLedger}${queryStr}`);
-        return (res?.stockLedger ?? res?.data ?? (Array.isArray(res) ? res : [])) as StockLedgerEntry[];
+        const queryStr = params
+          ? "?" + new URLSearchParams(params as any).toString()
+          : "";
+        const res = await apiClient.get<any>(
+          `${endpoints.inventory.stockLedger}${queryStr}`,
+        );
+        return (res?.stockLedger ??
+          res?.data ??
+          (Array.isArray(res) ? res : [])) as StockLedgerEntry[];
       },
     });
   },
@@ -112,25 +134,30 @@ export const stockApi = {
 
 export const transferApi = {
   useList: (params?: Record<string, string>) =>
-    useInventoryResource<StockTransfer, StockTransferFormValues, Partial<StockTransferFormValues>>(
-      "transfers",
-      endpoints.inventory.transfer
-    ).useList(params),
+    useInventoryResource<
+      StockTransfer,
+      StockTransferFormValues,
+      Partial<StockTransferFormValues>
+    >("transfers", endpoints.inventory.transfer).useList(params),
   useDetail: (id: string | number) =>
-    useInventoryResource<StockTransfer, StockTransferFormValues, Partial<StockTransferFormValues>>(
-      "transfers",
-      endpoints.inventory.transfer
-    ).useDetail(id),
+    useInventoryResource<
+      StockTransfer,
+      StockTransferFormValues,
+      Partial<StockTransferFormValues>
+    >("transfers", endpoints.inventory.transfer).useDetail(id),
   useCreate: () =>
-    useInventoryResource<StockTransfer, StockTransferFormValues, Partial<StockTransferFormValues>>(
-      "transfers",
-      endpoints.inventory.transfer
-    ).useCreate(),
+    useInventoryResource<
+      StockTransfer,
+      StockTransferFormValues,
+      Partial<StockTransferFormValues>
+    >("transfers", endpoints.inventory.transfer).useCreate(),
   useDelete: () => {
     const qc = useQueryClient();
     return useMutation({
       mutationFn: async (id: string | number) => {
-        const res = await apiClient.delete<any>(endpoints.inventory.transferDetail(id));
+        const res = await apiClient.delete<any>(
+          endpoints.inventory.transferDetail(id),
+        );
         return res;
       },
       onSuccess: () => {
@@ -143,7 +170,10 @@ export const transferApi = {
   useUpdateStatus: () => {
     const qc = useQueryClient();
     return useMutation({
-      mutationFn: async ({ id, status }: { id: string | number; status: string }) => {
+      mutationFn: async ({
+        id,
+        status,
+      }: { id: string | number; status: string }) => {
         const url = endpoints.inventory.transferStatus(id, status);
         const res = await apiClient.post<any>(url);
         return res.data;
@@ -159,29 +189,36 @@ export const transferApi = {
 
 export const adjustmentApi = {
   useList: (params?: Record<string, string>) =>
-    useInventoryResource<StockAdjustment, StockAdjustmentFormValues, Partial<StockAdjustmentFormValues>>(
-      "adjustments",
-      endpoints.inventory.adjustment
-    ).useList(params),
+    useInventoryResource<
+      StockAdjustment,
+      StockAdjustmentFormValues,
+      Partial<StockAdjustmentFormValues>
+    >("adjustments", endpoints.inventory.adjustment).useList(params),
   useDetail: (id: string | number) =>
-    useInventoryResource<StockAdjustment, StockAdjustmentFormValues, Partial<StockAdjustmentFormValues>>(
-      "adjustments",
-      endpoints.inventory.adjustment
-    ).useDetail(id),
+    useInventoryResource<
+      StockAdjustment,
+      StockAdjustmentFormValues,
+      Partial<StockAdjustmentFormValues>
+    >("adjustments", endpoints.inventory.adjustment).useDetail(id),
   useCreate: () =>
-    useInventoryResource<StockAdjustment, StockAdjustmentFormValues, Partial<StockAdjustmentFormValues>>(
-      "adjustments",
-      endpoints.inventory.adjustment
-    ).useCreate(),
+    useInventoryResource<
+      StockAdjustment,
+      StockAdjustmentFormValues,
+      Partial<StockAdjustmentFormValues>
+    >("adjustments", endpoints.inventory.adjustment).useCreate(),
   useDelete: () =>
-    useInventoryResource<StockAdjustment, StockAdjustmentFormValues, Partial<StockAdjustmentFormValues>>(
-      "adjustments",
-      endpoints.inventory.adjustment
-    ).useDelete(),
+    useInventoryResource<
+      StockAdjustment,
+      StockAdjustmentFormValues,
+      Partial<StockAdjustmentFormValues>
+    >("adjustments", endpoints.inventory.adjustment).useDelete(),
   useUpdateStatus: () => {
     const qc = useQueryClient();
     return useMutation({
-      mutationFn: async ({ id, status }: { id: string | number; status: string }) => {
+      mutationFn: async ({
+        id,
+        status,
+      }: { id: string | number; status: string }) => {
         const url = endpoints.inventory.adjustmentStatus(id, status);
         const res = await apiClient.post<any>(url);
         return res.data;

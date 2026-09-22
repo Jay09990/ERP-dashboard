@@ -1,8 +1,8 @@
 "use client";
 
-import { useFormContext, useFieldArray } from "react-hook-form";
-import { Trash2, Plus } from "lucide-react";
 import { Input } from "@altrex/ui";
+import { Plus, Trash2 } from "lucide-react";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import type { PartyFormValues } from "../schema";
 
 export function AddressRepeater() {
@@ -60,12 +60,16 @@ export function AddressRepeater() {
 
               <div className="altrex-field">
                 <label>Address Label</label>
-                <Input {...control.register(`addresses.${index}.address_label`)} />
+                <Input
+                  {...control.register(`addresses.${index}.address_label`)}
+                />
               </div>
 
               <div className="altrex-field">
                 <label>Attention To</label>
-                <Input {...control.register(`addresses.${index}.attention_to`)} />
+                <Input
+                  {...control.register(`addresses.${index}.attention_to`)}
+                />
               </div>
 
               <div className="altrex-field">
@@ -75,27 +79,40 @@ export function AddressRepeater() {
 
               <div className="altrex-field col-span-2">
                 <label>Address Line 1</label>
-                <Input {...control.register(`addresses.${index}.address_line1`)} />
+                <Input
+                  {...control.register(`addresses.${index}.address_line1`)}
+                />
               </div>
 
               <div className="altrex-field col-span-2">
                 <label>Address Line 2</label>
-                <Input {...control.register(`addresses.${index}.address_line2`)} />
+                <Input
+                  {...control.register(`addresses.${index}.address_line2`)}
+                />
               </div>
 
               <div className="altrex-field">
                 <label>Country</label>
-                <Input type="number" {...control.register(`addresses.${index}.country_id`)} />
+                <Input
+                  type="number"
+                  {...control.register(`addresses.${index}.country_id`)}
+                />
               </div>
 
               <div className="altrex-field">
                 <label>State</label>
-                <Input type="number" {...control.register(`addresses.${index}.state_id`)} />
+                <Input
+                  type="number"
+                  {...control.register(`addresses.${index}.state_id`)}
+                />
               </div>
 
               <div className="altrex-field">
                 <label>City</label>
-                <Input type="number" {...control.register(`addresses.${index}.city_id`)} />
+                <Input
+                  type="number"
+                  {...control.register(`addresses.${index}.city_id`)}
+                />
               </div>
 
               <div className="altrex-field">

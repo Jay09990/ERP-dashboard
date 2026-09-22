@@ -10,7 +10,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { type MetricTypeOption, type TimeframeOption, useDashboardAnalytics } from "../hooks/use-dashboard-analytics";
+import {
+  type MetricTypeOption,
+  type TimeframeOption,
+  useDashboardAnalytics,
+} from "../hooks/use-dashboard-analytics";
 
 const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
   "30d": "30 DAYS",
@@ -35,7 +39,13 @@ function CustomTooltip({ active, payload, label }: any) {
         color: "var(--altrex-text, #0f172a)",
       }}
     >
-      <div style={{ fontWeight: 700, marginBottom: 4, color: "var(--altrex-text, #0f172a)" }}>
+      <div
+        style={{
+          fontWeight: 700,
+          marginBottom: 4,
+          color: "var(--altrex-text, #0f172a)",
+        }}
+      >
         {label}
       </div>
       {payload.map((entry: any, index: number) => {
@@ -47,7 +57,12 @@ function CustomTooltip({ active, payload, label }: any) {
         return (
           <div
             key={`item-${index}`}
-            style={{ display: "flex", alignItems: "center", gap: 6, margin: "2px 0" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              margin: "2px 0",
+            }}
           >
             <span
               style={{
@@ -58,7 +73,9 @@ function CustomTooltip({ active, payload, label }: any) {
                 backgroundColor: color,
               }}
             />
-            <span style={{ color: "var(--altrex-muted, #64748b)" }}>{labelText}:</span>
+            <span style={{ color: "var(--altrex-muted, #64748b)" }}>
+              {labelText}:
+            </span>
             <span style={{ fontWeight: 700 }}>{valStr}</span>
           </div>
         );
@@ -107,7 +124,14 @@ export function InvoicedVsPaidChart() {
         }}
       >
         {/* Left Stats */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
           <div>
             <div
               style={{
@@ -120,7 +144,14 @@ export function InvoicedVsPaidChart() {
             >
               INVOICED
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#10b981", marginTop: 2 }}>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 800,
+                color: "#10b981",
+                marginTop: 2,
+              }}
+            >
               {totalInvoicedFormatted}
             </div>
           </div>
@@ -148,14 +179,28 @@ export function InvoicedVsPaidChart() {
             >
               PAID ({TIMEFRAME_LABELS[timeframe]})
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#3b82f6", marginTop: 2 }}>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 800,
+                color: "#3b82f6",
+                marginTop: 2,
+              }}
+            >
               {totalPaidFormatted}
             </div>
           </div>
         </div>
 
         {/* Right Stats & Filters */}
-        <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            flexWrap: "wrap",
+          }}
+        >
           <div style={{ textAlign: "right" }}>
             <div
               style={{
@@ -218,7 +263,9 @@ export function InvoicedVsPaidChart() {
           >
             <select
               value={metricType}
-              onChange={(e) => setMetricType(e.target.value as MetricTypeOption)}
+              onChange={(e) =>
+                setMetricType(e.target.value as MetricTypeOption)
+              }
               style={{
                 background: "transparent",
                 border: "none",
@@ -235,7 +282,9 @@ export function InvoicedVsPaidChart() {
               <option value="combined">Combined Total</option>
             </select>
 
-            <div style={{ width: 1, height: 16, background: "var(--altrex-line)" }} />
+            <div
+              style={{ width: 1, height: 16, background: "var(--altrex-line)" }}
+            />
 
             {(["30d", "90d", "6mo", "1yr"] as TimeframeOption[]).map((tf) => (
               <button
@@ -244,9 +293,14 @@ export function InvoicedVsPaidChart() {
                 onClick={() => setTimeframe(tf)}
                 style={{
                   border: "none",
-                  background: timeframe === tf ? "var(--altrex-surface)" : "transparent",
-                  color: timeframe === tf ? "var(--altrex-primary)" : "var(--altrex-muted)",
-                  boxShadow: timeframe === tf ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  background:
+                    timeframe === tf ? "var(--altrex-surface)" : "transparent",
+                  color:
+                    timeframe === tf
+                      ? "var(--altrex-primary)"
+                      : "var(--altrex-muted)",
+                  boxShadow:
+                    timeframe === tf ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                   fontSize: 11,
                   fontWeight: 800,
                   padding: "4px 8px",
@@ -278,7 +332,10 @@ export function InvoicedVsPaidChart() {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="invoicedGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
@@ -290,7 +347,11 @@ export function InvoicedVsPaidChart() {
                 </linearGradient>
               </defs>
 
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--altrex-line, #e2e8f0)" vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--altrex-line, #e2e8f0)"
+                vertical={false}
+              />
 
               <XAxis
                 dataKey="dateLabel"
@@ -319,7 +380,11 @@ export function InvoicedVsPaidChart() {
                 verticalAlign="top"
                 align="right"
                 iconType="circle"
-                wrapperStyle={{ paddingBottom: 10, fontSize: 12, fontWeight: 600 }}
+                wrapperStyle={{
+                  paddingBottom: 10,
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
               />
 
               <Area

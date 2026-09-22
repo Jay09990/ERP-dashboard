@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
   Loader2,
@@ -12,19 +13,18 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
-  navigationConfig,
-  NavParentItem,
   NavChildItem,
+  type NavParentItem,
   NavSubGroup,
+  navigationConfig,
 } from "@/config/navigation";
 import { apiClient } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
 import { sessionHasPermission } from "@/lib/auth/permissions";
 import { clearToken } from "@/lib/auth/token";
-import { endpoints } from "@/lib/api/endpoints";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     if (parent.subGroups) {
       return parent.subGroups.some((sg) =>
-        sg.items.some((child) => isRouteActive(child.href))
+        sg.items.some((child) => isRouteActive(child.href)),
       );
     }
     return false;
@@ -125,7 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               hasPermission(c.permission) &&
               (!q ||
                 c.label.toLowerCase().includes(q) ||
-                parent.label.toLowerCase().includes(q))
+                parent.label.toLowerCase().includes(q)),
           );
           if (!q && visibleChildren.length === 0) return null;
           if (q && visibleChildren.length === 0) return null;
@@ -141,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   (!q ||
                     item.label.toLowerCase().includes(q) ||
                     sg.title.toLowerCase().includes(q) ||
-                    parent.label.toLowerCase().includes(q))
+                    parent.label.toLowerCase().includes(q)),
               );
               return { ...sg, items: visibleItems };
             })
@@ -225,7 +225,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                     key={parent.id}
                     href={parent.href}
                     className={`altrex-nav-parent-btn ${
-                      active ? "altrex-nav-parent-active altrex-nav-child-active" : ""
+                      active
+                        ? "altrex-nav-parent-active altrex-nav-child-active"
+                        : ""
                     }`}
                     title={collapsed ? parent.label : undefined}
                   >
@@ -254,7 +256,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                       title={parent.label}
                       onClick={() => {
                         toggleSidebar();
-                        setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
+                        setOpenGroups((prev) => ({
+                          ...prev,
+                          [parent.id]: true,
+                        }));
                         setActiveFlyout(null);
                       }}
                     >
@@ -360,7 +365,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                             {ChildIcon && (
                               <ChildIcon size={14} style={{ flexShrink: 0 }} />
                             )}
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <span
+                              style={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
                               {child.label}
                             </span>
                             {child.badge && (
@@ -395,7 +406,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                                     style={{ flexShrink: 0 }}
                                   />
                                 )}
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <span
+                                  style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
                                   {child.label}
                                 </span>
                               </Link>

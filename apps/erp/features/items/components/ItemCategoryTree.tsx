@@ -3,7 +3,11 @@
 import { Button } from "@altrex/ui";
 import { FolderTree, Plus, Trash2, X } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
-import { useCreateItemCategory, useDeleteItemCategory, useItemCategories } from "../api";
+import {
+  useCreateItemCategory,
+  useDeleteItemCategory,
+  useItemCategories,
+} from "../api";
 import type { ItemCategory } from "../schema";
 
 function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
@@ -54,13 +58,23 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          background: depth === 0 ? "var(--altrex-surface)" : "var(--altrex-raised)",
+          background:
+            depth === 0 ? "var(--altrex-surface)" : "var(--altrex-raised)",
           borderLeft: depth > 0 ? "3px solid var(--altrex-primary)" : "none",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <FolderTree size={16} style={{ color: depth === 0 ? "var(--altrex-primary)" : "#8b5cf6" }} />
-          <span style={{ fontWeight: depth === 0 ? 700 : 500, fontSize: "14px", color: "var(--altrex-text)" }}>
+          <FolderTree
+            size={16}
+            style={{ color: depth === 0 ? "var(--altrex-primary)" : "#8b5cf6" }}
+          />
+          <span
+            style={{
+              fontWeight: depth === 0 ? 700 : 500,
+              fontSize: "14px",
+              color: "var(--altrex-text)",
+            }}
+          >
             {getCategoryName(cat)}
           </span>
           {depth === 0 && (
@@ -128,19 +142,30 @@ export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
   const categories = extractRecords<ItemCategory>(responseData);
 
-  const { mutate: createCategory, isPending: isCreating } = useCreateItemCategory();
-  const { mutate: deleteCategory, isPending: isDeleting } = useDeleteItemCategory();
+  const { mutate: createCategory, isPending: isCreating } =
+    useCreateItemCategory();
+  const { mutate: deleteCategory, isPending: isDeleting } =
+    useDeleteItemCategory();
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
 
   const getCategoryId = (c: ItemCategory) =>
-    c.category_id ?? (c as any).itemCategoryId ?? (c as any).item_category_id ?? (c as any).id;
+    c.category_id ??
+    (c as any).itemCategoryId ??
+    (c as any).item_category_id ??
+    (c as any).id;
   const getCategoryName = (c: ItemCategory) =>
-    c.category_name ?? (c as any).item_category_name ?? (c as any).name ?? "Unnamed category";
+    c.category_name ??
+    (c as any).item_category_name ??
+    (c as any).name ??
+    "Unnamed category";
   const getParentId = (c: ItemCategory) =>
-    c.parent_category_id ?? (c as any).parentCategoryId ?? (c as any).item_parent_category ?? null;
+    c.parent_category_id ??
+    (c as any).parentCategoryId ??
+    (c as any).item_parent_category ??
+    null;
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,8 +233,15 @@ export function ItemCategoryTree() {
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0 }}>
             Item Category Hierarchy
           </h1>
-          <p style={{ margin: "4px 0 0", color: "var(--altrex-muted)", fontSize: "14px" }}>
-            Manage parent-child hierarchical classification for items and products.
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "var(--altrex-muted)",
+              fontSize: "14px",
+            }}
+          >
+            Manage parent-child hierarchical classification for items and
+            products.
           </p>
         </div>
         <Button
@@ -234,8 +266,16 @@ export function ItemCategoryTree() {
           Failed to load category hierarchy from server.
         </div>
       ) : categories.length === 0 ? (
-        <div className="altrex-detail-card" style={{ padding: "40px", textAlign: "center", color: "var(--altrex-muted)" }}>
-          No item categories found. Click "+ Add Root Category" to create your first category.
+        <div
+          className="altrex-detail-card"
+          style={{
+            padding: "40px",
+            textAlign: "center",
+            color: "var(--altrex-muted)",
+          }}
+        >
+          No item categories found. Click "+ Add Root Category" to create your
+          first category.
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -257,13 +297,21 @@ export function ItemCategoryTree() {
 
       {/* Category Creation Modal */}
       {isOpenModal && (
-        <div className="altrex-dialog-backdrop" onClick={() => setIsOpenModal(false)}>
-          <div className="altrex-dialog altrex-dialog-md" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="altrex-dialog-backdrop"
+          onClick={() => setIsOpenModal(false)}
+        >
+          <div
+            className="altrex-dialog altrex-dialog-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="altrex-dialog-header">
               <div>
                 <h3 className="altrex-dialog-title">Create Item Category</h3>
                 <p className="altrex-dialog-subtitle">
-                  {parentId ? "Add a nested sub-category" : "Add a new top-level root category"}
+                  {parentId
+                    ? "Add a nested sub-category"
+                    : "Add a new top-level root category"}
                 </p>
               </div>
               <button
@@ -275,7 +323,10 @@ export function ItemCategoryTree() {
               </button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="altrex-dialog-body" style={{ display: "grid", gap: "16px" }}>
+              <div
+                className="altrex-dialog-body"
+                style={{ display: "grid", gap: "16px" }}
+              >
                 <label className="altrex-field">
                   <span>Category Name *</span>
                   <input
@@ -295,7 +346,10 @@ export function ItemCategoryTree() {
                   >
                     <option value="">(None - Top Level Root)</option>
                     {categories.map((c) => (
-                      <option key={getCategoryId(c)} value={getCategoryId(c).toString()}>
+                      <option
+                        key={getCategoryId(c)}
+                        value={getCategoryId(c).toString()}
+                      >
                         {getCategoryName(c)}
                       </option>
                     ))}
@@ -303,7 +357,11 @@ export function ItemCategoryTree() {
                 </label>
               </div>
               <div className="altrex-dialog-footer">
-                <Button variant="outline" type="button" onClick={() => setIsOpenModal(false)}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setIsOpenModal(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreating}>
