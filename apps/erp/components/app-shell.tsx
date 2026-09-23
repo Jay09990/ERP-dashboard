@@ -42,6 +42,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
 
+  // Close flyout on Escape key press
+  useEffect(() => {
+    if (!activeFlyout) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveFlyout(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeFlyout]);
+
   // Helper to check if a specific route is active
   const isRouteActive = (href: string, exact?: boolean) => {
     if (exact || href === "/") {
@@ -246,6 +260,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     className="altrex-nav-collapsed-wrapper"
                     onMouseEnter={() => setActiveFlyout(parent.id)}
                     onMouseLeave={() => setActiveFlyout(null)}
+                    onFocus={() => setActiveFlyout(parent.id)}
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setActiveFlyout(null);
+                      }
+                    }}
                   >
                     <button
                       type="button"
@@ -253,6 +273,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                         parentActive ? "altrex-nav-parent-active" : ""
                       }`}
                       aria-label={parent.label}
+                      aria-haspopup="true"
+                      aria-expanded={isOpenFlyout}
                       title={parent.label}
                       onClick={() => {
                         toggleSidebar();
@@ -268,7 +290,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                     {/* Collapsed Flyout Popover */}
                     {isOpenFlyout && (
-                      <div className="altrex-nav-flyout">
+                      <div
+                        className="altrex-nav-flyout"
+                        role="menu"
+                        aria-label={parent.label}
+                      >
                         <div className="altrex-nav-flyout-header">
                           {parent.label}
                         </div>
