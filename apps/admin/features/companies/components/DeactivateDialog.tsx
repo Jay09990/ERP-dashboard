@@ -42,7 +42,9 @@ export function DeactivateDialog({ company, onClose }: Props) {
       aria-modal="true"
       aria-labelledby="deactivate-title"
     >
-      <div
+      <button
+        type="button"
+        tabIndex={-1}
         aria-hidden="true"
         className="fixed inset-0 border-none bg-transparent"
         onClick={() => !isPending && onClose()}
@@ -91,7 +93,10 @@ export function DeactivateDialog({ company, onClose }: Props) {
             The company database and all its data will be preserved and can be
             re-activated at any time.
           </p>
-          <label className="altrex-dialog-confirm-check">
+          <label
+            className="altrex-dialog-confirm-check"
+            htmlFor="deactivate-confirm"
+          >
             <input
               type="checkbox"
               checked={confirmed}
