@@ -1141,32 +1141,38 @@ export function DocumentList({
     return sorted.slice(start, start + pageSize);
   }, [sorted, safeCurrentPage, pageSize]);
 
-  // Calculate totals
-  const pageTaxTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getTaxAmount(d), 0),
-    [paginatedDocs],
-  );
-  const pageAmountTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getGrandTotal(d), 0),
-    [paginatedDocs],
-  );
-  const pageBalanceTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getBalanceDue(d), 0),
-    [paginatedDocs],
-  );
+  // Calculate totals in a single pass over paginatedDocs and sorted arrays to reduce loop iterations from 6 to 2
+  const { pageTaxTotal, pageAmountTotal, pageBalanceTotal } = useMemo(() => {
+    let tax = 0;
+    let amount = 0;
+    let balance = 0;
+    for (const d of paginatedDocs) {
+      tax += getTaxAmount(d);
+      amount += getGrandTotal(d);
+      balance += getBalanceDue(d);
+    }
+    return {
+      pageTaxTotal: tax,
+      pageAmountTotal: amount,
+      pageBalanceTotal: balance,
+    };
+  }, [paginatedDocs]);
 
-  const grandTaxTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getTaxAmount(d), 0),
-    [sorted],
-  );
-  const grandAmountTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getGrandTotal(d), 0),
-    [sorted],
-  );
-  const grandBalanceTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getBalanceDue(d), 0),
-    [sorted],
-  );
+  const { grandTaxTotal, grandAmountTotal, grandBalanceTotal } = useMemo(() => {
+    let tax = 0;
+    let amount = 0;
+    let balance = 0;
+    for (const d of sorted) {
+      tax += getTaxAmount(d);
+      amount += getGrandTotal(d);
+      balance += getBalanceDue(d);
+    }
+    return {
+      grandTaxTotal: tax,
+      grandAmountTotal: amount,
+      grandBalanceTotal: balance,
+    };
+  }, [sorted]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
