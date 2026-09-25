@@ -7,3 +7,8 @@
 **Vulnerability:** Checking raw path segments in `[...path]` catch-all proxy routes allowed URL-encoded (or double-encoded) traversal sequences (e.g. `%2e%2e` or `%252e%252e`) to bypass string checks (`seg.includes("..")`). When passed into `new URL()`, Node's URL parser decodes `%2e%2e` to `..` during path normalization, leading to SSRF/path traversal.
 **Learning:** Checking raw strings without decoding allows encoded sequences to bypass validation until they reach downstream URL parsers.
 **Prevention:** Always decode path segments (including handling multi-pass encoding safely with try-catch) before checking for traversal tokens (`..`, `.`, `/`, `\`, `\0`).
+
+## 2025-05-22 - URL-Encoded Open Redirect Bypass in Login Next Parameter
+**Vulnerability:** `isSafeRedirect` checked raw strings for `//` or `\`, allowing URL-encoded payloads like `/%2f%2fevil.com` or `/%5cevil.com` to bypass safety checks before being processed by navigation routing.
+**Learning:** Checking relative URLs for protocol-relative slashes or backslashes without decoding encoded components permits open redirect vectors.
+**Prevention:** Perform multi-pass `decodeURIComponent` (safely handled with try-catch) before validating path prefix, slash patterns, and control characters.
