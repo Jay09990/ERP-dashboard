@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
 import {
   PartyFormDrawer,
   type PartyFormValues,
@@ -286,7 +287,7 @@ export function VendorDetail({ id }: VendorDetailProps) {
                   </div>
                 </div>
               )}
-              {vendor.website && (
+              {toSafeExternalUrl(vendor.website) && (
                 <div>
                   <span
                     style={{
@@ -309,11 +310,7 @@ export function VendorDetail({ id }: VendorDetailProps) {
                   >
                     <Globe size={13} style={{ color: "var(--altrex-muted)" }} />
                     <a
-                      href={
-                        vendor.website.startsWith("http")
-                          ? vendor.website
-                          : `https://${vendor.website}`
-                      }
+                      href={toSafeExternalUrl(vendor.website)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
