@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-23 - Module-Scoped Caching of Intl.NumberFormat Instances
+**Learning:** Instantiating `new Intl.NumberFormat(...)` repeatedly inside loops, data aggregation hooks, or chart tooltip hover renders creates significant CPU and GC churn due to V8 ICU locale initialization. Caching module-level `Intl.NumberFormat` instances drastically speeds up number/currency formatting and keeps UI hover animations smooth.
+**Action:** Always reuse module-level `Intl.NumberFormat` instances instead of instantiating them inline in render components, tooltips, or loops.
+
 ## 2025-05-22 - Caching Permission Sets in WeakMap for Rapid UI Permission Checks
 **Learning:** Checking permissions for 50+ navigation items on every render or search keystroke using linear array scans (`Array.includes`) and object array normalization creates redundant allocations and O(M * N) overhead. A `WeakMap<object, Set<string>>` cache normalizes array references once and allows O(1) membership checks with zero garbage collection overhead.
 **Action:** Use `WeakMap` caches for objects or arrays evaluated frequently across UI trees to avoid re-parsing and linear searches.
