@@ -34,7 +34,20 @@ export function WarehouseFormDrawer({
       setAddress("");
       setStatus("active");
     }
-  }, [initialData, isOpen]);
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, isPending]);
 
   if (!isOpen) return null;
 
@@ -50,10 +63,22 @@ export function WarehouseFormDrawer({
   };
 
   return (
-    <div className="altrex-dialog-backdrop" onClick={onClose}>
+    <div
+      className="altrex-dialog-backdrop"
+      // biome-ignore lint/a11y/useSemanticElements: custom styled modal overlay
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="warehouse-dialog-title"
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isPending && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-md"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-md relative z-10"
         style={{
           backgroundColor: "var(--altrex-bg-card, #ffffff)",
           color: "var(--altrex-text, #0f172a)",
@@ -66,6 +91,7 @@ export function WarehouseFormDrawer({
         >
           <div>
             <h3
+              id="warehouse-dialog-title"
               className="altrex-dialog-title"
               style={{ color: "var(--altrex-text, #0f172a)" }}
             >
@@ -84,6 +110,8 @@ export function WarehouseFormDrawer({
             type="button"
             className="altrex-icon-button"
             onClick={onClose}
+            aria-label="Close"
+            disabled={isPending}
           >
             <X size={18} />
           </button>
@@ -94,7 +122,7 @@ export function WarehouseFormDrawer({
             className="altrex-dialog-body"
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
-            <label className="altrex-field">
+            <label className="altrex-field" htmlFor="warehouse-name">
               <span
                 style={{
                   fontWeight: 600,
@@ -106,6 +134,7 @@ export function WarehouseFormDrawer({
                 Warehouse Name *
               </span>
               <input
+                id="warehouse-name"
                 className="altrex-input"
                 placeholder="e.g. Main Central Depot, Store Room 1"
                 value={warehouseName}
@@ -122,7 +151,7 @@ export function WarehouseFormDrawer({
               />
             </label>
 
-            <label className="altrex-field">
+            <label className="altrex-field" htmlFor="warehouse-address">
               <span
                 style={{
                   fontWeight: 600,
@@ -134,6 +163,7 @@ export function WarehouseFormDrawer({
                 Address / Location
               </span>
               <textarea
+                id="warehouse-address"
                 className="altrex-input"
                 placeholder="Full address of the warehouse facility..."
                 rows={3}
@@ -151,7 +181,7 @@ export function WarehouseFormDrawer({
               />
             </label>
 
-            <label className="altrex-field">
+            <label className="altrex-field" htmlFor="warehouse-status">
               <span
                 style={{
                   fontWeight: 600,
@@ -163,6 +193,7 @@ export function WarehouseFormDrawer({
                 Status
               </span>
               <select
+                id="warehouse-status"
                 className="altrex-input"
                 value={status}
                 onChange={(e) =>
