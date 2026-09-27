@@ -138,9 +138,47 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
   );
 });
 
+// Static helper accessors extracted outside component scope to maintain stable function references
+type CategoryRecord = Record<string, unknown>;
+
+const getCategoryId = (c: ItemCategory): number | string => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.category_id ??
+    (rec.itemCategoryId as number | string) ??
+    (rec.item_category_id as number | string) ??
+    (rec.id as number | string)
+  );
+};
+
+const getCategoryName = (c: ItemCategory): string => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.category_name ??
+    (rec.item_category_name as string) ??
+    (rec.name as string) ??
+    "Unnamed category"
+  );
+};
+
+const getParentId = (c: ItemCategory): number | string | null => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.parent_category_id ??
+    (rec.parentCategoryId as number | string | null) ??
+    (rec.item_parent_category as number | string | null) ??
+    null
+  );
+};
+
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories = extractRecords<ItemCategory>(responseData);
+
+  // Memoize categories array reference so extractRecords only runs when responseData changes
+  const categories = useMemo(
+    () => extractRecords<ItemCategory>(responseData),
+    [responseData],
+  );
 
   const { mutate: createCategory, isPending: isCreating } =
     useCreateItemCategory();
@@ -150,22 +188,6 @@ export function ItemCategoryTree() {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
-
-  const getCategoryId = (c: ItemCategory) =>
-    c.category_id ??
-    (c as any).itemCategoryId ??
-    (c as any).item_category_id ??
-    (c as any).id;
-  const getCategoryName = (c: ItemCategory) =>
-    c.category_name ??
-    (c as any).item_category_name ??
-    (c as any).name ??
-    "Unnamed category";
-  const getParentId = (c: ItemCategory) =>
-    c.parent_category_id ??
-    (c as any).parentCategoryId ??
-    (c as any).item_parent_category ??
-    null;
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +208,9 @@ export function ItemCategoryTree() {
     );
   };
 
-  // Build root categories and children map
+  // Build root categories and children map.
+  // Depends only on `categories` (getCategory* helpers are module-scoped static references).
+  // Prevents re-building hierarchy and re-rendering memoized CategoryTreeNode components when user types into modal inputs or toggles modal.
   const { rootCategories, childrenMap } = useMemo(() => {
     const roots: ItemCategory[] = [];
     const map = new Map<number | string, ItemCategory[]>();
@@ -206,7 +230,7 @@ export function ItemCategoryTree() {
     }
 
     return { rootCategories: roots, childrenMap: map };
-  }, [categories, getParentId]);
+  }, [categories]);
 
   // Memoized handlers to prevent unnecessary re-renders of memoized CategoryTreeNode children
   const handleAddSubCategory = useCallback((id: string | number) => {
@@ -222,7 +246,7 @@ export function ItemCategoryTree() {
         deleteCategory(id.toString());
       }
     },
-    [deleteCategory, getCategoryId, getCategoryName],
+    [deleteCategory],
   );
 
   return (
