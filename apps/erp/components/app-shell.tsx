@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -112,11 +118,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   // Permission filtering helper — login returns objects; normalize to name strings.
-  const hasPermission = (permKey?: string) => {
-    if (!permKey) return true;
-    if (!session) return true;
-    return sessionHasPermission(session.permissions, permKey);
-  };
+  const hasPermission = useCallback(
+    (permKey?: string) => {
+      if (!permKey) return true;
+      if (!session) return true;
+      return sessionHasPermission(session.permissions, permKey);
+    },
+    [session],
+  );
 
   // Filtered navigation based on permissions and search query
   const filteredNav = useMemo(() => {
@@ -168,7 +177,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         return parent;
       })
       .filter(Boolean) as NavParentItem[];
-  }, [searchQuery, session]);
+  }, [searchQuery, hasPermission]);
 
   return (
     <div
@@ -225,6 +234,37 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* Navigation Items */}
           <nav aria-label="Primary navigation">
+            {filteredNav.length === 0 && searchQuery && (
+              <div
+                style={{
+                  padding: "20px 12px",
+                  textAlign: "center",
+                  fontSize: "12px",
+                  color: "var(--altrex-muted)",
+                }}
+                aria-live="polite"
+              >
+                <p style={{ margin: "0 0 8px 0" }}>
+                  No menu items found for &ldquo;{searchQuery}&rdquo;
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--altrex-primary)",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    padding: 0,
+                    textDecoration: "underline",
+                  }}
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
             {filteredNav.map((parent) => {
               const Icon = parent.icon;
               const isDirectLink = Boolean(parent.href);
