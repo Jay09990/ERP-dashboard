@@ -21,6 +21,39 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Static module-level helper functions for category data extraction.
+// Defined outside component scope so they retain reference identity across renders.
+// This prevents invalidating useMemo dependencies and breaking React.memo for tree nodes.
+function getCategoryId(c: ItemCategory): number | string {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.category_id ??
+    (rec.itemCategoryId as number | string) ??
+    (rec.item_category_id as number | string) ??
+    (rec.id as number | string)
+  );
+}
+
+function getCategoryName(c: ItemCategory): string {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.category_name ??
+    (rec.item_category_name as string) ??
+    (rec.name as string) ??
+    "Unnamed category"
+  );
+}
+
+function getParentId(c: ItemCategory): number | string | null {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.parent_category_id ??
+    (rec.parentCategoryId as number | string) ??
+    (rec.item_parent_category as number | string) ??
+    null
+  );
+}
+
 interface CategoryTreeNodeProps {
   cat: ItemCategory;
   depth: number;
@@ -151,22 +184,6 @@ export function ItemCategoryTree() {
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
 
-  const getCategoryId = (c: ItemCategory) =>
-    c.category_id ??
-    (c as any).itemCategoryId ??
-    (c as any).item_category_id ??
-    (c as any).id;
-  const getCategoryName = (c: ItemCategory) =>
-    c.category_name ??
-    (c as any).item_category_name ??
-    (c as any).name ??
-    "Unnamed category";
-  const getParentId = (c: ItemCategory) =>
-    c.parent_category_id ??
-    (c as any).parentCategoryId ??
-    (c as any).item_parent_category ??
-    null;
-
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryName.trim()) return;
@@ -186,7 +203,9 @@ export function ItemCategoryTree() {
     );
   };
 
-  // Build root categories and children map
+  // Build root categories and children map.
+  // Static getParentId module function keeps dependency array [categories], ensuring tree structure
+  // is only recomputed when categories data changes, not on modal/input state updates.
   const { rootCategories, childrenMap } = useMemo(() => {
     const roots: ItemCategory[] = [];
     const map = new Map<number | string, ItemCategory[]>();
@@ -206,7 +225,7 @@ export function ItemCategoryTree() {
     }
 
     return { rootCategories: roots, childrenMap: map };
-  }, [categories, getParentId]);
+  }, [categories]);
 
   // Memoized handlers to prevent unnecessary re-renders of memoized CategoryTreeNode children
   const handleAddSubCategory = useCallback((id: string | number) => {
@@ -222,7 +241,7 @@ export function ItemCategoryTree() {
         deleteCategory(id.toString());
       }
     },
-    [deleteCategory, getCategoryId, getCategoryName],
+    [deleteCategory],
   );
 
   return (
