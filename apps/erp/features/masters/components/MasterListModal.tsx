@@ -2,7 +2,7 @@
 
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import { Edit, Plus, Search, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type FieldConfig = {
   name: string;
@@ -80,6 +80,19 @@ export function MasterListModal<T extends Record<string, any>>({
   const { mutate: deleteItem, isPending: isDeleting } = useDelete();
 
   const getItemId = (item: T) => item[idField] ?? item.id;
+
+  useEffect(() => {
+    if (!isOpenModal) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpenModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpenModal]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return items;
@@ -175,7 +188,7 @@ export function MasterListModal<T extends Record<string, any>>({
                 }
               }}
               disabled={isDeleting}
-              aria-label={`Delete ${title}`}
+              aria-label={`Delete record ${id}`}
               style={{
                 color: "var(--altrex-danger-text)",
                 borderColor: "rgba(220, 38, 38, 0.2)",
@@ -227,8 +240,14 @@ export function MasterListModal<T extends Record<string, any>>({
         <input
           className="altrex-input"
           placeholder="Search master records..."
+          aria-label="Search master records"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && search) {
+              setSearch("");
+            }
+          }}
           style={{ width: "320px", minWidth: 0 }}
         />
       </FilterBar>
@@ -255,13 +274,16 @@ export function MasterListModal<T extends Record<string, any>>({
       )}
 
       {isOpenModal && (
-        <div
-          className="altrex-dialog-backdrop"
-          role="presentation"
-          onClick={() => setIsOpenModal(false)}
-        >
+        <div className="altrex-dialog-backdrop">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="fixed inset-0 border-none bg-transparent"
+            onClick={() => setIsOpenModal(false)}
+          />
           <div
-            className="altrex-dialog altrex-dialog-md"
+            className="altrex-dialog altrex-dialog-md relative z-10"
             role="dialog"
             aria-modal="true"
             aria-labelledby="master-dialog-title"
