@@ -15,7 +15,6 @@ import {
   type TimeframeOption,
   useDashboardAnalytics,
 } from "../hooks/use-dashboard-analytics";
-import { formatINRNumber } from "../utils";
 
 const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
   "30d": "30 DAYS",
@@ -53,7 +52,7 @@ function CustomTooltip({ active, payload, label }: any) {
         const isInv = entry.dataKey === "invoiced";
         const color = isInv ? "#10b981" : "#3b82f6";
         const labelText = isInv ? "Invoiced" : "Paid";
-        const valStr = formatINRNumber(entry.value);
+        const valStr = new Intl.NumberFormat("en-IN").format(entry.value);
 
         return (
           <div
