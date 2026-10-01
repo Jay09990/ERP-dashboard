@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { useDashboardAnalytics } from "../hooks/use-dashboard-analytics";
+import { formatINRWhole } from "../utils";
 
 function CustomBarTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
@@ -31,11 +32,7 @@ function CustomBarTooltip({ active, payload, label }: any) {
         {label} Financial Comparison
       </div>
       {payload.map((entry: any, idx: number) => {
-        const valStr = new Intl.NumberFormat("en-IN", {
-          style: "currency",
-          currency: "INR",
-          maximumFractionDigits: 0,
-        }).format(entry.value);
+        const valStr = formatINRWhole(entry.value);
 
         return (
           <div
