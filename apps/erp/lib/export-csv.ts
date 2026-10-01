@@ -4,6 +4,7 @@
  */
 export function sanitizeCSVValue(val: unknown): string {
   if (val === null || val === undefined) return "";
+  if (typeof val === "number") return String(val);
   const str = String(val);
   // Check raw string or trimmed representation to catch leading whitespace/control chars
   // and include additional formula triggers like `%` or `|` used in spreadsheet macros.
