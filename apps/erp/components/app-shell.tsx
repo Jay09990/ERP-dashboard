@@ -315,6 +315,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       aria-label={parent.label}
                       aria-haspopup="true"
                       aria-expanded={isOpenFlyout}
+                      aria-controls={`flyout-menu-${parent.id}`}
                       title={parent.label}
                       onClick={() => {
                         toggleSidebar();
@@ -331,11 +332,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                     {/* Collapsed Flyout Popover */}
                     {isOpenFlyout && (
                       <div
+                        id={`flyout-menu-${parent.id}`}
                         className="altrex-nav-flyout"
                         role="menu"
                         aria-label={parent.label}
                       >
-                        <div className="altrex-nav-flyout-header">
+                        <div
+                          className="altrex-nav-flyout-header"
+                          role="presentation"
+                        >
                           {parent.label}
                         </div>
 
@@ -346,6 +351,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             <Link
                               key={child.id}
                               href={child.href}
+                              role="menuitem"
                               onClick={() => setActiveFlyout(null)}
                               className={`altrex-nav-child-link ${
                                 childActive ? "altrex-nav-child-active" : ""
@@ -363,7 +369,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                         })}
 
                         {parent.subGroups?.map((sg) => (
-                          <div key={sg.id} className="altrex-nav-subgroup">
+                          <div
+                            key={sg.id}
+                            className="altrex-nav-subgroup"
+                            role="group"
+                            aria-label={sg.title}
+                          >
                             <span className="altrex-nav-subgroup-title">
                               {sg.title}
                             </span>
@@ -374,6 +385,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                                 <Link
                                   key={child.id}
                                   href={child.href}
+                                  role="menuitem"
                                   onClick={() => setActiveFlyout(null)}
                                   className={`altrex-nav-child-link ${
                                     childActive ? "altrex-nav-child-active" : ""
