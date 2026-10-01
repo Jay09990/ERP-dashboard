@@ -4,9 +4,15 @@
  */
 export function sanitizeCSVValue(val: unknown): string {
   if (val === null || val === undefined) return "";
+  if (typeof val === "number") return String(val);
   const str = String(val);
-  const trimmed = str.trimStart();
-  if (/^[=+@\-\t\r]/.test(trimmed)) {
+  // Strip leading whitespace and ASCII control characters before testing formula triggers
+  let start = 0;
+  while (start < str.length && str.charCodeAt(start) <= 32) {
+    start++;
+  }
+  const trimmed = str.slice(start);
+  if (/^[=+@\-\t\r\n]/.test(trimmed)) {
     return `'${str}`;
   }
   return str;
