@@ -26,20 +26,30 @@ import { ProfileForm } from "./ProfileForm";
 /**
  * Validates and sanitizes external user-supplied URLs.
  * Ensures the target URL strictly uses `http:` or `https:` protocol to prevent
- * `javascript:`, `data:`, `vbscript:` or other malicious scheme execution.
+ * `javascript:`, `data:`, `vbscript:`, `file:`, `blob:` or other malicious scheme execution.
  */
 export function toSafeExternalUrl(url?: string | null): string | null {
   if (!url) return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
 
-  let candidate = trimmed;
-  if (!/^https?:\/\//i.test(candidate)) {
-    if (/^(javascript|data|vbscript):/i.test(candidate)) {
+  // Strip ASCII control characters (0-31, 127-159) before scheme evaluation
+  const sanitized = trimmed.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+  if (!sanitized) return null;
+
+  // If URL contains a scheme prefix (e.g. "javascript:", "data:", "file:"),
+  // verify it is strictly "http" or "https".
+  const schemeMatch = sanitized.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+  if (schemeMatch) {
+    const scheme = schemeMatch[1].toLowerCase();
+    if (scheme !== "http" && scheme !== "https") {
       return null;
     }
-    candidate = `https://${candidate}`;
   }
+
+  const candidate = /^https?:\/\//i.test(sanitized)
+    ? sanitized
+    : `https://${sanitized}`;
 
   try {
     const parsed = new URL(candidate);
