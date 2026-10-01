@@ -171,9 +171,47 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
   );
 });
 
+// Static helper accessors extracted outside component scope to maintain stable function references
+type CategoryRecord = Record<string, unknown>;
+
+const getCategoryId = (c: ItemCategory): number | string => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.category_id ??
+    (rec.itemCategoryId as number | string) ??
+    (rec.item_category_id as number | string) ??
+    (rec.id as number | string)
+  );
+};
+
+const getCategoryName = (c: ItemCategory): string => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.category_name ??
+    (rec.item_category_name as string) ??
+    (rec.name as string) ??
+    "Unnamed category"
+  );
+};
+
+const getParentId = (c: ItemCategory): number | string | null => {
+  const rec = c as unknown as CategoryRecord;
+  return (
+    c.parent_category_id ??
+    (rec.parentCategoryId as number | string | null) ??
+    (rec.item_parent_category as number | string | null) ??
+    null
+  );
+};
+
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories = extractRecords<ItemCategory>(responseData);
+
+  // Memoize categories array reference so extractRecords only runs when responseData changes
+  const categories = useMemo(
+    () => extractRecords<ItemCategory>(responseData),
+    [responseData],
+  );
 
   const { mutate: createCategory, isPending: isCreating } =
     useCreateItemCategory();
@@ -204,8 +242,8 @@ export function ItemCategoryTree() {
   };
 
   // Build root categories and children map.
-  // Static getParentId module function keeps dependency array [categories], ensuring tree structure
-  // is only recomputed when categories data changes, not on modal/input state updates.
+  // Depends only on `categories` (getCategory* helpers are module-scoped static references).
+  // Prevents re-building hierarchy and re-rendering memoized CategoryTreeNode components when user types into modal inputs or toggles modal.
   const { rootCategories, childrenMap } = useMemo(() => {
     const roots: ItemCategory[] = [];
     const map = new Map<number | string, ItemCategory[]>();
