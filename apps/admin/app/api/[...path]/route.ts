@@ -62,7 +62,11 @@ async function proxy(request: NextRequest, path: string[]) {
   }
 
   const result = new NextResponse(await response.text(), { status: response.status });
-  result.headers.set("content-type", response.headers.get("content-type") ?? "application/json");
+  const rawContentType = response.headers.get("content-type") ?? "";
+  // Sanitize content-type header to strip control characters (CRLF/null bytes) and ensure safe MIME type header forwarding
+  const cleanedContentType = rawContentType.replace(/[\r\n\0]/g, "").trim();
+  const safeContentType = cleanedContentType.length > 0 ? cleanedContentType : "application/json";
+  result.headers.set("content-type", safeContentType);
   return result;
 }
 
