@@ -43,16 +43,21 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    decoded.includes("\0") ||
-    decoded.includes("\r") ||
-    decoded.includes("\n")
+    decoded.includes(":") ||
+    decoded.includes("@") ||
+    /\s/.test(decoded) ||
+    decoded.includes("\0")
   ) {
     return false;
   }
   try {
     const dummyOrigin = "http://localhost";
     const parsed = new URL(path, dummyOrigin);
-    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
+    return (
+      parsed.origin === dummyOrigin &&
+      parsed.pathname.startsWith("/") &&
+      !parsed.pathname.startsWith("//")
+    );
   } catch {
     return false;
   }
