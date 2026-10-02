@@ -2,12 +2,15 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useDashboardAnalytics } from "../hooks/use-dashboard-analytics";
-import { formatINRWhole } from "../utils";
 
 function CustomPieTooltip({ active, payload }: any) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0];
-  const formattedVal = formatINRWhole(data.value);
+  const formattedVal = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(data.value);
 
   return (
     <div

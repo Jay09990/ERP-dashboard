@@ -46,16 +46,12 @@ export function ChangePasswordModal({ onClose }: Props) {
       className="altrex-dialog-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="change-password-title"
+      onClick={onClose}
     >
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-hidden="true"
-        className="fixed inset-0 border-none bg-transparent"
-        onClick={() => !isPending && onClose()}
-      />
-      <div className="altrex-dialog altrex-dialog-md relative z-10">
+      <div
+        className="altrex-dialog altrex-dialog-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div
@@ -74,9 +70,7 @@ export function ChangePasswordModal({ onClose }: Props) {
               <KeyRound size={20} />
             </div>
             <div>
-              <h3 id="change-password-title" className="altrex-dialog-title">
-                Change Password
-              </h3>
+              <h3 className="altrex-dialog-title">Change Password</h3>
               <p className="altrex-dialog-subtitle">
                 Enter your current password and choose a secure new one.
               </p>
@@ -87,7 +81,6 @@ export function ChangePasswordModal({ onClose }: Props) {
             className="altrex-icon-button"
             onClick={onClose}
             aria-label="Close"
-            disabled={isPending}
           >
             <X size={18} />
           </button>
@@ -99,11 +92,10 @@ export function ChangePasswordModal({ onClose }: Props) {
             onSubmit={form.handleSubmit(onSubmit)}
             style={{ display: "grid", gap: "16px" }}
           >
-            <div className="altrex-field">
-              <label htmlFor="current-password">Current Password</label>
+            <label className="altrex-field">
+              <span>Current Password</span>
               <div className="altrex-password-row">
                 <input
-                  id="current-password"
                   className="altrex-input"
                   type={showCurrent ? "text" : "password"}
                   placeholder="Enter current password"
@@ -127,13 +119,12 @@ export function ChangePasswordModal({ onClose }: Props) {
                   {form.formState.errors.current_password.message}
                 </span>
               )}
-            </div>
+            </label>
 
-            <div className="altrex-field">
-              <label htmlFor="new-password">New Password</label>
+            <label className="altrex-field">
+              <span>New Password</span>
               <div className="altrex-password-row">
                 <input
-                  id="new-password"
                   className="altrex-input"
                   type={showNew ? "text" : "password"}
                   placeholder="Enter new password (min 6 characters)"
@@ -155,7 +146,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                   {form.formState.errors.new_password.message}
                 </span>
               )}
-            </div>
+            </label>
 
             {error && (
               <p className="altrex-form-error" role="alert">

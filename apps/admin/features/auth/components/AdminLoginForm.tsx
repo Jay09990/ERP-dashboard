@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -43,21 +43,16 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    decoded.includes(":") ||
-    decoded.includes("@") ||
-    /\s/.test(decoded) ||
-    decoded.includes("\0")
+    decoded.includes("\0") ||
+    decoded.includes("\r") ||
+    decoded.includes("\n")
   ) {
     return false;
   }
   try {
     const dummyOrigin = "http://localhost";
     const parsed = new URL(path, dummyOrigin);
-    return (
-      parsed.origin === dummyOrigin &&
-      parsed.pathname.startsWith("/") &&
-      !parsed.pathname.startsWith("//")
-    );
+    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
   } catch {
     return false;
   }
@@ -82,14 +77,11 @@ export function AdminLoginForm() {
       const response = await apiClient.post<{
         token?: string;
         access_token?: string;
-        // biome-ignore lint/suspicious/noExplicitAny: backend login response payload format varies
         user?: Record<string, any>;
-        // biome-ignore lint/suspicious/noExplicitAny: backend login response payload format varies
         data?: Record<string, any>;
       }>(endpoints.admin.login, payload);
       const token = response.token ?? response.access_token;
-      // biome-ignore lint/suspicious/noExplicitAny: backend login response payload format varies
-      const user: any =
+      const user =
         response.user ?? response.data?.user ?? response.data ?? response;
       if (!token) throw new Error("Login response did not include a token");
       setToken(token);
@@ -128,10 +120,9 @@ export function AdminLoginForm() {
       description="Use your email address or phone number to continue."
     >
       <form className="altrex-auth-form" onSubmit={form.handleSubmit(submit)}>
-        <label className="altrex-field" htmlFor="admin-login">
+        <label className="altrex-field">
           <span>Email or phone</span>
           <Input
-            id="admin-login"
             aria-invalid={Boolean(form.formState.errors.login)}
             {...form.register("login")}
           />
@@ -141,11 +132,10 @@ export function AdminLoginForm() {
             </small>
           )}
         </label>
-        <label className="altrex-field" htmlFor="admin-password">
+        <label className="altrex-field">
           <span>Password</span>
           <div className="altrex-password-row">
             <Input
-              id="admin-password"
               type={showPassword ? "text" : "password"}
               aria-invalid={Boolean(form.formState.errors.password)}
               {...form.register("password")}
@@ -171,26 +161,8 @@ export function AdminLoginForm() {
             <span>{serverError}</span>
           </div>
         ) : null}
-        <Button
-          type="submit"
-          size="lg"
-          disabled={form.formState.isSubmitting}
-          aria-busy={form.formState.isSubmitting}
-        >
-          {form.formState.isSubmitting ? (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <Loader2 className="animate-spin" size={18} />
-              Signing in...
-            </span>
-          ) : (
-            "Sign in"
-          )}
+        <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
+          Sign in
         </Button>
         <Link
           href="/register"
