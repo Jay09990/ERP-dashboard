@@ -82,33 +82,13 @@ export function isInCurrentMonth(
   );
 }
 
-// Module-scoped Intl.NumberFormat instances cached to prevent expensive V8 ICU initialization
-// and garbage collection churn on every currency formatting call, chart hover render, and array iteration.
-const inrCurrencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const inrWholeCurrencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
-const inrNumberFormatter = new Intl.NumberFormat("en-IN");
-
 export function formatINR(amount: number): string {
-  return inrCurrencyFormatter.format(amount);
-}
-
-export function formatINRWhole(amount: number): string {
-  return inrWholeCurrencyFormatter.format(amount);
-}
-
-export function formatINRNumber(amount: number): string {
-  return inrNumberFormatter.format(amount);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 const CLOSED_STATUSES = new Set([
