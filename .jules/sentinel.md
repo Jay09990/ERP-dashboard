@@ -12,3 +12,8 @@
 **Vulnerability:** `isSafeRedirect` checked raw strings for `//` or `\`, allowing URL-encoded payloads like `/%2f%2fevil.com` or `/%5cevil.com` to bypass safety checks before being processed by navigation routing.
 **Learning:** Checking relative URLs for protocol-relative slashes or backslashes without decoding encoded components permits open redirect vectors.
 **Prevention:** Perform multi-pass `decodeURIComponent` (safely handled with try-catch) before validating path prefix, slash patterns, and control characters.
+
+## 2025-05-23 - Control Character Bypass in Open Redirect Validation
+**Vulnerability:** `isSafeRedirect` passed the un-decoded raw string to `new URL(path, dummyOrigin)` and failed to filter ASCII control characters (such as `%09` / `\t`), allowing URL-encoded tab characters (`/%09//evil.com`) to bypass double-slash checks and pass `new URL` origin validation, while resolving to external origins when processed by browser navigation.
+**Learning:** `new URL()` does not decode URL-encoded control characters like `%09` when parsing raw strings, but browser navigation and WHATWG URL parsers strip decoded control characters during URL resolution (`/\t//evil.com` -> `//evil.com`).
+**Prevention:** Always test control characters (`/[\0-\x1f]/`) on multi-pass decoded redirect strings and pass the fully `decoded` string into `new URL(decoded, dummyOrigin)`.
