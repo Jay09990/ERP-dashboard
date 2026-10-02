@@ -142,6 +142,37 @@ export const navigationConfig: NavParentItem[] = [
     ],
   },
   {
+    id: "projects",
+    label: "Projects",
+    icon: Briefcase,
+    children: [
+      {
+        id: "project-register",
+        label: "Projects",
+        href: "/projects",
+        icon: Building2,
+      },
+      {
+        id: "project-requisitions",
+        label: "Requisitions",
+        href: "/procurement/requisitions",
+        icon: ClipboardList,
+      },
+      {
+        id: "project-grn",
+        label: "Goods Receipts",
+        href: "/procurement/grn",
+        icon: FileCheck,
+      },
+      {
+        id: "project-site-issues",
+        label: "Site Issues",
+        href: "/procurement/site-issues",
+        icon: Truck,
+      },
+    ],
+  },
+  {
     id: "parties",
     label: "Parties",
     icon: Users2,

@@ -113,4 +113,43 @@ export const endpoints = {
     adjustmentStatus: (id: string | number, status: string) =>
       `/api/inventory/adjustment/${id}/${status}`,
   },
+  projects: {
+    list: "/api/project",
+    detail: (id: string | number) => `/api/project/${id}`,
+    createFromSalesOrder: (salesOrderId: string | number) =>
+      `/api/project/from-sales-order/${salesOrderId}`,
+    status: (id: string | number, status: string) =>
+      `/api/project/${id}/status/${status}`,
+    financials: (id: string | number) => `/api/project/${id}/financials`,
+    sites: (id: string | number) => `/api/project/${id}/sites`,
+    site: (id: string | number, siteId: string | number) =>
+      `/api/project/${id}/sites/${siteId}`,
+    boq: (id: string | number) => `/api/project/${id}/boq`,
+    boqItem: (id: string | number, boqId: string | number) =>
+      `/api/project/${id}/boq/${boqId}`,
+    milestones: (id: string | number) => `/api/project/${id}/milestones`,
+    milestone: (id: string | number, milestoneId: string | number) =>
+      `/api/project/${id}/milestones/${milestoneId}`,
+    tasks: (id: string | number) => `/api/project/${id}/tasks`,
+    task: (id: string | number, taskId: string | number) =>
+      `/api/project/${id}/tasks/${taskId}`,
+    dpr: (id: string | number) => `/api/projects/${id}/dpr`,
+    documents: (id: string | number) => `/api/projects/${id}/documents`,
+    document: (id: string | number, documentId: string | number) =>
+      `/api/projects/${id}/documents/${documentId}`,
+  },
+  procurement: {
+    requisitions: "/api/procurement/requisition",
+    requisition: (id: string | number) => `/api/procurement/requisition/${id}`,
+    requisitionStatus: (id: string | number, status: string) =>
+      `/api/procurement/requisition/${id}/${status}`,
+    grns: "/api/procurement/grn",
+    grn: (id: string | number) => `/api/procurement/grn/${id}`,
+    grnStatus: (id: string | number, status: string) =>
+      `/api/procurement/grn/${id}/${status}`,
+    siteIssues: "/api/procurement/site-issue",
+    siteIssue: (id: string | number) => `/api/procurement/site-issue/${id}`,
+    siteIssueStatus: (id: string | number, status: string) =>
+      `/api/procurement/site-issue/${id}/${status}`,
+  },
 } as const;

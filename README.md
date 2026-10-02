@@ -49,6 +49,8 @@ The primary company application. Covers:
 - **Item Management** — Item Types, Categories, and Items (dual sales/purchase pricing)
 - **Sales Documents** — Quotations, Sales Orders, Proforma Invoices, Delivery Challans, Sales Invoices, Credit Notes
 - **Purchase Documents** — Purchase Orders, Purchase Invoices, Debit Notes
+- **Project Management** — Project register and status workflow, sales-order conversion, financial summaries, sites, BOQ and budgets, milestones, tasks, daily progress reports, and project documents
+- **Project Procurement** — Material requisitions, goods receipts (GRN), and project site issues with approval/cancellation workflows
 - **Document workflow** — draft/approved/sent/cancelled status, line-item discounts, tax selection, round-off calculation, and document editing
 - **Document printing** — browser print/PDF layouts with company, customer/vendor, address, tax, bank, terms, signature, and amount-in-words sections
 - **Masters** — 18+ reference-data masters (Countries/States/Cities, Currencies, Tax Types, UOM, Financial Years, Payment Terms, Banks, Departments, Branches, etc.)
@@ -117,6 +119,7 @@ Each app reads its own `.env.local`. Create the file manually in both apps:
 ```text
 # apps/erp/.env.local
 BACKEND_URL=http://localhost:4500
+NEXT_PUBLIC_ERP_SEED_MODE=false
 
 # apps/admin/.env.local
 BACKEND_URL=http://localhost:4500
@@ -125,8 +128,9 @@ BACKEND_URL=http://localhost:4500
 | Variable | Used in | Purpose |
 |---|---|---|
 | `BACKEND_URL` | both apps | Express API base URL, without the `/api` suffix (for example `http://localhost:4500`) |
+| `NEXT_PUBLIC_ERP_SEED_MODE` | ERP | Set to `true` to serve the local ERP fixtures from `apps/erp/mocks/seed.ts`. Seed mode accepts demo login locally, serves seeded GET requests, and rejects writes before they can reach the backend. Restart `next dev` after changing it. |
 
-The frontend calls same-origin `/api/*` URLs through the BFF proxy at `app/api/[...path]/route.ts`. The route handler forwards the request to `${BACKEND_URL}/api/*`, keeps the backend URL server-side, and passes request headers through. The JWT is stored in browser local storage by the auth flow; a non-sensitive marker cookie is used only for route gating.
+The frontend calls same-origin `/api/*` URLs through the BFF proxy at `app/api/[...path]/route.ts`. With seed mode disabled, the route handler forwards requests to `${BACKEND_URL}/api/*` and keeps the backend URL server-side. With seed mode enabled, it serves fixture data locally and rejects all non-login writes before forwarding. Use `.env.example` as a starting point for `apps/erp/.env.local`; set `NEXT_PUBLIC_ERP_SEED_MODE=true` for the demo mode. Demo login accepts any non-empty credentials and selects a matching seeded user by email or phone, falling back to the first seeded user. Next.js includes `NEXT_PUBLIC_` variables in the browser bundle at build time, so set the flag before building production assets.
 
 ---
 
@@ -147,6 +151,14 @@ The frontend calls same-origin `/api/*` URLs through the BFF proxy at `app/api/[
 ---
 
 ## Architecture & Documentation
+
+Project Management and Project Procurement in `apps/erp` consume the external
+Express API documented in [`HELPER/Projects_api_doc.md`](./HELPER/Projects_api_doc.md).
+The frontend includes project filtering and lifecycle controls, project detail
+sections, financial reporting, and the requisition, GRN, and site-issue workflows.
+The Lead routes in that API document are intentionally not part of this frontend
+implementation. The API server itself is external to this repository; configure
+`BACKEND_URL` and make sure it implements the documented routes.
 
 In-depth documentation lives in [`HELPER/`](./HELPER/):
 

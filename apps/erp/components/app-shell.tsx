@@ -21,6 +21,7 @@ import {
   NavSubGroup,
   navigationConfig,
 } from "@/config/navigation";
+import { seedModeEnabled } from "@/config/seed-mode";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { sessionHasPermission } from "@/lib/auth/permissions";
@@ -482,6 +483,22 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
 
           <span className="altrex-topbar-title">Enterprise Operations</span>
+
+          {seedModeEnabled && (
+            <span
+              role="status"
+              style={{
+                borderRadius: 999,
+                padding: "4px 10px",
+                color: "#854d0e",
+                background: "#fef3c7",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              Demo data · read only
+            </span>
+          )}
 
           <div className="altrex-topbar-end">
             <ThemeDropdown />

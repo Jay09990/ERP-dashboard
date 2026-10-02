@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { seedModeEnabled } from "@/config/seed-mode";
+import { handleSeedRequest } from "@/lib/api/seed-handler";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -27,13 +29,16 @@ function isUnsafeSegment(seg: string): boolean {
 }
 
 async function proxy(request: NextRequest, path: string[]) {
-  const backendUrl = process.env.BACKEND_URL;
-  if (!backendUrl) return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
-
   // Prevent Path Traversal / SSRF by rejecting unsafe path segments (including URL-encoded sequences)
   if (!path || path.length === 0 || path.some(isUnsafeSegment)) {
     return NextResponse.json({ message: "Invalid API path" }, { status: 400 });
   }
+
+  // Seed mode responds locally, so no API method in this branch can reach the backend.
+  if (seedModeEnabled) return handleSeedRequest(request, path);
+
+  const backendUrl = process.env.BACKEND_URL;
+  if (!backendUrl) return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
 
   const pathStr = path.join("/");
   const baseUrl = backendUrl.replace(/\/+$/, "");
