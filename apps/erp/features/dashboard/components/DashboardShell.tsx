@@ -86,13 +86,22 @@ export function DashboardShell() {
       ) : null}
 
       {/* Top Stat Cards */}
-      <div className="altrex-stat-grid">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
         <div
           className="altrex-card"
           style={{
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            borderRadius: 12,
+            padding: 24,
           }}
         >
           <div
@@ -133,6 +142,8 @@ export function DashboardShell() {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            borderRadius: 12,
+            padding: 24,
           }}
         >
           <div
@@ -173,6 +184,8 @@ export function DashboardShell() {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            borderRadius: 12,
+            padding: 24,
           }}
         >
           <div
@@ -211,6 +224,8 @@ export function DashboardShell() {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            borderRadius: 12,
+            padding: 24,
           }}
         >
           <div

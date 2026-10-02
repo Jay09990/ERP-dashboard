@@ -86,13 +86,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      await apiClient.post(endpoints.auth.logout, {});
-    } catch (error) {
-      console.error("Logout request failed:", error);
-    } finally {
+      // No backend logout endpoint — JWT is stateless.
+      // Clear client-side token and session; redirect to login.
       clearToken();
       setSession(null);
       queryClient.clear();
+    } catch (error) {
+      console.error("Logout cleanup failed:", error);
+    } finally {
       window.location.href = "/login?logout=1";
     }
   };

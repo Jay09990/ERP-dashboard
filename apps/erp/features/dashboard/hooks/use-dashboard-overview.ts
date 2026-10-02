@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 
 import {
+  creditNoteApi,
+  debitNoteApi,
   deliveryChallanApi,
   invoiceApi,
   purchaseInvoiceApi,
@@ -45,6 +47,12 @@ export type DashboardOverview = {
   monthlyPurchases: number;
   monthlyPurchasesLabel: string;
   monthlyPurchasesCount: number;
+  monthlyCreditNotes: number;
+  monthlyCreditNotesLabel: string;
+  monthlyCreditNotesCount: number;
+  monthlyDebitNotes: number;
+  monthlyDebitNotesLabel: string;
+  monthlyDebitNotesCount: number;
   activeQuotations: number;
   pendingDeliveries: number;
   customerCount: number;
@@ -87,6 +95,9 @@ export function useDashboardOverview(): DashboardOverview {
   const customersQuery = useCustomers();
   const vendorsQuery = useVendors();
 
+  const creditNotesQuery = creditNoteApi.useList();
+  const debitNotesQuery = debitNoteApi.useList();
+
   const queries = [
     invoicesQuery,
     purchaseInvoicesQuery,
@@ -96,6 +107,8 @@ export function useDashboardOverview(): DashboardOverview {
     purchaseOrdersQuery,
     customersQuery,
     vendorsQuery,
+    creditNotesQuery,
+    debitNotesQuery,
   ];
 
   const isLoading = queries.some((query) => query.isLoading);
@@ -108,6 +121,8 @@ export function useDashboardOverview(): DashboardOverview {
     const challans = extractRecords(challansQuery.data);
     const salesOrders = extractRecords(salesOrdersQuery.data);
     const purchaseOrders = extractRecords(purchaseOrdersQuery.data);
+    const creditNotes = extractRecords(creditNotesQuery.data);
+    const debitNotes = extractRecords(debitNotesQuery.data);
     const customers = extractRecords(customersQuery.data);
     const vendors = extractRecords(vendorsQuery.data);
 
@@ -115,6 +130,12 @@ export function useDashboardOverview(): DashboardOverview {
       isInCurrentMonth(getDocumentDate(doc)),
     );
     const monthlyPurchaseInvoices = purchaseInvoices.filter((doc) =>
+      isInCurrentMonth(getDocumentDate(doc)),
+    );
+    const monthlyCreditNotes = creditNotes.filter((doc) =>
+      isInCurrentMonth(getDocumentDate(doc)),
+    );
+    const monthlyDebitNotes = debitNotes.filter((doc) =>
       isInCurrentMonth(getDocumentDate(doc)),
     );
 
@@ -126,6 +147,14 @@ export function useDashboardOverview(): DashboardOverview {
       (sum, doc) => sum + getDocumentAmount(doc),
       0,
     );
+    const monthlyCreditNotesTotal = monthlyCreditNotes.reduce(
+      (sum, doc) => sum + getDocumentAmount(doc),
+      0,
+    );
+    const monthlyDebitNotesTotal = monthlyDebitNotes.reduce(
+      (sum, doc) => sum + getDocumentAmount(doc),
+      0,
+    );
 
     const recentActivity = [
       ...toActivity(invoices, "Sales Invoice", "/sales/invoices"),
@@ -134,6 +163,8 @@ export function useDashboardOverview(): DashboardOverview {
       ...toActivity(salesOrders, "Sales Order", "/sales/orders"),
       ...toActivity(purchaseOrders, "Purchase Order", "/purchase/orders"),
       ...toActivity(challans, "Delivery Challan", "/sales/challans"),
+      ...toActivity(creditNotes, "Credit Note", "/sales/credit-notes"),
+      ...toActivity(debitNotes, "Debit Note", "/purchase/debit-notes"),
     ]
       .sort((a, b) => b.sortTime - a.sortTime)
       .slice(0, 8);
@@ -147,6 +178,12 @@ export function useDashboardOverview(): DashboardOverview {
       monthlyPurchases,
       monthlyPurchasesLabel: formatINR(monthlyPurchases),
       monthlyPurchasesCount: monthlyPurchaseInvoices.length,
+      monthlyCreditNotes: monthlyCreditNotesTotal,
+      monthlyCreditNotesLabel: formatINR(monthlyCreditNotesTotal),
+      monthlyCreditNotesCount: monthlyCreditNotes.length,
+      monthlyDebitNotes: monthlyDebitNotesTotal,
+      monthlyDebitNotesLabel: formatINR(monthlyDebitNotesTotal),
+      monthlyDebitNotesCount: monthlyDebitNotes.length,
       activeQuotations: quotations.filter(isActiveQuotation).length,
       pendingDeliveries: challans.filter(isPendingDelivery).length,
       customerCount: customers.length,
@@ -155,7 +192,9 @@ export function useDashboardOverview(): DashboardOverview {
     };
   }, [
     challansQuery.data,
+    creditNotesQuery.data,
     customersQuery.data,
+    debitNotesQuery.data,
     hasError,
     invoicesQuery.data,
     isLoading,

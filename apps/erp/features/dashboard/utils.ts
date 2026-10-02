@@ -30,6 +30,8 @@ export function getDocumentAmount(doc: Record<string, unknown>): number {
       doc.total_amount ??
       doc.net_amount ??
       doc.invoice_total ??
+      doc.credit_note_total ??
+      doc.debit_note_total ??
       doc.amount ??
       doc.payable_amount ??
       doc.total,
@@ -64,6 +66,8 @@ export function getDocumentId(doc: Record<string, unknown>): string {
     doc.purchase_order_id ??
     doc.proforma_id ??
     doc.delivery_challan_id ??
+    doc.credit_note_id ??
+    doc.debit_note_id ??
     doc.party_id ??
     doc.id;
   return id == null ? "" : String(id);

@@ -1,8 +1,15 @@
 import { create } from "zustand";
 
+export type SessionPermission = {
+  permission_name: string;
+  module_name: string;
+  is_allowed: boolean;
+  source?: string;
+};
+
 export type SessionSnapshot = {
   user: { id: string; name: string; email?: string; phone?: string };
-  permissions: string[];
+  permissions: (SessionPermission | string)[];
   company?: {
     id: string;
     name: string;

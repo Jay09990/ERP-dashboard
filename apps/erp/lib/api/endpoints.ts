@@ -3,11 +3,9 @@ const masterApiBase = "/api/master";
 export const endpoints = {
   auth: {
     login: "/api/auth/login",
-    // TODO(unconfirmed): backend has never documented an explicit logout
-    // endpoint/method — this path is inferred from the /api/auth/login pattern.
-    // Confirm the real path + method with the backend developer.
-    logout: "/api/auth/logout",
 
+    // audit_logs: placeholder — backend endpoint not yet documented.
+    // Activity Log task (Phase 10) needs this; blocked until backend exposes it.
     profile: "/api/auth/profile",
     users: "/api/auth/users",
     user: (id: string | number) => `/api/auth/users/${id}`,

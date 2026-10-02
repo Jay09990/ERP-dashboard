@@ -1,6 +1,6 @@
 "use client";
 
-import { invoiceApi, purchaseInvoiceApi } from "@/features/documents/api";
+import { invoiceApi, creditNoteApi, debitNoteApi, purchaseInvoiceApi } from "@/features/documents/api";
 import { useMemo, useState } from "react";
 import {
   extractRecords,
@@ -79,21 +79,34 @@ export function useDashboardAnalytics(): DashboardAnalytics {
   const [metricType, setMetricType] = useState<MetricTypeOption>("sales");
 
   const invoicesQuery = invoiceApi.useList();
+  const creditNotesQuery = creditNoteApi.useList();
+  const debitNotesQuery = debitNoteApi.useList();
   const purchaseInvoicesQuery = purchaseInvoiceApi.useList();
 
-  const isLoading = invoicesQuery.isLoading || purchaseInvoicesQuery.isLoading;
+  const isLoading =
+    invoicesQuery.isLoading ||
+    creditNotesQuery.isLoading ||
+    debitNotesQuery.isLoading ||
+    purchaseInvoicesQuery.isLoading;
 
   const result = useMemo(() => {
     const rawSalesInvoices = extractRecords(invoicesQuery.data);
+    const rawCreditNotes = extractRecords(creditNotesQuery.data);
+    const rawDebitNotes = extractRecords(debitNotesQuery.data);
     const rawPurchaseInvoices = extractRecords(purchaseInvoicesQuery.data);
 
     let activeDocs: Record<string, unknown>[] = [];
     if (metricType === "sales") {
-      activeDocs = rawSalesInvoices;
+      activeDocs = [...rawSalesInvoices, ...rawCreditNotes];
     } else if (metricType === "purchases") {
-      activeDocs = rawPurchaseInvoices;
+      activeDocs = [...rawPurchaseInvoices, ...rawDebitNotes];
     } else {
-      activeDocs = [...rawSalesInvoices, ...rawPurchaseInvoices];
+      activeDocs = [
+        ...rawSalesInvoices,
+        ...rawCreditNotes,
+        ...rawDebitNotes,
+        ...rawPurchaseInvoices,
+      ];
     }
 
     const now = new Date();
@@ -287,6 +300,20 @@ export function useDashboardAnalytics(): DashboardAnalytics {
       }
     });
 
+    rawCreditNotes.forEach((doc) => {
+      const dStr = getDocumentDate(doc);
+      if (!dStr) return;
+      const d = new Date(dStr);
+      if (!Number.isNaN(d.getTime())) {
+        const m = d.getMonth();
+        if (monthlyMap.has(m)) {
+          const amt = getDocumentAmount(doc);
+          const curr = monthlyMap.get(m)!;
+          curr.sales += amt;
+        }
+      }
+    });
+
     rawPurchaseInvoices.forEach((doc) => {
       const dStr = getDocumentDate(doc);
       if (!dStr) return;
@@ -301,8 +328,25 @@ export function useDashboardAnalytics(): DashboardAnalytics {
       }
     });
 
+    rawDebitNotes.forEach((doc) => {
+      const dStr = getDocumentDate(doc);
+      if (!dStr) return;
+      const d = new Date(dStr);
+      if (!Number.isNaN(d.getTime())) {
+        const m = d.getMonth();
+        if (monthlyMap.has(m)) {
+          const amt = getDocumentAmount(doc);
+          const curr = monthlyMap.get(m)!;
+          curr.purchases += amt;
+        }
+      }
+    });
+
     const hasRealDocs =
-      rawSalesInvoices.length > 0 || rawPurchaseInvoices.length > 0;
+      rawSalesInvoices.length > 0 ||
+      rawCreditNotes.length > 0 ||
+      rawDebitNotes.length > 0 ||
+      rawPurchaseInvoices.length > 0;
     const monthlyComparison: MonthlyComparisonPoint[] = monthNames
       .slice(0, 9)
       .map((m, idx) => {
@@ -337,7 +381,7 @@ export function useDashboardAnalytics(): DashboardAnalytics {
       statusData,
       monthlyComparison,
     };
-  }, [invoicesQuery.data, purchaseInvoicesQuery.data, timeframe, metricType]);
+  }, [invoicesQuery.data, creditNotesQuery.data, debitNotesQuery.data, purchaseInvoicesQuery.data, timeframe, metricType]);
 
   return {
     timeframe,

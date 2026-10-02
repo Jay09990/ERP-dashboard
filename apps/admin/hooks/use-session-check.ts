@@ -5,6 +5,31 @@ import { endpoints } from "@/lib/api/endpoints";
 import { clearToken, getToken, isTokenExpired } from "@/lib/auth/token";
 import { useSessionStore } from "@/stores/session-store";
 
+type MeResponse = {
+  userId?: number | string;
+  fullName?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  permissions?: Array<{
+    permission_name: string;
+    module_name: string;
+    is_allowed: boolean;
+  }>;
+  companyId?: number;
+  companyName?: string;
+  gstNo?: string;
+  companyPhone?: string;
+  companyEmail?: string;
+  address?: string;
+};
+
+type SessionPermissions = Array<{
+  permission_name: string;
+  module_name: string;
+  is_allowed: boolean;
+}>;
+
 export function useSessionCheck() {
   const setSession = useSessionStore((state) => state.setSession);
 
@@ -17,30 +42,30 @@ export function useSessionCheck() {
         return;
       }
       try {
-        const response = await apiClient.get<any>(endpoints.admin.me);
-        if (response.data) {
+        const response = await apiClient.get<MeResponse>(endpoints.admin.me);
+        if (response) {
           setSession({
             user: {
-              id: response.data.userId?.toString() || "",
-              name: response.data.fullName || response.data.email || "",
-              email: response.data.email || "",
-              phone: response.data.phone || "",
+              id: String(response.userId ?? ""),
+              name:
+                response.fullName || response.full_name || response.email || "",
+              email: response.email || "",
+              phone: response.phone || "",
             },
-            permissions: response.data.permissions || [],
-            company: response.data.companyId
+            permissions: (response.permissions || []) as SessionPermissions,
+            company: response.companyId
               ? {
-                  id: response.data.companyId.toString(),
-                  name: response.data.companyName || "",
-                  gstNo: response.data.gstNo || "",
-                  phone: response.data.companyPhone || "",
-                  email: response.data.companyEmail || "",
-                  address: response.data.address || "",
+                  id: String(response.companyId),
+                  name: response.companyName || "",
+                  gstNo: response.gstNo || "",
+                  phone: response.companyPhone || "",
+                  email: response.companyEmail || "",
+                  address: response.address || "",
                 }
               : undefined,
           });
         }
-      } catch (error) {
-        // Session not valid or expired
+      } catch {
         clearToken();
         setSession(null);
       }

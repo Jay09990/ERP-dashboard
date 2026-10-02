@@ -27,15 +27,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      await apiClient.post(endpoints.admin.logout, {});
-    } catch (error) {
-      // Log it — don't silently assume "session already expired".
-      // If this fires consistently, the endpoint path itself is likely wrong.
-      console.error("Logout request failed:", error);
-    } finally {
+      // No backend logout endpoint — JWT is stateless.
+      // Clear client-side token and session; redirect to login.
       clearToken();
-      setSession(null); // clear cached permissions/user immediately
-      queryClient.clear(); // drop all cached query data — critical before a new user can log in
+      setSession(null);
+      queryClient.clear();
+    } catch (error) {
+      console.error("Logout cleanup failed:", error);
+    } finally {
       router.push("/login");
     }
   };

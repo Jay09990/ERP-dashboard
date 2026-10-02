@@ -10,38 +10,25 @@ interface Props {
   onClose: () => void;
 }
 
-/**
- * Soft-deactivate confirmation.
- * Reversible — admin can re-activate later. Visually neutral (warning, not danger).
- * The backend DELETE /api/admin/companies/:id does NOT drop the tenant database.
- */
+/** Soft-deactivate confirmation. */
 export function DeactivateDialog({ company, onClose }: Props) {
   const { mutate, isPending, error } = useDeactivateCompany();
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
+      if (event.key === "Escape" && !isPending) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, isPending]);
 
   const handleConfirm = () => {
-    mutate(company.company_id, {
-      onSuccess: () => onClose(),
-    });
+    mutate(company.company_id, { onSuccess: () => onClose() });
   };
 
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="deactivate-title"
-    >
+    <div className="altrex-dialog-backdrop" aria-hidden="true">
       <button
         type="button"
         tabIndex={-1}
@@ -49,7 +36,12 @@ export function DeactivateDialog({ company, onClose }: Props) {
         className="fixed inset-0 border-none bg-transparent"
         onClick={() => !isPending && onClose()}
       />
-      <div className="altrex-dialog altrex-dialog-md relative z-10">
+      <div
+        className="altrex-dialog altrex-dialog-md relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deactivate-title"
+      >
         <div className="altrex-dialog-header">
           <div className="altrex-dialog-icon altrex-dialog-icon-warning">
             <svg

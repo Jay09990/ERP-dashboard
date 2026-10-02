@@ -56,23 +56,25 @@ export function AdminLoginForm() {
       const response = await apiClient.post<{
         token?: string;
         access_token?: string;
-        user?: Record<string, any>;
-        data?: Record<string, any>;
+        user?: Record<string, unknown>;
+        data?: Record<string, unknown>;
       }>(endpoints.admin.login, payload);
       const token = response.token ?? response.access_token;
       const user =
         response.user ?? response.data?.user ?? response.data ?? response;
       if (!token) throw new Error("Login response did not include a token");
       setToken(token);
+      // Normalize user object — the backend may return different shapes.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const u = user as any;
       const session: SessionSnapshot = {
         user: {
-          id: String(user.userId ?? user.user_id ?? user.id ?? ""),
-          name:
-            user.fullName ?? user.full_name ?? user.name ?? user.email ?? "",
-          email: user.email ?? "",
-          phone: user.phone ?? "",
+          id: String(u.userId ?? u.user_id ?? u.id ?? ""),
+          name: u.fullName ?? u.full_name ?? u.name ?? u.email ?? "",
+          email: u.email ?? "",
+          phone: u.phone ?? "",
         },
-        permissions: user.permissions ?? [],
+        permissions: (u.permissions ?? []) as SessionSnapshot["permissions"],
       };
       setSession(session);
 
@@ -99,9 +101,10 @@ export function AdminLoginForm() {
       description="Use your email address or phone number to continue."
     >
       <form className="altrex-auth-form" onSubmit={form.handleSubmit(submit)}>
-        <label className="altrex-field">
+        <label className="altrex-field" htmlFor="admin-login">
           <span>Email or phone</span>
           <Input
+            id="admin-login"
             aria-invalid={Boolean(form.formState.errors.login)}
             {...form.register("login")}
           />
@@ -111,10 +114,11 @@ export function AdminLoginForm() {
             </small>
           )}
         </label>
-        <label className="altrex-field">
+        <label className="altrex-field" htmlFor="admin-password">
           <span>Password</span>
           <div className="altrex-password-row">
             <Input
+              id="admin-password"
               type={showPassword ? "text" : "password"}
               aria-invalid={Boolean(form.formState.errors.password)}
               {...form.register("password")}

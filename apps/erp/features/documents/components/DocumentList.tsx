@@ -1237,14 +1237,16 @@ export function DocumentList({
     ]);
 
     const csvContent = [
-      headers.map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`).join(","),
+      headers
+        .map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`)
+        .join(","),
       ...rows.map((r) =>
         r
           .map((cell) => {
             const str = sanitizeCSVValue(cell).replace(/"/g, '""');
             return `"${str}"`;
           })
-          .join(",")
+          .join(","),
       ),
     ].join("\n");
 
