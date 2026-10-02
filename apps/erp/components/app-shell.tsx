@@ -42,6 +42,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
 
+  // Close flyout on Escape key press
+  useEffect(() => {
+    if (!activeFlyout) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveFlyout(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeFlyout]);
+
   // Helper to check if a specific route is active
   const isRouteActive = (href: string, exact?: boolean) => {
     if (exact || href === "/") {
@@ -247,6 +261,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     className="altrex-nav-collapsed-wrapper"
                     onMouseEnter={() => setActiveFlyout(parent.id)}
                     onMouseLeave={() => setActiveFlyout(null)}
+                    onFocus={() => setActiveFlyout(parent.id)}
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setActiveFlyout(null);
+                      }
+                    }}
                   >
                     <button
                       type="button"
@@ -254,6 +274,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                         parentActive ? "altrex-nav-parent-active" : ""
                       }`}
                       aria-label={parent.label}
+                      aria-haspopup="true"
+                      aria-expanded={isOpenFlyout}
+                      aria-controls={`flyout-menu-${parent.id}`}
                       title={parent.label}
                       onClick={() => {
                         toggleSidebar();
@@ -269,8 +292,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                     {/* Collapsed Flyout Popover */}
                     {isOpenFlyout && (
-                      <div className="altrex-nav-flyout">
-                        <div className="altrex-nav-flyout-header">
+                      <div
+                        id={`flyout-menu-${parent.id}`}
+                        className="altrex-nav-flyout"
+                        role="menu"
+                        aria-label={parent.label}
+                      >
+                        <div
+                          className="altrex-nav-flyout-header"
+                          role="presentation"
+                        >
                           {parent.label}
                         </div>
 
@@ -281,6 +312,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             <Link
                               key={child.id}
                               href={child.href}
+                              role="menuitem"
                               onClick={() => setActiveFlyout(null)}
                               className={`altrex-nav-child-link ${
                                 childActive ? "altrex-nav-child-active" : ""
@@ -298,7 +330,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                         })}
 
                         {parent.subGroups?.map((sg) => (
-                          <div key={sg.id} className="altrex-nav-subgroup">
+                          <div
+                            key={sg.id}
+                            className="altrex-nav-subgroup"
+                            role="group"
+                            aria-label={sg.title}
+                          >
                             <span className="altrex-nav-subgroup-title">
                               {sg.title}
                             </span>
@@ -309,6 +346,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                                 <Link
                                   key={child.id}
                                   href={child.href}
+                                  role="menuitem"
                                   onClick={() => setActiveFlyout(null)}
                                   className={`altrex-nav-child-link ${
                                     childActive ? "altrex-nav-child-active" : ""

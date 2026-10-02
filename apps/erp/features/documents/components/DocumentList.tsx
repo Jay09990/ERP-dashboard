@@ -47,6 +47,17 @@ function extractList(value: any, keys: string[]): any[] {
   return [];
 }
 
+// Module-scoped Intl.NumberFormat instances cached to prevent V8 ICU locale initialization overhead and GC churn
+const inrDecimalFormatter = new Intl.NumberFormat("en-IN", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 2,
+});
+
+const inrCurrencyOneDecimalFormatter = new Intl.NumberFormat("en-IN", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
 function extractObject(value: any, keys: string[]): any {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   for (const key of keys) {
@@ -400,11 +411,7 @@ async function printDocument(document: any, docType: DocumentType) {
             entry.id,
         ) === String(id),
     ) ?? {};
-  const money = (value: any) =>
-    Number(value || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 2,
-    });
+  const money = (value: any) => inrDecimalFormatter.format(Number(value || 0));
   const fmtDate = (d: string) => {
     try {
       return d
@@ -507,7 +514,7 @@ async function printDocument(document: any, docType: DocumentType) {
       <td class="center">${index + 1}</td>
       <td><strong>${escapeHtml(item.item_name ?? item.description ?? "Line item")}</strong>${item.item_name && item.description ? `<br><span style="color:#64748b;font-size:8.5px">${escapeHtml(item.description)}</span>` : ""}</td>
       <td class="center">${escapeHtml(item.hsn_code ?? "")}</td>
-      <td class="num">${quantity.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}<br><span style="font-size:7.5px;color:#475569">${uomStr}</span></td>
+      <td class="num">${inrDecimalFormatter.format(quantity)}<br><span style="font-size:7.5px;color:#475569">${uomStr}</span></td>
       <td class="num">${money(rate)}</td>
       ${hasDiscountInItems ? `<td class="num">${money(discAmt)}${pctDiscount > 0 ? `<br><span style="font-size:7.5px;color:#475569">${pctDiscount}%</span>` : ""}</td>` : ""}
       <td class="num">${money(taxable)}</td>
@@ -1141,32 +1148,38 @@ export function DocumentList({
     return sorted.slice(start, start + pageSize);
   }, [sorted, safeCurrentPage, pageSize]);
 
-  // Calculate totals
-  const pageTaxTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getTaxAmount(d), 0),
-    [paginatedDocs],
-  );
-  const pageAmountTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getGrandTotal(d), 0),
-    [paginatedDocs],
-  );
-  const pageBalanceTotal = useMemo(
-    () => paginatedDocs.reduce((sum, d) => sum + getBalanceDue(d), 0),
-    [paginatedDocs],
-  );
+  // Calculate totals in a single pass over paginatedDocs and sorted arrays to reduce loop iterations from 6 to 2
+  const { pageTaxTotal, pageAmountTotal, pageBalanceTotal } = useMemo(() => {
+    let tax = 0;
+    let amount = 0;
+    let balance = 0;
+    for (const d of paginatedDocs) {
+      tax += getTaxAmount(d);
+      amount += getGrandTotal(d);
+      balance += getBalanceDue(d);
+    }
+    return {
+      pageTaxTotal: tax,
+      pageAmountTotal: amount,
+      pageBalanceTotal: balance,
+    };
+  }, [paginatedDocs]);
 
-  const grandTaxTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getTaxAmount(d), 0),
-    [sorted],
-  );
-  const grandAmountTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getGrandTotal(d), 0),
-    [sorted],
-  );
-  const grandBalanceTotal = useMemo(
-    () => sorted.reduce((sum, d) => sum + getBalanceDue(d), 0),
-    [sorted],
-  );
+  const { grandTaxTotal, grandAmountTotal, grandBalanceTotal } = useMemo(() => {
+    let tax = 0;
+    let amount = 0;
+    let balance = 0;
+    for (const d of sorted) {
+      tax += getTaxAmount(d);
+      amount += getGrandTotal(d);
+      balance += getBalanceDue(d);
+    }
+    return {
+      grandTaxTotal: tax,
+      grandAmountTotal: amount,
+      grandBalanceTotal: balance,
+    };
+  }, [sorted]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -1195,7 +1208,7 @@ export function DocumentList({
   };
 
   const fmtCurrency = (num: number) => {
-    return `₹ ${num.toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+    return `₹ ${inrCurrencyOneDecimalFormatter.format(num)}`;
   };
 
   const fmtTableDate = (d: string) => {

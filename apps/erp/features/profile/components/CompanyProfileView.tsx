@@ -23,6 +23,35 @@ import { useState } from "react";
 import { useCompanyProfile } from "../api";
 import { ProfileForm } from "./ProfileForm";
 
+/**
+ * Validates and sanitizes external user-supplied URLs.
+ * Ensures the target URL strictly uses `http:` or `https:` protocol to prevent
+ * `javascript:`, `data:`, `vbscript:` or other malicious scheme execution.
+ */
+export function toSafeExternalUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  let candidate = trimmed;
+  if (!/^https?:\/\//i.test(candidate)) {
+    if (/^(javascript|data|vbscript):/i.test(candidate)) {
+      return null;
+    }
+    candidate = `https://${candidate}`;
+  }
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function extractRecords(value: unknown): Array<Record<string, any>> {
   if (Array.isArray(value)) return value as Array<Record<string, any>>;
   if (!value || typeof value !== "object") return [];
@@ -338,17 +367,13 @@ export function CompanyProfileView() {
               </a>
             </span>
           )}
-          {profile.website && (
+          {toSafeExternalUrl(profile.website) && (
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Globe size={14} style={{ color: "var(--altrex-primary)" }} />
               <a
-                href={
-                  profile.website.startsWith("http")
-                    ? profile.website
-                    : `https://${profile.website}`
-                }
+                href={toSafeExternalUrl(profile.website)!}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 style={{
                   color: "var(--altrex-primary)",
                   fontWeight: 500,

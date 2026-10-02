@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
 import {
   PartyFormDrawer,
   type PartyFormValues,
@@ -275,7 +276,7 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
                 </div>
               )}
 
-              {customer.website && (
+              {toSafeExternalUrl(customer.website) && (
                 <div>
                   <span
                     style={{
@@ -298,11 +299,7 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
                   >
                     <Globe size={13} style={{ color: "var(--altrex-muted)" }} />
                     <a
-                      href={
-                        customer.website.startsWith("http")
-                          ? customer.website
-                          : `https://${customer.website}`
-                      }
+                      href={toSafeExternalUrl(customer.website)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

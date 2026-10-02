@@ -4,6 +4,7 @@
  */
 export function sanitizeCSVValue(val: unknown): string {
   if (val === null || val === undefined) return "";
+  if (typeof val === "number") return String(val);
   const str = String(val);
   const trimmed = str.trimStart();
   if (/^[=+@\-\t\r]/.test(trimmed)) {

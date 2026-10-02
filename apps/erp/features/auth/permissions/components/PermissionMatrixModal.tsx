@@ -57,9 +57,14 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
     const mods = Array.from(
       new Set(permissions.map((p) => p.module_name || "General")),
     );
-    if (activeModule === "" && mods.length > 0) setActiveModule(mods[0]);
     return mods;
   }, [permissions]);
+
+  useEffect(() => {
+    if (activeModule === "" && modules.length > 0) {
+      setActiveModule(modules[0]);
+    }
+  }, [modules, activeModule]);
 
   const handleToggle = (permissionName: string) => {
     setPermissions((prev) =>
@@ -88,15 +93,29 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   const totalCount = permissions.length;
   const grantedCount = permissions.filter((p) => p.is_allowed).length;
 
+  // Cache grouped permissions by module to avoid O(N) array filter scans on every sidebar module switch or search keystroke
+  const permissionsByModule = useMemo(() => {
+    const map = new Map<string, PermissionItem[]>();
+    for (const p of permissions) {
+      const mod = p.module_name || "General";
+      let list = map.get(mod);
+      if (!list) {
+        list = [];
+        map.set(mod, list);
+      }
+      list.push(p);
+    }
+    return map;
+  }, [permissions]);
+
   const activeModuleItems = useMemo(() => {
-    const items = permissions.filter(
-      (p) => (p.module_name || "General") === activeModule,
-    );
+    const items = permissionsByModule.get(activeModule) || [];
     if (!permSearch.trim()) return items;
+    const lowerSearch = permSearch.toLowerCase();
     return items.filter((p) =>
-      p.permission_name.toLowerCase().includes(permSearch.toLowerCase()),
+      p.permission_name.toLowerCase().includes(lowerSearch),
     );
-  }, [permissions, activeModule, permSearch]);
+  }, [permissionsByModule, activeModule, permSearch]);
 
   const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
   const activeModuleGranted = activeModuleItems.filter(
@@ -211,9 +230,7 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
             }}
           >
             {modules.map((mod) => {
-              const modItems = permissions.filter(
-                (p) => (p.module_name || "General") === mod,
-              );
+              const modItems = permissionsByModule.get(mod) || [];
               const modGranted = modItems.filter((p) => p.is_allowed).length;
               const isActive = mod === activeModule;
               return (

@@ -2,7 +2,7 @@
 
 import { Button, DataTable } from "@altrex/ui";
 import { Plus, Tag, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCreateItemType, useDeleteItemType, useItemTypes } from "../api";
 import type { ItemType } from "../schema";
 
@@ -26,6 +26,19 @@ export function ItemTypeList() {
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [typeName, setTypeName] = useState("");
+
+  useEffect(() => {
+    if (!isOpenModal) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpenModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpenModal]);
 
   const getTypeId = (t: ItemType) =>
     t.item_type_id ??
@@ -90,6 +103,8 @@ export function ItemTypeList() {
               }
             }}
             disabled={isDeleting}
+            aria-label={`Delete ${getTypeName(t)}`}
+            title={`Delete ${getTypeName(t)}`}
             style={{
               color: "var(--altrex-danger-text)",
               borderColor: "rgba(220,38,38,0.2)",
@@ -156,15 +171,26 @@ export function ItemTypeList() {
       {isOpenModal && (
         <div
           className="altrex-dialog-backdrop"
-          onClick={() => setIsOpenModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-item-type-title"
         >
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="fixed inset-0 border-none bg-transparent"
+            onClick={() => setIsOpenModal(false)}
+          />
           <div
-            className="altrex-dialog altrex-dialog-md"
+            className="altrex-dialog altrex-dialog-md relative z-10"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="altrex-dialog-header">
               <div>
-                <h3 className="altrex-dialog-title">Add Item Type</h3>
+                <h3 id="add-item-type-title" className="altrex-dialog-title">
+                  Add Item Type
+                </h3>
                 <p className="altrex-dialog-subtitle">
                   Define a new item classification type for inventory
                   management.
@@ -174,6 +200,7 @@ export function ItemTypeList() {
                 type="button"
                 className="altrex-icon-button"
                 onClick={() => setIsOpenModal(false)}
+                aria-label="Close dialog"
               >
                 <X size={18} />
               </button>

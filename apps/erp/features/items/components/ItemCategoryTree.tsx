@@ -21,12 +21,43 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Static module-level helper functions for category data extraction.
+// Defined outside component scope so they retain reference identity across renders.
+// This prevents invalidating useMemo dependencies and breaking React.memo for tree nodes.
+function extractCategoryId(c: ItemCategory): number | string {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.category_id ??
+    (rec.itemCategoryId as number | string) ??
+    (rec.item_category_id as number | string) ??
+    (rec.id as number | string)
+  );
+}
+
+function extractCategoryName(c: ItemCategory): string {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.category_name ??
+    (rec.item_category_name as string) ??
+    (rec.name as string) ??
+    "Unnamed category"
+  );
+}
+
+function extractParentId(c: ItemCategory): number | string | null {
+  const rec = c as Record<string, unknown>;
+  return (
+    c.parent_category_id ??
+    (rec.parentCategoryId as number | string) ??
+    (rec.item_parent_category as number | string) ??
+    null
+  );
+}
+
 interface CategoryTreeNodeProps {
   cat: ItemCategory;
   depth: number;
   childrenMap: Map<number | string, ItemCategory[]>;
-  getCategoryId: (c: ItemCategory) => number | string;
-  getCategoryName: (c: ItemCategory) => string;
   onAddSubCategory: (id: string | number) => void;
   onDeleteCategory: (cat: ItemCategory) => void;
   isDeleting: boolean;
@@ -40,13 +71,11 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
   cat,
   depth,
   childrenMap,
-  getCategoryId,
-  getCategoryName,
   onAddSubCategory,
   onDeleteCategory,
   isDeleting,
 }: CategoryTreeNodeProps) {
-  const id = getCategoryId(cat);
+  const id = extractCategoryId(cat);
   const children = childrenMap.get(id) || [];
 
   return (
@@ -75,7 +104,7 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
               color: "var(--altrex-text)",
             }}
           >
-            {getCategoryName(cat)}
+            {extractCategoryName(cat)}
           </span>
           {depth === 0 && (
             <span
@@ -121,12 +150,10 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
         <div style={{ display: "flex", flexDirection: "column" }}>
           {children.map((child) => (
             <CategoryTreeNode
-              key={getCategoryId(child)}
+              key={extractCategoryId(child)}
               cat={child}
               depth={depth + 1}
               childrenMap={childrenMap}
-              getCategoryId={getCategoryId}
-              getCategoryName={getCategoryName}
               onAddSubCategory={onAddSubCategory}
               onDeleteCategory={onDeleteCategory}
               isDeleting={isDeleting}
@@ -151,22 +178,6 @@ export function ItemCategoryTree() {
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
 
-  const getCategoryId = (c: ItemCategory) =>
-    c.category_id ??
-    (c as any).itemCategoryId ??
-    (c as any).item_category_id ??
-    (c as any).id;
-  const getCategoryName = (c: ItemCategory) =>
-    c.category_name ??
-    (c as any).item_category_name ??
-    (c as any).name ??
-    "Unnamed category";
-  const getParentId = (c: ItemCategory) =>
-    c.parent_category_id ??
-    (c as any).parentCategoryId ??
-    (c as any).item_parent_category ??
-    null;
-
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryName.trim()) return;
@@ -186,13 +197,15 @@ export function ItemCategoryTree() {
     );
   };
 
-  // Build root categories and children map
+  // Build root categories and children map.
+  // Static extractParentId module function keeps dependency array [categories], ensuring tree structure
+  // is only recomputed when categories data changes, not on modal/input state updates.
   const { rootCategories, childrenMap } = useMemo(() => {
     const roots: ItemCategory[] = [];
     const map = new Map<number | string, ItemCategory[]>();
 
     for (const cat of categories) {
-      const pid = getParentId(cat);
+      const pid = extractParentId(cat);
       if (!pid) {
         roots.push(cat);
       } else {
@@ -206,7 +219,7 @@ export function ItemCategoryTree() {
     }
 
     return { rootCategories: roots, childrenMap: map };
-  }, [categories, getParentId]);
+  }, [categories]);
 
   // Memoized handlers to prevent unnecessary re-renders of memoized CategoryTreeNode children
   const handleAddSubCategory = useCallback((id: string | number) => {
@@ -216,13 +229,13 @@ export function ItemCategoryTree() {
 
   const handleDeleteCategory = useCallback(
     (cat: ItemCategory) => {
-      const id = getCategoryId(cat);
-      const name = getCategoryName(cat);
+      const id = extractCategoryId(cat);
+      const name = extractCategoryName(cat);
       if (confirm(`Are you sure you want to delete category "${name}"?`)) {
         deleteCategory(id.toString());
       }
     },
-    [deleteCategory, getCategoryId, getCategoryName],
+    [deleteCategory],
   );
 
   return (
@@ -281,12 +294,10 @@ export function ItemCategoryTree() {
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {rootCategories.map((cat) => (
             <CategoryTreeNode
-              key={getCategoryId(cat)}
+              key={extractCategoryId(cat)}
               cat={cat}
               depth={0}
               childrenMap={childrenMap}
-              getCategoryId={getCategoryId}
-              getCategoryName={getCategoryName}
               onAddSubCategory={handleAddSubCategory}
               onDeleteCategory={handleDeleteCategory}
               isDeleting={isDeleting}
@@ -347,10 +358,10 @@ export function ItemCategoryTree() {
                     <option value="">(None - Top Level Root)</option>
                     {categories.map((c) => (
                       <option
-                        key={getCategoryId(c)}
-                        value={getCategoryId(c).toString()}
+                        key={extractCategoryId(c)}
+                        value={extractCategoryId(c).toString()}
                       >
-                        {getCategoryName(c)}
+                        {extractCategoryName(c)}
                       </option>
                     ))}
                   </select>
