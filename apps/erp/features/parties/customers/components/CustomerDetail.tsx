@@ -1,5 +1,6 @@
 "use client";
 
+import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
 import {
   ArrowLeft,
   Building2,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
 import {
   PartyFormDrawer,
   type PartyFormValues,

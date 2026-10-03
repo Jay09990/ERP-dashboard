@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -57,29 +63,39 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFlyout]);
 
+  // Pure helper to check permission against session permissions reference.
+  // Defined at component scope using useCallback to avoid closure allocation on every render.
+  const sessionPermissions = session?.permissions;
+
   // Helper to check if a specific route is active
-  const isRouteActive = (href: string, exact?: boolean) => {
-    if (exact || href === "/") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
-  };
+  const isRouteActive = useCallback(
+    (href: string, exact?: boolean) => {
+      if (exact || href === "/") {
+        return pathname === href;
+      }
+      return pathname.startsWith(href);
+    },
+    [pathname],
+  );
 
   // Helper to check if a parent item contains the active route
-  const isParentActive = (parent: NavParentItem) => {
-    if (parent.href) {
-      return isRouteActive(parent.href, true);
-    }
-    if (parent.children) {
-      return parent.children.some((child) => isRouteActive(child.href));
-    }
-    if (parent.subGroups) {
-      return parent.subGroups.some((sg) =>
-        sg.items.some((child) => isRouteActive(child.href)),
-      );
-    }
-    return false;
-  };
+  const isParentActive = useCallback(
+    (parent: NavParentItem) => {
+      if (parent.href) {
+        return isRouteActive(parent.href, true);
+      }
+      if (parent.children) {
+        return parent.children.some((child) => isRouteActive(child.href));
+      }
+      if (parent.subGroups) {
+        return parent.subGroups.some((sg) =>
+          sg.items.some((child) => isRouteActive(child.href)),
+        );
+      }
+      return false;
+    },
+    [isRouteActive],
+  );
 
   // Auto-expand the parent that contains the active route on pathname change
   useEffect(() => {
@@ -88,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
       }
     }
-  }, [pathname]);
+  }, [isParentActive]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) => ({
@@ -114,18 +130,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   // Permission filtering helper — login returns objects; normalize to name strings.
-  const hasPermission = (permKey?: string) => {
-    if (!permKey) return true;
-    if (!session) return true;
-    return sessionHasPermission(session.permissions, permKey);
-  };
+  const checkHasPermission = useCallback(
+    (permKey?: string) => {
+      if (!permKey) return true;
+      if (!sessionPermissions) return true;
+      return sessionHasPermission(sessionPermissions, permKey);
+    },
+    [sessionPermissions],
+  );
 
-  // Filtered navigation based on permissions and search query
+  // Filtered navigation based on permissions and search query.
+  // Uses checkHasPermission and sessionPermissions dependencies to avoid re-evaluating navigation
+  // permissions when unrelated state (such as activeFlyout or loggingOut) updates.
   const filteredNav = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
     return navigationConfig
-      .filter((parent) => hasPermission(parent.permission))
+      .filter((parent) => checkHasPermission(parent.permission))
       .map((parent) => {
         if (parent.href) {
           const matches =
@@ -138,13 +159,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         if (parent.children) {
           const visibleChildren = parent.children.filter(
             (c) =>
-              hasPermission(c.permission) &&
+              checkHasPermission(c.permission) &&
               (!q ||
                 c.label.toLowerCase().includes(q) ||
                 parent.label.toLowerCase().includes(q)),
           );
-          if (!q && visibleChildren.length === 0) return null;
-          if (q && visibleChildren.length === 0) return null;
+          if (visibleChildren.length === 0) return null;
           return { ...parent, children: visibleChildren };
         }
 
@@ -153,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             .map((sg) => {
               const visibleItems = sg.items.filter(
                 (item) =>
-                  hasPermission(item.permission) &&
+                  checkHasPermission(item.permission) &&
                   (!q ||
                     item.label.toLowerCase().includes(q) ||
                     sg.title.toLowerCase().includes(q) ||
@@ -170,7 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         return parent;
       })
       .filter(Boolean) as NavParentItem[];
-  }, [searchQuery, session]);
+  }, [checkHasPermission, searchQuery]);
 
   return (
     <div
