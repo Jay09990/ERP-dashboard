@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -24,10 +30,33 @@ import {
 import { seedModeEnabled } from "@/config/seed-mode";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { sessionHasPermission } from "@/lib/auth/permissions";
+import { getPermissionSet } from "@/lib/auth/permissions";
 import { clearToken } from "@/lib/auth/token";
 import { useSessionStore } from "@/stores/session-store";
 import { useUiStore } from "@/stores/ui-store";
+
+// Static module-scoped helpers for route matching to preserve reference identity across renders
+function isRouteActive(pathname: string, href: string, exact?: boolean) {
+  if (exact || href === "/") {
+    return pathname === href;
+  }
+  return pathname.startsWith(href);
+}
+
+function isParentActive(pathname: string, parent: NavParentItem) {
+  if (parent.href) {
+    return isRouteActive(pathname, parent.href, true);
+  }
+  if (parent.children) {
+    return parent.children.some((child) => isRouteActive(pathname, child.href));
+  }
+  if (parent.subGroups) {
+    return parent.subGroups.some((sg) =>
+      sg.items.some((child) => isRouteActive(pathname, child.href)),
+    );
+  }
+  return false;
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -57,34 +86,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFlyout]);
 
-  // Helper to check if a specific route is active
-  const isRouteActive = (href: string, exact?: boolean) => {
-    if (exact || href === "/") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
-  };
-
-  // Helper to check if a parent item contains the active route
-  const isParentActive = (parent: NavParentItem) => {
-    if (parent.href) {
-      return isRouteActive(parent.href, true);
-    }
-    if (parent.children) {
-      return parent.children.some((child) => isRouteActive(child.href));
-    }
-    if (parent.subGroups) {
-      return parent.subGroups.some((sg) =>
-        sg.items.some((child) => isRouteActive(child.href)),
-      );
-    }
-    return false;
-  };
-
   // Auto-expand the parent that contains the active route on pathname change
   useEffect(() => {
     for (const parent of navigationConfig) {
-      if (isParentActive(parent)) {
+      if (isParentActive(pathname, parent)) {
         setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
       }
     }
@@ -113,12 +118,25 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  // Permission filtering helper — login returns objects; normalize to name strings.
-  const hasPermission = (permKey?: string) => {
-    if (!permKey) return true;
-    if (!session) return true;
-    return sessionHasPermission(session.permissions, permKey);
-  };
+  // Cache permission set via WeakMap in getPermissionSet to avoid repeated O(N) permission normalizations.
+  const permissionSet = useMemo(
+    () => (session ? getPermissionSet(session.permissions) : null),
+    [session],
+  );
+
+  // Memoized O(1) permission check function.
+  const hasPermission = useCallback(
+    (permKey?: string) => {
+      if (!permKey) return true;
+      if (!permissionSet) return true;
+      return (
+        permissionSet.has(permKey) ||
+        permissionSet.has("*") ||
+        permissionSet.has("all")
+      );
+    },
+    [permissionSet],
+  );
 
   // Filtered navigation based on permissions and search query
   const filteredNav = useMemo(() => {
@@ -170,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         return parent;
       })
       .filter(Boolean) as NavParentItem[];
-  }, [searchQuery, session]);
+  }, [searchQuery, hasPermission]);
 
   return (
     <div
@@ -230,12 +248,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             {filteredNav.map((parent) => {
               const Icon = parent.icon;
               const isDirectLink = Boolean(parent.href);
-              const parentActive = isParentActive(parent);
+              const parentActive = isParentActive(pathname, parent);
               const isExpanded = Boolean(openGroups[parent.id] || searchQuery);
 
               // Standalone direct link (e.g. Dashboard)
               if (isDirectLink && parent.href) {
-                const active = isRouteActive(parent.href, true);
+                const active = isRouteActive(pathname, parent.href, true);
                 return (
                   <Link
                     key={parent.id}
@@ -308,7 +326,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                         {parent.children?.map((child) => {
                           const ChildIcon = child.icon;
-                          const childActive = isRouteActive(child.href);
+                          const childActive = isRouteActive(
+                            pathname,
+                            child.href,
+                          );
                           return (
                             <Link
                               key={child.id}
@@ -342,7 +363,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </span>
                             {sg.items.map((child) => {
                               const ChildIcon = child.icon;
-                              const childActive = isRouteActive(child.href);
+                              const childActive = isRouteActive(
+                                pathname,
+                                child.href,
+                              );
                               return (
                                 <Link
                                   key={child.id}
@@ -393,7 +417,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       {/* Standard direct children */}
                       {parent.children?.map((child) => {
                         const ChildIcon = child.icon;
-                        const childActive = isRouteActive(child.href);
+                        const childActive = isRouteActive(pathname, child.href);
                         return (
                           <Link
                             key={child.id}
@@ -431,7 +455,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                           </span>
                           {sg.items.map((child) => {
                             const ChildIcon = child.icon;
-                            const childActive = isRouteActive(child.href);
+                            const childActive = isRouteActive(
+                              pathname,
+                              child.href,
+                            );
                             return (
                               <Link
                                 key={child.id}
