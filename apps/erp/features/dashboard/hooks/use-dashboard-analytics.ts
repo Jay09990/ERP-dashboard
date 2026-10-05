@@ -1,6 +1,11 @@
 "use client";
 
-import { invoiceApi, creditNoteApi, debitNoteApi, purchaseInvoiceApi } from "@/features/documents/api";
+import {
+  creditNoteApi,
+  debitNoteApi,
+  invoiceApi,
+  purchaseInvoiceApi,
+} from "@/features/documents/api";
 import { useMemo, useState } from "react";
 import {
   extractRecords,
@@ -381,7 +386,14 @@ export function useDashboardAnalytics(): DashboardAnalytics {
       statusData,
       monthlyComparison,
     };
-  }, [invoicesQuery.data, creditNotesQuery.data, debitNotesQuery.data, purchaseInvoicesQuery.data, timeframe, metricType]);
+  }, [
+    invoicesQuery.data,
+    creditNotesQuery.data,
+    debitNotesQuery.data,
+    purchaseInvoicesQuery.data,
+    timeframe,
+    metricType,
+  ]);
 
   return {
     timeframe,

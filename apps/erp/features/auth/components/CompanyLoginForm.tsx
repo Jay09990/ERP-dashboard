@@ -122,9 +122,10 @@ export function CompanyLoginForm() {
       description="Use your email address or phone number to continue."
     >
       <form className="altrex-auth-form" onSubmit={form.handleSubmit(submit)}>
-        <label className="altrex-field">
+        <label className="altrex-field" htmlFor="company-login">
           <span>Email or phone</span>
           <Input
+            id="company-login"
             aria-invalid={Boolean(form.formState.errors.login)}
             {...form.register("login")}
           />
@@ -134,10 +135,11 @@ export function CompanyLoginForm() {
             </small>
           )}
         </label>
-        <label className="altrex-field">
+        <label className="altrex-field" htmlFor="company-password">
           <span>Password</span>
           <div className="altrex-password-row">
             <Input
+              id="company-password"
               type={showPassword ? "text" : "password"}
               aria-invalid={Boolean(form.formState.errors.password)}
               {...form.register("password")}
