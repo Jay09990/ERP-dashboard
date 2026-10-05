@@ -12,13 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -63,11 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFlyout]);
 
-  // Pure helper to check permission against session permissions reference.
-  // Defined at component scope using useCallback to avoid closure allocation on every render.
-  const sessionPermissions = session?.permissions;
-
-  // Helper to check if a specific route is active
+  // Helper to check if a specific route is active - memoized to prevent re-creation on every render
   const isRouteActive = useCallback(
     (href: string, exact?: boolean) => {
       if (exact || href === "/") {
@@ -78,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     [pathname],
   );
 
-  // Helper to check if a parent item contains the active route
+  // Helper to check if a parent item contains the active route - memoized to keep reference stable
   const isParentActive = useCallback(
     (parent: NavParentItem) => {
       if (parent.href) {
@@ -104,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
       }
     }
-  }, [isParentActive]);
+  }, [pathname, isParentActive]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) => ({
@@ -130,13 +120,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   // Permission filtering helper — login returns objects; normalize to name strings.
-  const checkHasPermission = useCallback(
+  // Memoized on session to maintain reference stability and prevent useMemo cache invalidation.
+  const hasPermission = useCallback(
     (permKey?: string) => {
       if (!permKey) return true;
-      if (!sessionPermissions) return true;
-      return sessionHasPermission(sessionPermissions, permKey);
+      if (!session) return true;
+      return sessionHasPermission(session.permissions, permKey);
     },
-    [sessionPermissions],
+    [session],
   );
 
   // Filtered navigation based on permissions and search query.
@@ -190,7 +181,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         return parent;
       })
       .filter(Boolean) as NavParentItem[];
-  }, [checkHasPermission, searchQuery]);
+  }, [searchQuery, hasPermission]);
 
   return (
     <div
