@@ -13,7 +13,9 @@ export function getToken(): string | null {
 export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
   // Marker only — short-lived, non-httpOnly is fine since it carries no secret.
-  document.cookie = `${MARKER_COOKIE}=1; path=/; max-age=900; SameSite=Lax`;
+  const isSecure =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+  document.cookie = `${MARKER_COOKIE}=1; path=/; max-age=900; SameSite=Strict${isSecure ? "; Secure" : ""}`;
 }
 
 export function clearToken() {
