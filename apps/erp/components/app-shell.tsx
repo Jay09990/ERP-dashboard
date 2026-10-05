@@ -12,13 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -86,6 +80,36 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFlyout]);
 
+  // Helper to check if a specific route is active - memoized to prevent re-creation on every render
+  const isRouteActive = useCallback(
+    (href: string, exact?: boolean) => {
+      if (exact || href === "/") {
+        return pathname === href;
+      }
+      return pathname.startsWith(href);
+    },
+    [pathname],
+  );
+
+  // Helper to check if a parent item contains the active route - memoized to keep reference stable
+  const isParentActive = useCallback(
+    (parent: NavParentItem) => {
+      if (parent.href) {
+        return isRouteActive(parent.href, true);
+      }
+      if (parent.children) {
+        return parent.children.some((child) => isRouteActive(child.href));
+      }
+      if (parent.subGroups) {
+        return parent.subGroups.some((sg) =>
+          sg.items.some((child) => isRouteActive(child.href)),
+        );
+      }
+      return false;
+    },
+    [isRouteActive],
+  );
+
   // Auto-expand the parent that contains the active route on pathname change
   useEffect(() => {
     for (const parent of navigationConfig) {
@@ -93,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
       }
     }
-  }, [pathname]);
+  }, [pathname, isParentActive]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) => ({
@@ -118,24 +142,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  // Cache permission set via WeakMap in getPermissionSet to avoid repeated O(N) permission normalizations.
-  const permissionSet = useMemo(
-    () => (session ? getPermissionSet(session.permissions) : null),
-    [session],
-  );
-
-  // Memoized O(1) permission check function.
+  // Permission filtering helper — login returns objects; normalize to name strings.
+  // Memoized on session to maintain reference stability and prevent useMemo cache invalidation.
   const hasPermission = useCallback(
     (permKey?: string) => {
       if (!permKey) return true;
-      if (!permissionSet) return true;
-      return (
-        permissionSet.has(permKey) ||
-        permissionSet.has("*") ||
-        permissionSet.has("all")
-      );
+      if (!session) return true;
+      return sessionHasPermission(session.permissions, permKey);
     },
-    [permissionSet],
+    [session],
   );
 
   // Filtered navigation based on permissions and search query

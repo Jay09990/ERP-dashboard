@@ -28,7 +28,7 @@ export function DeactivateDialog({ company, onClose }: Props) {
   };
 
   return (
-    <div className="altrex-dialog-backdrop" aria-hidden="true">
+    <div className="altrex-dialog-backdrop">
       <button
         type="button"
         tabIndex={-1}
@@ -73,6 +73,7 @@ export function DeactivateDialog({ company, onClose }: Props) {
             className="altrex-icon-button"
             onClick={onClose}
             aria-label="Close"
+            title="Close"
             disabled={isPending}
           >
             <X size={18} />
