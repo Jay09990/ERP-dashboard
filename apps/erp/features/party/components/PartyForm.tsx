@@ -62,60 +62,65 @@ export function PartyForm({
   };
 
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-6">
-      <div className="altrex-company-grid">
-        <div className="altrex-field">
-          <label>
-            {partyType === "customer" ? "Customer Name" : "Vendor Name"}
-          </label>
-          <Input {...form.register("party_name")} />
-          {form.formState.errors.party_name && (
-            <small className="altrex-form-error">
-              {form.formState.errors.party_name.message}
-            </small>
-          )}
+    <form
+      onSubmit={form.handleSubmit(handleSubmit)}
+      className="altrex-dialog-form"
+    >
+      <div className="altrex-dialog-form-body">
+        <div className="altrex-company-grid">
+          <div className="altrex-field">
+            <label>
+              {partyType === "customer" ? "Customer Name" : "Vendor Name"}
+            </label>
+            <Input {...form.register("party_name")} />
+            {form.formState.errors.party_name && (
+              <small className="altrex-form-error">
+                {form.formState.errors.party_name.message}
+              </small>
+            )}
+          </div>
+
+          <div className="altrex-field">
+            <label>Phone</label>
+            <Input {...form.register("phone")} />
+            {form.formState.errors.phone && (
+              <small className="altrex-form-error">
+                {form.formState.errors.phone.message}
+              </small>
+            )}
+          </div>
+
+          <div className="altrex-field">
+            <label>Email</label>
+            <Input {...form.register("email")} />
+            {form.formState.errors.email && (
+              <small className="altrex-form-error">
+                {form.formState.errors.email.message}
+              </small>
+            )}
+          </div>
+
+          <div className="altrex-field">
+            <label>GST Number</label>
+            <Input {...form.register("gst_no")} />
+          </div>
+
+          <div className="altrex-field">
+            <label>PAN Number</label>
+            <Input {...form.register("pan_no")} />
+          </div>
+
+          <div className="altrex-field">
+            <label>Address</label>
+            <Input {...form.register("address")} />
+          </div>
         </div>
 
-        <div className="altrex-field">
-          <label>Phone</label>
-          <Input {...form.register("phone")} />
-          {form.formState.errors.phone && (
-            <small className="altrex-form-error">
-              {form.formState.errors.phone.message}
-            </small>
-          )}
-        </div>
-
-        <div className="altrex-field">
-          <label>Email</label>
-          <Input {...form.register("email")} />
-          {form.formState.errors.email && (
-            <small className="altrex-form-error">
-              {form.formState.errors.email.message}
-            </small>
-          )}
-        </div>
-
-        <div className="altrex-field">
-          <label>GST Number</label>
-          <Input {...form.register("gst_no")} />
-        </div>
-
-        <div className="altrex-field">
-          <label>PAN Number</label>
-          <Input {...form.register("pan_no")} />
-        </div>
-
-        <div className="altrex-field">
-          <label>Address</label>
-          <Input {...form.register("address")} />
-        </div>
+        <AddressRepeater />
+        <ContactPersonRepeater />
       </div>
 
-      <AddressRepeater />
-      <ContactPersonRepeater />
-
-      <div className="flex justify-end gap-3">
+      <div className="altrex-dialog-footer">
         <button
           type="button"
           onClick={() => form.reset()}

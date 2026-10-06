@@ -1,579 +1,124 @@
+/** Visual business overview, arranged as a responsive dashboard grid. */
 "use client";
 
 import {
-  ArrowRight,
-  Building2,
-  Clock,
-  FileCheck,
-  FileText,
-  Package,
-  Plus,
-  ShoppingBag,
-  TrendingUp,
-  Users,
+  Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight,
+  BriefcaseBusiness, Boxes, Building2, CircleDollarSign, ClipboardCheck,
+  FileClock, PackageSearch, Plus, Users,
 } from "lucide-react";
 import Link from "next/link";
-
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from "recharts";
+import { formatINR } from "../utils";
 import { useDashboardOverview } from "../hooks/use-dashboard-overview";
-import { InvoicedVsPaidChart } from "./InvoicedVsPaidChart";
-import { PaymentStatusDonut } from "./PaymentStatusDonut";
-import { SalesVsPurchaseBarChart } from "./SalesVsPurchaseBarChart";
 
-function StatusChip({ status }: { status: string }) {
-  const normalized = status.toLowerCase();
-  const isPositive =
-    normalized === "approved" ||
-    normalized === "sent" ||
-    normalized === "paid" ||
-    normalized === "delivered" ||
-    normalized === "completed";
+const currencyTick = (value: number) => value >= 10000000 ? `₹${(value / 10000000).toFixed(1)}Cr`
+  : value >= 100000 ? `₹${(value / 100000).toFixed(0)}L` : `₹${Math.round(value / 1000)}k`;
 
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 11,
-        fontWeight: 700,
-        textTransform: "uppercase",
-        background: isPositive
-          ? "rgba(16, 185, 129, 0.12)"
-          : "rgba(245, 158, 11, 0.12)",
-        color: isPositive ? "#10b981" : "#f59e0b",
-      }}
-    >
-      {status}
-    </span>
-  );
+function Panel({ title, detail, children, className = "" }: {
+  title: string; detail?: string; children: React.ReactNode; className?: string;
+}) {
+  return <section className={`dashboard-panel ${className}`}>
+    <div className="dashboard-panel-heading"><div><h2>{title}</h2>{detail && <span>{detail}</span>}</div></div>
+    {children}
+  </section>;
+}
+
+function Metric({ icon: Icon, label, value, foot, tone, href }: {
+  icon: typeof Activity; label: string; value: string; foot: string; tone: string; href?: string;
+}) {
+  const content = <>
+    <div className="dashboard-metric-top"><span>{label}</span><i className={`dashboard-icon ${tone}`}><Icon size={17} /></i></div>
+    <strong>{value}</strong><small>{foot}</small>
+  </>;
+  return href ? <Link className="dashboard-metric dashboard-panel" href={href}>{content}</Link>
+    : <div className="dashboard-metric dashboard-panel">{content}</div>;
 }
 
 export function DashboardShell() {
-  const overview = useDashboardOverview();
+  const data = useDashboardOverview();
+  const money = (value: number) => formatINR(value);
+  const nameDate = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+  const dueCount = data.attentionItems.reduce((sum, item) => sum + item.count, 0);
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Header */}
-      <div className="altrex-page-header">
-        <div>
-          <span className="altrex-eyebrow">Enterprise Operations</span>
-          <h1>Dashboard Overview</h1>
+  return <main className="dashboard-page">
+    <header className="dashboard-header">
+      <div><span className="dashboard-eyebrow">BUSINESS PULSE · {nameDate.toUpperCase()}</span><h1>Your business at a glance</h1>
+        <p>Live activity across sales, projects, inventory and your team.</p></div>
+      <nav aria-label="Quick actions" className="dashboard-actions">
+        <Link href="/sales/invoices" className="altrex-button altrex-button-primary"><Plus size={16} />New invoice</Link>
+        <Link href="/crm/leads" className="altrex-button altrex-button-secondary"><Users size={16} />Leads</Link>
+      </nav>
+    </header>
+
+    {data.hasError && <div className="dashboard-notice"><AlertTriangle size={16} />Some module data could not be loaded; available figures are still shown.</div>}
+
+    <section className="dashboard-metrics" aria-label="Key business figures">
+      <Metric icon={CircleDollarSign} label="Sales this month" value={data.isLoading ? "—" : money(data.monthlySales)} foot={`${data.monthlySalesCount} invoices`} tone="green" href="/sales/invoices" />
+      <Metric icon={ArrowDownRight} label="To collect" value={data.isLoading ? "—" : money(data.receivables)} foot={`${data.overdueInvoices} overdue invoices`} tone="amber" href="/sales/invoices" />
+      <Metric icon={ArrowUpRight} label="To pay" value={data.isLoading ? "—" : money(data.payables)} foot={`${data.monthlyPurchasesCount} bills this month`} tone="blue" href="/purchase/invoices" />
+      <Metric icon={BriefcaseBusiness} label="Active projects" value={String(data.activeProjects)} foot={`${data.averageProgress}% average progress`} tone="violet" href="/projects" />
+      <Metric icon={Activity} label="Sales pipeline" value={String(data.leads)} foot={money(data.pipelineValue)} tone="cyan" href="/crm/leads" />
+      <Metric icon={Boxes} label="Stock to review" value={String(data.lowStockCount)} foot={`${data.expiringBatches} batches expiring soon`} tone="rose" href="/inventory/stock" />
+    </section>
+
+    <section className="dashboard-main-grid">
+      <Panel title="Money in & out" detail="Monthly invoices · last 12 months" className="dashboard-wide dashboard-money">
+        <div className="dashboard-chart dashboard-chart-large">
+          <ResponsiveContainer width="100%" height="100%"><AreaChart data={data.cashflow} margin={{ top: 10, right: 8, left: -14, bottom: 0 }}>
+            <defs><linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#22c55e" stopOpacity={0.25} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} /></linearGradient></defs>
+            <CartesianGrid vertical={false} stroke="var(--dashboard-grid)" strokeDasharray="3 5" />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "var(--altrex-muted)", fontSize: 11 }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--altrex-muted)", fontSize: 10 }} tickFormatter={currencyTick} />
+            <Tooltip formatter={(value) => money(Number(value))} contentStyle={{ borderRadius: 10, border: "1px solid var(--altrex-border)", background: "var(--altrex-surface)" }} />
+            <Area type="monotone" dataKey="sales" name="Sales" stroke="#22c55e" strokeWidth={2.5} fill="url(#salesFill)" />
+            <Area type="monotone" dataKey="purchases" name="Purchases" stroke="#818cf8" strokeWidth={2} fill="none" />
+          </AreaChart></ResponsiveContainer>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Link
-            href="/parties/customers"
-            className="altrex-button altrex-button-primary"
-          >
-            <Plus size={16} />
-            <span>Add Customer</span>
-          </Link>
-          <Link
-            href="/parties/vendors"
-            className="altrex-button altrex-button-secondary"
-          >
-            <Building2 size={16} />
-            <span>Add Vendor</span>
-          </Link>
+        <div className="dashboard-chart-legend"><span><i className="legend-dot green" />Sales <b>{money(data.monthlySales)}</b></span><span><i className="legend-dot violet" />Purchases <b>{money(data.monthlyPurchases)}</b></span></div>
+      </Panel>
+
+      <Panel title="Invoice collection" detail="Current status across invoices" className="dashboard-invoice">
+        <div className="dashboard-donut-wrap">
+          <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data.invoiceStatus} dataKey="value" nameKey="name" innerRadius="68%" outerRadius="90%" paddingAngle={4} stroke="none">
+            {data.invoiceStatus.map((item) => <Cell key={item.name} fill={item.color} />)}
+          </Pie><Tooltip /></PieChart></ResponsiveContainer>
+          <div className="dashboard-donut-center"><strong>{data.invoiceStatus.reduce((sum, item) => sum + item.value, 0)}</strong><span>invoices</span></div>
         </div>
-      </div>
+        <div className="dashboard-status-list">{data.invoiceStatus.map((item) => <div key={item.name}><span><i className="legend-dot" style={{ background: item.color }} />{item.name}</span><b>{item.value}</b></div>)}</div>
+      </Panel>
 
-      {overview.hasError ? (
-        <div className="altrex-table-state altrex-table-state-error">
-          Some dashboard metrics could not be loaded. Counts below use whatever
-          responses succeeded.
-        </div>
-      ) : null}
+      <Panel title="Your network" detail="Customers and suppliers" className="dashboard-network-panel">
+        <div className="dashboard-network"><Link href="/parties/customers"><Building2 size={17} /><span>Customers</span><b>{data.customerCount}</b><ArrowRight size={14} /></Link><Link href="/parties/vendors"><Users size={17} /><span>Suppliers</span><b>{data.vendorCount}</b><ArrowRight size={14} /></Link></div>
+      </Panel>
 
-      {/* Top Stat Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
-        <div
-          className="altrex-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            borderRadius: 12,
-            padding: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div className="altrex-stat-label">Total Monthly Sales</div>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: "rgba(34, 197, 94, 0.15)",
-                color: "#22c55e",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <TrendingUp size={17} />
-            </div>
-          </div>
-          <div className="altrex-stat-value">
-            {overview.isLoading ? "…" : overview.monthlySalesLabel}
-          </div>
-          <span className="altrex-stat-helper">
-            {overview.isLoading
-              ? "Loading sales invoices…"
-              : `${overview.monthlySalesCount} invoice${overview.monthlySalesCount === 1 ? "" : "s"} this month`}
-          </span>
-        </div>
+      <Panel title="Project delivery" detail={`${data.activeProjects} active · ${data.averageProgress}% average completion`} className="dashboard-projects">
+        <div className="dashboard-project-summary"><div className="dashboard-progress-ring" style={{ "--progress": `${data.averageProgress}%` } as React.CSSProperties}><b>{data.averageProgress}%</b></div><span>portfolio progress</span></div>
+        <div className="dashboard-chart dashboard-chart-short"><ResponsiveContainer width="100%" height="100%"><BarChart data={data.projectStatus} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="var(--dashboard-grid)" strokeDasharray="3 5" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "var(--altrex-muted)", fontSize: 10 }} /><YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: "var(--altrex-muted)", fontSize: 10 }} /><Tooltip /><Bar dataKey="count" name="Projects" fill="#8b5cf6" radius={[5, 5, 0, 0]} />
+        </BarChart></ResponsiveContainer></div>
+      </Panel>
 
-        <div
-          className="altrex-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            borderRadius: 12,
-            padding: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div className="altrex-stat-label">Total Purchases</div>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: "rgba(59, 130, 246, 0.15)",
-                color: "#3b82f6",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <ShoppingBag size={17} />
-            </div>
-          </div>
-          <div className="altrex-stat-value">
-            {overview.isLoading ? "…" : overview.monthlyPurchasesLabel}
-          </div>
-          <span className="altrex-stat-helper">
-            {overview.isLoading
-              ? "Loading purchase invoices…"
-              : `${overview.monthlyPurchasesCount} bill${overview.monthlyPurchasesCount === 1 ? "" : "s"} this month`}
-          </span>
-        </div>
+      <Panel title="Stock watch" detail="Items at or below reorder level" className="dashboard-stock">
+        {data.lowStock.length ? <div className="dashboard-stock-list">{data.lowStock.map((item) => <div className="dashboard-stock-item" key={item.name}>
+          <div><span>{item.name}</span><small>{item.stock} on hand · reorder at {item.reorder}</small></div><div className="dashboard-stock-track"><i style={{ width: `${Math.min(100, item.stock / Math.max(1, item.reorder) * 100)}%` }} /></div>
+        </div>)}</div> : <div className="dashboard-empty"><PackageSearch size={25} /><span>Stock levels look healthy</span></div>}
+      </Panel>
 
-        <div
-          className="altrex-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            borderRadius: 12,
-            padding: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div className="altrex-stat-label">Active Quotations</div>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: "rgba(168, 85, 247, 0.15)",
-                color: "#a855f7",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <FileText size={17} />
-            </div>
-          </div>
-          <div className="altrex-stat-value">
-            {overview.isLoading ? "…" : overview.activeQuotations}
-          </div>
-          <span className="altrex-stat-helper">
-            Open / pending customer quotes
-          </span>
-        </div>
+      <Panel title="Latest activity" detail="Recent sales and purchasing" className="dashboard-wide dashboard-activity-panel">
+        {data.recentActivity.length ? <div className="dashboard-activity">{data.recentActivity.map((item) => <Link key={item.key} href={item.href} className="dashboard-activity-row">
+          <span className="dashboard-activity-icon"><FileClock size={16} /></span><span className="dashboard-activity-name"><b>{item.label}</b><small>{item.dateLabel} · {item.status}</small></span><strong>{item.amountLabel ?? "—"}</strong><ArrowRight size={14} />
+        </Link>)}</div> : <div className="dashboard-empty"><ClipboardCheck size={25} /><span>New activity will appear here</span></div>}
+      </Panel>
 
-        <div
-          className="altrex-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            borderRadius: 12,
-            padding: 24,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div className="altrex-stat-label">Pending Deliveries</div>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                background: "rgba(249, 115, 22, 0.15)",
-                color: "#f97316",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <Package size={17} />
-            </div>
-          </div>
-          <div className="altrex-stat-value">
-            {overview.isLoading ? "…" : overview.pendingDeliveries}
-          </div>
-          <span className="altrex-stat-helper">Challans not yet completed</span>
-        </div>
-      </div>
+      <Panel title="Needs attention" detail={`${dueCount} open items`} className="dashboard-attention-panel">
+        <div className="dashboard-attention-grid">{data.attentionItems.map((item) => <Link key={item.label} href={item.href} className={`dashboard-attention ${item.tone}`}>
+          <span className="dashboard-attention-number">{item.count}</span><span>{item.label}</span><ArrowRight size={15} />
+        </Link>)}</div>
+      </Panel>
 
-      {/* Bento Grid Row 1: Invoiced vs Paid Chart (2 Cols) + Payment Status Donut (1 Col) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 20,
-        }}
-      >
-        <div style={{ gridColumn: "span 2", minWidth: 320 }}>
-          <InvoicedVsPaidChart />
-        </div>
-        <div style={{ gridColumn: "span 1", minWidth: 280 }}>
-          <PaymentStatusDonut />
-        </div>
-      </div>
-
-      {/* Bento Grid Row 2: Sales vs Purchase Bar Chart (2 Cols) + Directory Directives (1 Col) */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 20,
-        }}
-      >
-        <div style={{ gridColumn: "span 2", minWidth: 320 }}>
-          <SalesVsPurchaseBarChart />
-        </div>
-
-        <div
-          style={{
-            gridColumn: "span 1",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
-        >
-          <Link
-            href="/parties/customers"
-            className="altrex-card"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: 16,
-              borderRadius: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: "rgba(59, 130, 246, 0.15)",
-                color: "#3b82f6",
-                display: "grid",
-                placeItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Users size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "var(--altrex-text)",
-                }}
-              >
-                Customers Directory
-              </div>
-              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-                {overview.isLoading
-                  ? "Loading…"
-                  : `${overview.customerCount} customer${overview.customerCount === 1 ? "" : "s"}`}
-              </span>
-            </div>
-            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-          </Link>
-
-          <Link
-            href="/parties/vendors"
-            className="altrex-card"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: 16,
-              borderRadius: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: "rgba(168, 85, 247, 0.15)",
-                color: "#a855f7",
-                display: "grid",
-                placeItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Building2 size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "var(--altrex-text)",
-                }}
-              >
-                Vendors & Suppliers
-              </div>
-              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-                {overview.isLoading
-                  ? "Loading…"
-                  : `${overview.vendorCount} vendor${overview.vendorCount === 1 ? "" : "s"}`}
-              </span>
-            </div>
-            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-          </Link>
-
-          <Link
-            href="/users"
-            className="altrex-card"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              padding: 16,
-              borderRadius: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: "rgba(34, 197, 94, 0.15)",
-                color: "#22c55e",
-                display: "grid",
-                placeItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              <FileCheck size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "var(--altrex-text)",
-                }}
-              >
-                Users & Access Control
-              </div>
-              <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-                Role permissions & team credentials
-              </span>
-            </div>
-            <ArrowRight size={16} style={{ color: "var(--altrex-muted)" }} />
-          </Link>
-        </div>
-      </div>
-
-      {/* Bento Grid Row 3: Recent Activity & Operations */}
-      <div className="altrex-card" style={{ borderRadius: 12, padding: 20 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 16,
-              fontWeight: 800,
-              color: "var(--altrex-text)",
-            }}
-          >
-            Recent Activity & Operations
-          </h2>
-          {!overview.isLoading && overview.recentActivity.length > 0 ? (
-            <span style={{ fontSize: 12, color: "var(--altrex-muted)" }}>
-              Latest {overview.recentActivity.length}
-            </span>
-          ) : null}
-        </div>
-
-        {overview.isLoading ? (
-          <div className="altrex-table-state">
-            <span className="altrex-spinner" />
-            <span>Loading recent documents…</span>
-          </div>
-        ) : overview.recentActivity.length === 0 ? (
-          <div
-            style={{
-              padding: "40px 24px",
-              textAlign: "center",
-              border: "1px dashed var(--altrex-border)",
-              borderRadius: 10,
-            }}
-          >
-            <Clock
-              size={32}
-              style={{
-                margin: "0 auto 10px",
-                color: "var(--altrex-muted)",
-                opacity: 0.5,
-                display: "block",
-              }}
-            />
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--altrex-text)",
-              }}
-            >
-              No recent transactional logs
-            </div>
-            <p
-              style={{
-                margin: "4px 0 0",
-                fontSize: 12,
-                color: "var(--altrex-muted)",
-              }}
-            >
-              Activity appears here as quotations, orders, invoices, and
-              challans are created.
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {overview.recentActivity.map((item) => (
-              <Link
-                key={item.key}
-                href={item.href}
-                style={{
-                  textDecoration: "none",
-                  color: "inherit",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "12px 14px",
-                  borderRadius: 10,
-                  border: "1px solid var(--altrex-line)",
-                  background: "var(--altrex-raised)",
-                }}
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 9,
-                    background: "rgba(37,99,235,0.1)",
-                    color: "var(--altrex-primary)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <FileText size={16} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: "var(--altrex-text)",
-                      }}
-                    >
-                      {item.label}
-                      {item.id ? ` #${item.id}` : ""}
-                    </span>
-                    <StatusChip status={item.status} />
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "var(--altrex-muted)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {item.dateLabel}
-                    {item.amountLabel ? ` · ${item.amountLabel}` : ""}
-                  </div>
-                </div>
-                <ArrowRight
-                  size={15}
-                  style={{ color: "var(--altrex-muted)", flexShrink: 0 }}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    </section>
+  </main>;
 }

@@ -1087,6 +1087,25 @@ export const erpSeed = {
         module_name: "customers",
         is_allowed: true,
       },
+      ...[
+        ["leads:read", "leads"],
+        ["leads:create", "leads"],
+        ["leads:update", "leads"],
+        ["leads:delete", "leads"],
+        ["leads:status:update", "leads"],
+        ["leads:convert", "leads"],
+        ["leads:activities:read", "leads"],
+        ["leads:activities:create", "leads"],
+        ["lead-sources:read", "lead_sources"],
+        ["lead-sources:create", "lead_sources"],
+        ["industries:read", "industries"],
+        ["industries:create", "industries"],
+        ["follow-ups:read", "follow_ups"],
+      ].map(([permission_name, module_name]) => ({
+        permission_name,
+        module_name,
+        is_allowed: true,
+      })),
     ],
     userPermissions: [
       {

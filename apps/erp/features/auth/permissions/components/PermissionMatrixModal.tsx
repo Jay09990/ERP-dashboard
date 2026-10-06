@@ -140,7 +140,11 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
       <div
         className="altrex-dialog altrex-dialog-lg"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {/* Header */}
         <div className="altrex-dialog-header" style={{ flexShrink: 0 }}>

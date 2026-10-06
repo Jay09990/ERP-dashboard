@@ -141,7 +141,7 @@ export const projectApi = {
   useDeleteSite: () =>
     useWrite(
       ({ id, childId }: MutationInput) =>
-        apiClient.delete(
+        apiClient.post(
           endpoints.projects.site(
             needId(id, "Project ID"),
             needId(childId, "Site ID"),
@@ -170,7 +170,7 @@ export const projectApi = {
   useDeleteBoq: () =>
     useWrite(
       ({ id, childId }: MutationInput) =>
-        apiClient.delete(
+        apiClient.post(
           endpoints.projects.boqItem(
             needId(id, "Project ID"),
             needId(childId, "BOQ item ID"),
@@ -202,7 +202,7 @@ export const projectApi = {
   useDeleteMilestone: () =>
     useWrite(
       ({ id, childId }: MutationInput) =>
-        apiClient.delete(
+        apiClient.post(
           endpoints.projects.milestone(
             needId(id, "Project ID"),
             needId(childId, "Milestone ID"),
@@ -234,7 +234,7 @@ export const projectApi = {
   useDeleteTask: () =>
     useWrite(
       ({ id, childId }: MutationInput) =>
-        apiClient.delete(
+        apiClient.post(
           endpoints.projects.task(
             needId(id, "Project ID"),
             needId(childId, "Task ID"),
