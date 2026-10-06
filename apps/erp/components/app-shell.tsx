@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -186,6 +192,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       className={`altrex-shell ${collapsed ? "altrex-shell-collapsed" : ""}`}
     >
+      <a href="#main-content" className="altrex-skip-link">
+        Skip to main content
+      </a>
       <aside className="altrex-sidebar">
         {/* Brand bar */}
         <div className="altrex-brand">
@@ -532,7 +541,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="altrex-content">{children}</main>
+        <main id="main-content" tabIndex={-1} className="altrex-content">
+          {children}
+        </main>
       </div>
     </div>
   );
