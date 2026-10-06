@@ -6,21 +6,25 @@ export function sanitizeCSVValue(val: unknown): string {
   if (val === null || val === undefined) return "";
   if (typeof val === "number") return String(val);
   const str = String(val);
-  const trimmed = str.trimStart();
-  if (/^[=+@\-\t\r]/.test(trimmed)) {
-    return `'${str}`;
+  // Strip null bytes and normalize control whitespace before formula character checks
+  const cleaned = str.replace(/\0/g, "");
+  const trimmed = cleaned.trimStart();
+  if (/^[=+@\-\t\r%|]/.test(trimmed)) {
+    return `'${cleaned}`;
   }
-  return str;
+  return cleaned;
 }
 
 /**
  * Helper utility to export array of objects to CSV file
  */
+// biome-ignore lint/suspicious/noExplicitAny: Generic CSV export supports arbitrary record types
 export function exportToCSV<T extends Record<string, any>>(
   filename: string,
   headers: {
     key: keyof T | string;
     label: string;
+    // biome-ignore lint/suspicious/noExplicitAny: Value type varies by exported field
     transform?: (val: any, row: T) => string;
   }[],
   data: T[],
@@ -41,7 +45,8 @@ export function exportToCSV<T extends Record<string, any>>(
   // Data rows
   for (const row of data) {
     const values = headers.map((h) => {
-      let rawVal: any = row[h.key];
+      // biome-ignore lint/suspicious/noExplicitAny: Property dynamic access for CSV values
+      let rawVal: any = (row as any)[h.key];
       if (h.transform) {
         rawVal = h.transform(rawVal, row);
       } else if (rawVal === null || rawVal === undefined) {

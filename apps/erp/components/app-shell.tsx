@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { ThemeDropdown } from "@/components/theme-dropdown";
 import {
@@ -57,29 +63,35 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFlyout]);
 
-  // Helper to check if a specific route is active
-  const isRouteActive = (href: string, exact?: boolean) => {
-    if (exact || href === "/") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
-  };
+  // Helper to check if a specific route is active - memoized to prevent re-creation on every render
+  const isRouteActive = useCallback(
+    (href: string, exact?: boolean) => {
+      if (exact || href === "/") {
+        return pathname === href;
+      }
+      return pathname.startsWith(href);
+    },
+    [pathname],
+  );
 
-  // Helper to check if a parent item contains the active route
-  const isParentActive = (parent: NavParentItem) => {
-    if (parent.href) {
-      return isRouteActive(parent.href, true);
-    }
-    if (parent.children) {
-      return parent.children.some((child) => isRouteActive(child.href));
-    }
-    if (parent.subGroups) {
-      return parent.subGroups.some((sg) =>
-        sg.items.some((child) => isRouteActive(child.href)),
-      );
-    }
-    return false;
-  };
+  // Helper to check if a parent item contains the active route - memoized to keep reference stable
+  const isParentActive = useCallback(
+    (parent: NavParentItem) => {
+      if (parent.href) {
+        return isRouteActive(parent.href, true);
+      }
+      if (parent.children) {
+        return parent.children.some((child) => isRouteActive(child.href));
+      }
+      if (parent.subGroups) {
+        return parent.subGroups.some((sg) =>
+          sg.items.some((child) => isRouteActive(child.href)),
+        );
+      }
+      return false;
+    },
+    [isRouteActive],
+  );
 
   // Auto-expand the parent that contains the active route on pathname change
   useEffect(() => {
@@ -88,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setOpenGroups((prev) => ({ ...prev, [parent.id]: true }));
       }
     }
-  }, [pathname]);
+  }, [pathname, isParentActive]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prev) => ({
@@ -114,11 +126,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   // Permission filtering helper — login returns objects; normalize to name strings.
-  const hasPermission = (permKey?: string) => {
-    if (!permKey) return true;
-    if (!session) return true;
-    return sessionHasPermission(session.permissions, permKey);
-  };
+  // Memoized on session to maintain reference stability and prevent useMemo cache invalidation.
+  const hasPermission = useCallback(
+    (permKey?: string) => {
+      if (!permKey) return true;
+      if (!session) return true;
+      return sessionHasPermission(session.permissions, permKey);
+    },
+    [session],
+  );
 
   // Filtered navigation based on permissions and search query
   const filteredNav = useMemo(() => {
@@ -170,12 +186,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         return parent;
       })
       .filter(Boolean) as NavParentItem[];
-  }, [searchQuery, session]);
+  }, [searchQuery, hasPermission]);
 
   return (
     <div
       className={`altrex-shell ${collapsed ? "altrex-shell-collapsed" : ""}`}
     >
+      <a href="#main-content" className="altrex-skip-link">
+        Skip to main content
+      </a>
       <aside className="altrex-sidebar">
         {/* Brand bar */}
         <div className="altrex-brand">
@@ -522,7 +541,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="altrex-content">{children}</main>
+        <main id="main-content" tabIndex={-1} className="altrex-content">
+          {children}
+        </main>
       </div>
     </div>
   );

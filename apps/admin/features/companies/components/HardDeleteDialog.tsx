@@ -42,12 +42,7 @@ export function HardDeleteDialog({ company, onClose }: Props) {
   };
 
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="harddelete-title"
-    >
+    <div className="altrex-dialog-backdrop">
       <button
         type="button"
         tabIndex={-1}
@@ -55,7 +50,12 @@ export function HardDeleteDialog({ company, onClose }: Props) {
         className="fixed inset-0 border-none bg-transparent"
         onClick={() => !isPending && onClose()}
       />
-      <div className="altrex-dialog altrex-dialog-md altrex-dialog-danger relative z-10">
+      <div
+        className="altrex-dialog altrex-dialog-md altrex-dialog-danger relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="harddelete-title"
+      >
         <div className="altrex-dialog-header">
           <div className="altrex-dialog-icon altrex-dialog-icon-danger">
             <svg
@@ -148,6 +148,7 @@ export function HardDeleteDialog({ company, onClose }: Props) {
               placeholder={company.company_name}
               autoComplete="off"
               spellCheck={false}
+              autoFocus
             />
           </div>
 
