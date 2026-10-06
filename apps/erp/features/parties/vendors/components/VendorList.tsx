@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PartyFormDrawer,
   type PartyFormValues,
@@ -43,6 +43,18 @@ export function VendorList() {
     null,
   );
   const [deleteId, setDeleteId] = useState<string | number | null>(null);
+
+  // Close delete modal on Escape key press
+  useEffect(() => {
+    if (deleteId === null) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isDeleting) {
+        setDeleteId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [deleteId, isDeleting]);
 
   const filteredVendors = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -605,9 +617,27 @@ export function VendorList() {
             background: "rgba(0,0,0,0.45)",
           }}
         >
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            style={{
+              position: "fixed",
+              inset: 0,
+              border: "none",
+              background: "transparent",
+              cursor: "default",
+            }}
+            onClick={() => !isDeleting && setDeleteId(null)}
+          />
           <div
             className="altrex-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-vendor-title"
             style={{
+              position: "relative",
+              zIndex: 10,
               maxWidth: 420,
               width: "100%",
               padding: 24,
@@ -615,6 +645,7 @@ export function VendorList() {
             }}
           >
             <h3
+              id="delete-vendor-title"
               style={{
                 margin: "0 0 10px",
                 fontSize: 17,
