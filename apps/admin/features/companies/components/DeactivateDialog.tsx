@@ -28,7 +28,7 @@ export function DeactivateDialog({ company, onClose }: Props) {
   };
 
   return (
-    <div className="altrex-dialog-backdrop">
+    <div className="altrex-dialog-backdrop" aria-hidden="true">
       <button
         type="button"
         tabIndex={-1}

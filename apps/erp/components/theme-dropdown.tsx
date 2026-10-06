@@ -16,65 +16,19 @@ export function ThemeDropdown() {
   const setThemePreference = useUiStore((state) => state.setThemePreference);
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const items = menuRef.current?.querySelectorAll<HTMLButtonElement>(
-      '[role="menuitemradio"]',
-    );
-    if (items && items.length > 0) {
-      const selectedIndex = themes.findIndex(
-        (t) => t.value === themePreference,
-      );
-      const focusIndex = selectedIndex >= 0 ? selectedIndex : 0;
-      items[focusIndex]?.focus();
-    }
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsOpen(false);
-        buttonRef.current?.focus();
-        return;
-      }
-
-      if (!menuRef.current) return;
-      const menuItems = Array.from(
-        menuRef.current.querySelectorAll<HTMLButtonElement>(
-          '[role="menuitemradio"]',
-        ),
-      );
-      if (menuItems.length === 0) return;
-
-      const activeIndex = menuItems.indexOf(
-        document.activeElement as HTMLButtonElement,
-      );
-
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        const nextIndex =
-          activeIndex < 0 || activeIndex === menuItems.length - 1
-            ? 0
-            : activeIndex + 1;
-        menuItems[nextIndex]?.focus();
-      } else if (event.key === "ArrowUp") {
-        event.preventDefault();
-        const prevIndex =
-          activeIndex <= 0 ? menuItems.length - 1 : activeIndex - 1;
-        menuItems[prevIndex]?.focus();
-      } else if (event.key === "Home") {
-        event.preventDefault();
-        menuItems[0]?.focus();
-      } else if (event.key === "End") {
-        event.preventDefault();
-        menuItems[menuItems.length - 1]?.focus();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, themePreference]);
+  }, [isOpen]);
 
   const currentTheme =
     themes.find((t) => t.value === themePreference) || themes[2];
@@ -105,7 +59,6 @@ export function ThemeDropdown() {
             onClick={() => setIsOpen(false)}
           />
           <div
-            ref={menuRef}
             role="menu"
             aria-label="Theme selection"
             className="absolute right-0 top-full z-20 mt-2 min-w-[140px] rounded-lg border border-[var(--altrex-border)] bg-[var(--altrex-surface)] p-1 shadow-lg"
