@@ -124,8 +124,15 @@ The ERP App Router also includes `/projects`, `/projects/[id]`,
 and procurement requests against the paths in `lib/api/endpoints.ts`. Dedicated
 TanStack Query hooks are used rather than the simple CRUD factory because these
 operations include lifecycle transitions and project-scoped child resources.
-The Express backend remains external to this repository. The Lead API is not
-part of this feature.
+`ProjectUi.tsx` provides a feature-local form dialog with repeatable collection
+rows, shared response extraction, and error presentation. Procurement record
+details are rendered as labeled fields and item tables; backend objects should
+not be exposed as serialized JSON in end-user screens.
+The Express backend remains external to this repository.
+
+The CRM lead workspace lives in `features/crm/` and is routed at `/crm/leads`.
+Its hooks centralize lead lifecycle, follow-up, source, industry, and activity
+requests. Enquiry remains out of scope until its payload contract is documented.
 
 ---
 

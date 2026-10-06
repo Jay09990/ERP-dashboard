@@ -152,4 +152,15 @@ export const endpoints = {
     siteIssueStatus: (id: string | number, status: string) =>
       `/api/procurement/site-issue/${id}/${status}`,
   },
+  crm: {
+    leads: "/api/lead",
+    lead: (id: string | number) => `/api/lead/${id}`,
+    leadStatus: (id: string | number, status: string) =>
+      `/api/lead/${id}/status/${status}`,
+    leadConvert: (id: string | number) => `/api/lead/${id}/convert`,
+    leadActivities: (id: string | number) => `/api/lead/${id}/activities`,
+    leadSources: "/api/crm/lead_sources",
+    industries: "/api/crm/industries",
+    followUps: "/api/crm/follow-ups",
+  },
 } as const;

@@ -189,7 +189,11 @@ export function ItemFormDrawer({ item, onClose }: Props) {
       <div
         className="altrex-dialog altrex-dialog-lg"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: "92vh", display: "flex", flexDirection: "column" }}
+        style={{
+          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {/* Header */}
         <div className="altrex-dialog-header" style={{ flexShrink: 0 }}>

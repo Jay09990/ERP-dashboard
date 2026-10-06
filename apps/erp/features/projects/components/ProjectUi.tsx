@@ -7,11 +7,12 @@ import { useState } from "react";
 export type FieldDefinition = {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "textarea" | "json" | "select";
+  type?: "text" | "number" | "date" | "textarea" | "select" | "collection";
   required?: boolean;
   placeholder?: string;
   rows?: number;
   options?: { value: string; label: string }[];
+  itemFields?: Omit<FieldDefinition, "itemFields">[];
 };
 
 export function extractRecords<T>(
@@ -145,14 +146,37 @@ export function EntityFormDialog({
     Object.fromEntries(
       fields.map((field) => {
         const value = initialValues?.[field.name];
-        const displayValue =
-          field.type === "json" && value !== undefined
-            ? JSON.stringify(value, null, 2)
-            : value == null
-              ? ""
-              : String(value);
+        const displayValue = value == null ? "" : String(value);
         return [field.name, displayValue];
       }),
+    ),
+  );
+  const [collectionValues, setCollectionValues] = useState<
+    Record<string, Record<string, string>[]>
+  >(() =>
+    Object.fromEntries(
+      fields
+        .filter((field) => field.type === "collection")
+        .map((field) => {
+          const rows = initialValues?.[field.name];
+          return [
+            field.name,
+            Array.isArray(rows)
+              ? rows.map((row) =>
+                  Object.fromEntries(
+                    (field.itemFields ?? []).map((itemField) => [
+                      itemField.name,
+                      (row as Record<string, unknown>)[itemField.name] == null
+                        ? ""
+                        : String(
+                            (row as Record<string, unknown>)[itemField.name],
+                          ),
+                    ]),
+                  ),
+                )
+              : [],
+          ];
+        }),
     ),
   );
   const [formError, setFormError] = useState("");
@@ -167,25 +191,52 @@ export function EntityFormDialog({
         if (field.required && !value) {
           throw new Error(`${field.label} is required.`);
         }
-        if (!value) {
-          if (submitEmptyValues && field.type !== "json") {
+        if (!value && field.type !== "collection") {
+          if (submitEmptyValues) {
             payload[field.name] =
               field.type === "number" || field.type === "date" ? null : "";
           }
           continue;
         }
-        if (field.type === "json") {
-          const parsed: unknown = JSON.parse(value);
-          if (
-            !Array.isArray(parsed) ||
-            (field.required && parsed.length === 0)
-          ) {
-            throw new Error(
-              `${field.label} must be a JSON array${field.required ? " with at least one entry" : ""}.`,
-            );
+        if (field.type === "collection") {
+          const rows = collectionValues[field.name] ?? [];
+          const parsedRows = rows
+            .map((row) =>
+              (field.itemFields ?? []).reduce<Record<string, unknown>>(
+                (itemValues, itemField) => {
+                  const itemValue = row[itemField.name]?.trim() ?? "";
+                  if (!itemValue) {
+                    if (itemField.required) {
+                      throw new Error(
+                        `${itemField.label} is required for each item.`,
+                      );
+                    }
+                    return itemValues;
+                  }
+                  if (itemField.type === "number") {
+                    const number = Number(itemValue);
+                    if (!Number.isFinite(number)) {
+                      throw new Error(
+                        `${itemField.label} must be a valid number.`,
+                      );
+                    }
+                    itemValues[itemField.name] = number;
+                    return itemValues;
+                  }
+                  itemValues[itemField.name] = itemValue;
+                  return itemValues;
+                },
+                {},
+              ),
+            )
+            .filter((row) => Object.keys(row).length > 0);
+          if (field.required && parsedRows.length === 0) {
+            throw new Error(`${field.label} needs at least one item.`);
           }
-          payload[field.name] = parsed;
-        } else if (field.type === "number") {
+          payload[field.name] = parsedRows;
+          continue;
+        }
+        if (field.type === "number") {
           const number = Number(value);
           if (!Number.isFinite(number)) {
             throw new Error(`${field.label} must be a valid number.`);
@@ -238,26 +289,159 @@ export function EntityFormDialog({
               }}
             >
               {fields.map((field) => (
-                <label
+                <div
                   className="altrex-field"
                   key={field.name}
-                  htmlFor={field.name}
                   style={{
                     gridColumn:
-                      field.type === "json" || field.type === "textarea"
+                      field.type === "textarea" || field.type === "collection"
                         ? "1 / -1"
                         : undefined,
                   }}
                 >
-                  <span>
-                    {field.label}
-                    {field.required ? " *" : ""}
-                  </span>
-                  {field.type === "textarea" || field.type === "json" ? (
+                  {field.type === "collection" ? (
+                    <span>
+                      {field.label}
+                      {field.required ? " *" : ""}
+                    </span>
+                  ) : (
+                    <label htmlFor={field.name}>
+                      {field.label}
+                      {field.required ? " *" : ""}
+                    </label>
+                  )}
+                  {field.type === "collection" ? (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      {(collectionValues[field.name] ?? []).map(
+                        (row, rowIndex) => (
+                          <div
+                            key={`${field.name}-${rowIndex}`}
+                            className="altrex-card"
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fit, minmax(180px, 1fr))",
+                              gap: 12,
+                              marginBottom: 10,
+                              padding: 12,
+                            }}
+                          >
+                            {(field.itemFields ?? []).map((itemField) => (
+                              <label
+                                className="altrex-field"
+                                key={itemField.name}
+                                htmlFor={`${field.name}-${rowIndex}-${itemField.name}`}
+                              >
+                                <span>{itemField.label}</span>
+                                {itemField.type === "select" ? (
+                                  <select
+                                    id={`${field.name}-${rowIndex}-${itemField.name}`}
+                                    className="altrex-input"
+                                    value={row[itemField.name] ?? ""}
+                                    onChange={(event) =>
+                                      setCollectionValues((current) => ({
+                                        ...current,
+                                        [field.name]: (
+                                          current[field.name] ?? []
+                                        ).map((item, index) =>
+                                          index === rowIndex
+                                            ? {
+                                                ...item,
+                                                [itemField.name]:
+                                                  event.target.value,
+                                              }
+                                            : item,
+                                        ),
+                                      }))
+                                    }
+                                  >
+                                    <option value="">
+                                      Choose {itemField.label.toLowerCase()}
+                                    </option>
+                                    {itemField.options?.map((option) => (
+                                      <option
+                                        value={option.value}
+                                        key={option.value}
+                                      >
+                                        {option.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    id={`${field.name}-${rowIndex}-${itemField.name}`}
+                                    className="altrex-input"
+                                    type={itemField.type ?? "text"}
+                                    step={
+                                      itemField.type === "number"
+                                        ? "any"
+                                        : undefined
+                                    }
+                                    value={row[itemField.name] ?? ""}
+                                    placeholder={itemField.placeholder}
+                                    onChange={(event) =>
+                                      setCollectionValues((current) => ({
+                                        ...current,
+                                        [field.name]: (
+                                          current[field.name] ?? []
+                                        ).map((item, index) =>
+                                          index === rowIndex
+                                            ? {
+                                                ...item,
+                                                [itemField.name]:
+                                                  event.target.value,
+                                              }
+                                            : item,
+                                        ),
+                                      }))
+                                    }
+                                  />
+                                )}
+                              </label>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                setCollectionValues((current) => ({
+                                  ...current,
+                                  [field.name]: (
+                                    current[field.name] ?? []
+                                  ).filter((_, index) => index !== rowIndex),
+                                }))
+                              }
+                            >
+                              Remove item
+                            </Button>
+                          </div>
+                        ),
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          setCollectionValues((current) => ({
+                            ...current,
+                            [field.name]: [
+                              ...(current[field.name] ?? []),
+                              Object.fromEntries(
+                                (field.itemFields ?? []).map((itemField) => [
+                                  itemField.name,
+                                  "",
+                                ]),
+                              ),
+                            ],
+                          }))
+                        }
+                      >
+                        Add {field.label.toLowerCase()}
+                      </Button>
+                    </div>
+                  ) : field.type === "textarea" ? (
                     <textarea
                       id={field.name}
                       className="altrex-input"
-                      rows={field.rows ?? (field.type === "json" ? 7 : 3)}
+                      rows={field.rows ?? 3}
                       value={values[field.name] ?? ""}
                       placeholder={field.placeholder}
                       required={field.required}
@@ -307,7 +491,7 @@ export function EntityFormDialog({
                       }
                     />
                   )}
-                </label>
+                </div>
               ))}
             </div>
             {formError && (

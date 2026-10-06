@@ -101,10 +101,23 @@
 - [x] Goods receipts (GRN) with list/detail, create, and approve/cancel actions
 - [x] Project site issues with list/detail, create, and approve/cancel actions
 - [x] Add API endpoint constants, sidebar navigation, and document the feature
+- [x] Replace project and procurement JSON-array text entry with labeled repeatable item forms
+- [x] Replace raw procurement JSON detail output with readable record summaries and item tables
 - [ ] Validate all request/response shapes and child-route methods against a running backend; the API server is outside this repository
-- [ ] Replace manually entered reference IDs and JSON line-item arrays with searchable selectors/repeaters when the backend lookup/detail contracts are confirmed
+- [ ] Replace manually entered reference IDs with searchable selectors when backend lookup contracts are confirmed
 - [ ] Add permission gating for project/procurement mutations once the backend permission keys are documented
 - [ ] Confirm project document upload/storage contract; current UI accepts document metadata and a file URL, not binary uploads
+
+### Phase 12 — CRM Leads
+- [x] Lead list, create/edit, documented status transitions, loss reason, and customer conversion
+- [x] Lead activity history and activity logging
+- [x] Lead source and industry lists/create forms
+- [x] Follow-up list with documented due, overdue, today, and upcoming scopes
+- [x] Add CRM permission keys, hide unauthorized actions, and protect the Leads navigation entry
+- [x] Include CRM permission catalog entries in role and user permission matrices when the backend catalog is stale
+- [ ] Confirm lead source/industry update/delete routes and provide selectors for documented references
+- [ ] Confirm the follow-up list response shape and whether it returns lead records or activity records
+- [ ] Implement Enquiry after its request and response payload contract is documented
 
 ---
 
@@ -115,7 +128,7 @@ These exist in `modules.md` as 🚧/🔮 and are **not** part of the phases abov
 2. Slot it into the appropriate phase above (Sales Documents for Proforma/Delivery Challan/Credit Notes; Purchase Documents for Debit Notes; Item Management for Item Attributes/Item Images).
 3. Reuse the master document-form template or resource-hook factory — do not architect it fresh.
 
-Known future modules: Proforma (backend documented, not confirmed), Delivery Challan, Credit Notes, Debit Notes, Item Attributes, Item Images. Additionally, the Departments/Branch/Designations/Shift/Holiday masters exist ahead of any consuming HR module — an HR module is plausible future scope given these masters already exist. Note: Warehouse Master and full Inventory Module are now completed as part of Phase 6. The Lead module in `Projects_api_doc.md` is intentionally outside Phase 11 and was not implemented.
+Known future modules: Proforma (backend documented, not confirmed), Delivery Challan, Credit Notes, Debit Notes, Item Attributes, Item Images, and Enquiry pending its payload contract. Additionally, the Departments/Branch/Designations/Shift/Holiday masters exist ahead of any consuming HR module — an HR module is plausible future scope given these masters already exist. Note: Warehouse Master and full Inventory Module are now completed as part of Phase 6.
 
 ---
 
@@ -141,6 +154,6 @@ Known future modules: Proforma (backend documented, not confirmed), Delivery Cha
 - [ ] **Token refresh strategy unconfirmed.** — BLOCKED. No refresh endpoint in `BackendApi_doc.md`. JWT issued on login expires in 15 minutes (`exp - iat` from observed token). **No refresh endpoint in BackendApi_doc.md — blocked. 15-min JWT expiry confirmed. Product-blocking: users forced to re-login every 15 minutes. Frontend has isTokenExpired() ready in token.ts but no renewal path.**
 - [ ] **Token revocation on logout unconfirmed.** — UNRESOLVED. No revocation/blacklist mechanism in `BackendApi_doc.md`. **No revocation mechanism documented — awaiting backend confirmation. With stateless JWTs, logout may only need client-side clearToken(). If backend adds revocation list later, frontend logout call can be re-added.**
 - [ ] **Activity Log endpoint missing** — NEW (Phase 10 Task 3 blocker). No `GET /api/audit_logs` or equivalent endpoint in `BackendApi_doc.md`. `modules.md §9.1` references `company.audit_logs` as a backend concept but no frontend-facing endpoint is documented. Frontend cannot build the Activity Log viewer against a non-existent endpoint. **Activity Log viewer (Phase 10 Task 3) blocked — no audit_logs endpoint in BackendApi_doc.md. Frontend cannot build reader against non-existent endpoint. Backend must document GET /api/audit_logs before this can proceed.**
-- [x] **Project Management and Procurement frontend** — initial screens and API hooks implemented from `Projects_api_doc.md`; see Phase 11 and `modules.md` §7.1. The Express backend is not in this repository. Forms currently use numeric reference IDs and JSON line-item arrays pending confirmed lookup/response contracts. The documented project-document create example repeats DPR fields and does not specify a binary upload contract; upload remains unimplemented.
+- [x] **Project Management and Procurement frontend** — screens, API hooks, repeatable human-readable item forms, and readable procurement detail views implemented from `Projects_api_doc.md`; see Phase 11 and `modules.md` §7.1. The Express backend is external. Forms still use numeric reference IDs pending confirmed lookup contracts. The documented project-document create example repeats DPR fields and does not specify a binary upload contract; upload remains unimplemented.
 - [ ] **Project/Procurement permissions** — the project API document does not provide permission keys. Phase 11 mutation controls are not yet permission-gated; obtain the backend permission names before adding gates.
 - [ ] **Project child-route methods and response shapes** — confirm the API document's update/delete methods and nested project-detail response shape against the deployed backend. Some child operations are listed with ambiguous methods in the source document; do not silently assume every route matches REST conventions.

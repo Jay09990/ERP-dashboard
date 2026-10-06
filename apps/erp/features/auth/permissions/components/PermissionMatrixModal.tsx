@@ -91,12 +91,13 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   };
 
   const totalCount = permissions.length;
-  const grantedCount = permissions.filter((p) => p.is_allowed).length;
 
-  // Cache grouped permissions by module to avoid O(N) array filter scans on every sidebar module switch or search keystroke
-  const permissionsByModule = useMemo(() => {
+  // Cache grouped permissions and granted count in a single O(N) pass to avoid redundant array allocations and traversals on every render or search keystroke
+  const { permissionsByModule, grantedCount } = useMemo(() => {
     const map = new Map<string, PermissionItem[]>();
+    let granted = 0;
     for (const p of permissions) {
+      if (p.is_allowed) granted++;
       const mod = p.module_name || "General";
       let list = map.get(mod);
       if (!list) {
@@ -105,22 +106,29 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
       }
       list.push(p);
     }
-    return map;
+    return { permissionsByModule: map, grantedCount: granted };
   }, [permissions]);
 
-  const activeModuleItems = useMemo(() => {
-    const items = permissionsByModule.get(activeModule) || [];
-    if (!permSearch.trim()) return items;
-    const lowerSearch = permSearch.toLowerCase();
-    return items.filter((p) =>
-      p.permission_name.toLowerCase().includes(lowerSearch),
-    );
-  }, [permissionsByModule, activeModule, permSearch]);
+  // Compute filtered items and active module granted count in a single pass
+  const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
+    useMemo(() => {
+      const items = permissionsByModule.get(activeModule) || [];
+      const query = permSearch.trim().toLowerCase();
+      const filtered = query
+        ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
+        : items;
 
-  const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
-  const activeModuleGranted = activeModuleItems.filter(
-    (p) => p.is_allowed,
-  ).length;
+      let granted = 0;
+      for (const p of filtered) {
+        if (p.is_allowed) granted++;
+      }
+
+      return {
+        activeModuleItems: filtered,
+        activeModuleAllowed: filtered.length > 0 && granted === filtered.length,
+        activeModuleGranted: granted,
+      };
+    }, [permissionsByModule, activeModule, permSearch]);
 
   if (isLoadingAll || isLoadingRole) {
     return (
@@ -140,7 +148,11 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
       <div
         className="altrex-dialog altrex-dialog-lg"
         onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {/* Header */}
         <div className="altrex-dialog-header" style={{ flexShrink: 0 }}>
