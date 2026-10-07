@@ -1,4 +1,7 @@
-import { additionalPermissionCatalog } from "@/config/permissions";
+import {
+  additionalPermissionCatalog,
+  legacyPermissionAliases,
+} from "@/config/permissions";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,8 +16,28 @@ export type PermissionItem = {
 type PermissionResponse = PermissionItem[] | { permissions?: PermissionItem[] };
 
 function permissionArray(response: PermissionResponse): PermissionItem[] {
-  if (Array.isArray(response)) return response;
-  return (response as { permissions?: PermissionItem[] }).permissions ?? [];
+  const permissions = Array.isArray(response)
+    ? response
+    : ((response as { permissions?: PermissionItem[] }).permissions ?? []);
+  const normalized = new Map<string, PermissionItem>();
+
+  for (const permission of permissions) {
+    const canonicalName =
+      legacyPermissionAliases[permission.permission_name] ??
+      permission.permission_name;
+    const existing = normalized.get(canonicalName);
+    const isCanonical = canonicalName === permission.permission_name;
+    const existingIsCanonical = existing?.permission_name === canonicalName;
+
+    if (!existing || (isCanonical && !existingIsCanonical)) {
+      normalized.set(canonicalName, {
+        ...permission,
+        permission_name: canonicalName,
+      });
+    }
+  }
+
+  return [...normalized.values()];
 }
 
 export function useAllPermissions() {

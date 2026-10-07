@@ -265,11 +265,21 @@ export function LeadWorkspace() {
   const [editing, setEditing] = useState<Lead | null>(null);
   const [activeLead, setActiveLead] = useState<number | null>(null);
   const [followUpScope, setFollowUpScope] = useState("due");
-  const leadsQuery = crmApi.useLeads();
-  const sourcesQuery = crmApi.useLeadSources();
-  const industriesQuery = crmApi.useIndustries();
-  const followUpsQuery = crmApi.useFollowUps(followUpScope);
-  const activitiesQuery = crmApi.useActivities(activeLead);
+  const leadsQuery = crmApi.useLeads(hasPermission(permissions.leadsRead));
+  const sourcesQuery = crmApi.useLeadSources(
+    hasPermission(permissions.leadSourcesRead),
+  );
+  const industriesQuery = crmApi.useIndustries(
+    hasPermission(permissions.industriesRead),
+  );
+  const followUpsQuery = crmApi.useFollowUps(
+    followUpScope,
+    hasPermission(permissions.followUpsRead),
+  );
+  const activitiesQuery = crmApi.useActivities(
+    activeLead,
+    hasPermission(permissions.leadActivitiesRead),
+  );
   const createLead = crmApi.useCreateLead();
   const updateLead = crmApi.useUpdateLead();
   const deleteLead = crmApi.useDeleteLead();

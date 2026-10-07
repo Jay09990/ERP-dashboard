@@ -41,6 +41,7 @@ export interface PartyRecord {
   updated_at?: string;
   addresses?: PartyAddress[];
   contactPersons?: PartyContactPerson[];
+  contactperson?: PartyContactPerson[];
   tbl_party_addresses?: PartyAddress[];
   tbl_party_contact_person?: PartyContactPerson[];
 }

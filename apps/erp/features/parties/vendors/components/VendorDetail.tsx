@@ -66,7 +66,10 @@ export function VendorDetail({ id }: VendorDetailProps) {
 
   const addresses = vendor.addresses || vendor.tbl_party_addresses || [];
   const contactPersons =
-    vendor.contactPersons || vendor.tbl_party_contact_person || [];
+    vendor.contactPersons ||
+    vendor.contactperson ||
+    vendor.tbl_party_contact_person ||
+    [];
   const balance = Number.parseFloat(String(vendor.opening_balance || 0));
 
   return (

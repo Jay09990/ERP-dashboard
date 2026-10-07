@@ -11,6 +11,7 @@ function extractPartyArray(res: any): PartyRecord[] {
   for (const key of [
     "data",
     "customers",
+    "vendors",
     "parties",
     "rows",
     "records",
@@ -26,15 +27,47 @@ function extractPartyArray(res: any): PartyRecord[] {
   return [];
 }
 
-function extractPartySingle(res: any): PartyRecord | null {
+function extractPartySingle(
+  res: any,
+  id: string | number,
+): PartyRecord | null {
   if (!res) return null;
-  if (Array.isArray(res)) return res[0] || null;
-  if (res.data) return extractPartySingle(res.data);
-  if (res.customer) return res.customer;
-  if (res.party) return res.party;
-  if (res.result) return extractPartySingle(res.result);
-  if (res.payload) return extractPartySingle(res.payload);
-  return res && typeof res === "object" ? res : null;
+  if (Array.isArray(res)) {
+    const matchingParty = res.find(
+      (party) =>
+        String(party?.party_id ?? party?.id ?? "") === String(id),
+    );
+    if (matchingParty) return matchingParty;
+    const onlyParty = res.length === 1 ? res[0] : null;
+    return onlyParty?.party_id == null && onlyParty?.id == null
+      ? onlyParty
+      : null;
+  }
+  if (typeof res !== "object") return null;
+  const recordId = res.party_id ?? res.id;
+  if (recordId != null) {
+    return String(recordId) === String(id) ? res : null;
+  }
+
+  for (const key of [
+    "customer",
+    "vendor",
+    "party",
+    "customers",
+    "vendors",
+    "parties",
+    "data",
+    "result",
+    "payload",
+    "record",
+  ]) {
+    if (res[key] != null) {
+      const party = extractPartySingle(res[key], id);
+      if (party) return party;
+    }
+  }
+
+  return null;
 }
 
 function normalizeParty(record: any): PartyRecord | null {
@@ -71,7 +104,7 @@ export function useCustomer(id: string | number) {
     retry: false,
     queryFn: async () => {
       const res = await apiClient.get<any>(endpoints.party.customer(id));
-      const record = normalizeParty(extractPartySingle(res));
+      const record = normalizeParty(extractPartySingle(res, id));
       if (!record || (!record.id && !record.party_id)) {
         throw new Error("Customer not found");
       }

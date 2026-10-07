@@ -68,7 +68,10 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
 
   const addresses = customer.addresses || customer.tbl_party_addresses || [];
   const contactPersons =
-    customer.contactPersons || customer.tbl_party_contact_person || [];
+    customer.contactPersons ||
+    customer.contactperson ||
+    customer.tbl_party_contact_person ||
+    [];
   const balance = Number.parseFloat(String(customer.opening_balance || 0));
 
   return (

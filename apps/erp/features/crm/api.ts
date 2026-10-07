@@ -19,32 +19,36 @@ function useCrmMutation<TInput>(
 }
 
 export const crmApi = {
-  useLeads: () =>
+  useLeads: (enabled = true) =>
     useQuery({
       queryKey: ["leads"],
       queryFn: () => apiClient.get<unknown>(endpoints.crm.leads),
+      enabled,
     }),
-  useLeadSources: () =>
+  useLeadSources: (enabled = true) =>
     useQuery({
       queryKey: ["crm", "lead-sources"],
       queryFn: () => apiClient.get<unknown>(endpoints.crm.leadSources),
+      enabled,
     }),
-  useIndustries: () =>
+  useIndustries: (enabled = true) =>
     useQuery({
       queryKey: ["crm", "industries"],
       queryFn: () => apiClient.get<unknown>(endpoints.crm.industries),
+      enabled,
     }),
-  useFollowUps: (scope: string) =>
+  useFollowUps: (scope: string, enabled = true) =>
     useQuery({
       queryKey: ["crm", "follow-ups", scope],
       queryFn: () => apiClient.get<unknown>(endpoints.crm.followUps, { scope }),
+      enabled,
     }),
-  useActivities: (id: number | null) =>
+  useActivities: (id: number | null, enabled = true) =>
     useQuery({
       queryKey: ["crm", "activities", id],
       queryFn: () =>
         apiClient.get<unknown>(endpoints.crm.leadActivities(id as number)),
-      enabled: id != null,
+      enabled: id != null && enabled,
     }),
   useCreateLead: () =>
     useCrmMutation((body: Partial<Lead>) =>
