@@ -321,7 +321,10 @@ export function WarehouseList() {
       </div>
 
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading warehouses..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading warehouses..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load warehouse data from backend server.

@@ -335,8 +335,8 @@ export function VendorList() {
                       color: "var(--altrex-muted)",
                     }}
                   >
-                    <span className="altrex-spinner" aria-hidden="true" /> Loading
-                    vendor directory...
+                    <span className="altrex-spinner" aria-hidden="true" />{" "}
+                    Loading vendor directory...
                   </td>
                 </tr>
               ) : error ? (

@@ -148,7 +148,10 @@ export function ItemTypeList() {
       </div>
 
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading item types..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading item types..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load item types from server.

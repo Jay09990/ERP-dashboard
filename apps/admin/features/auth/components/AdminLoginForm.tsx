@@ -105,6 +105,17 @@ export function AdminLoginForm() {
         return;
       }
       // Normalize user object — the backend may return different shapes.
+      type AdminLoginUser = {
+        userId?: string | number;
+        user_id?: string | number;
+        id?: string | number;
+        fullName?: string;
+        full_name?: string;
+        name?: string;
+        email?: string;
+        phone?: string;
+        permissions?: unknown[];
+      };
       const u = user as AdminLoginUser;
       const session: SessionSnapshot = {
         user: {
