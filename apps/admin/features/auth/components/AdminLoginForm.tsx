@@ -46,7 +46,7 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    /[\0-\x1f]/.test(decoded)
+    /[\x00-\x1f]/.test(decoded)
   ) {
     return false;
   }
