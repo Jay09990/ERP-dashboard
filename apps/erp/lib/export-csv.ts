@@ -1,16 +1,17 @@
 /**
  * Sanitizes cell values to prevent CSV / Formula Injection attacks
  * when CSV files are opened in spreadsheet applications like Excel or Google Sheets.
+ * Prevents formula triggers (=, +, -, @, tab, CR, %, |) across multi-line text values.
  */
 export function sanitizeCSVValue(val: unknown): string {
   if (val === null || val === undefined) return "";
   if (typeof val === "number") return String(val);
   const str = String(val);
-  // Strip null bytes and normalize control whitespace before formula character checks
+  // Strip null bytes before formula character checks
   const cleaned = str.replace(/\0/g, "");
-  const trimmed = cleaned.trimStart();
-  if (/^[=+@\-\t\r%|]/.test(trimmed)) {
-    return `'${cleaned}`;
+  // Check if start of string or any line in multi-line text starts with formula triggers after optional whitespace
+  if (/(^|[\r\n]+)\s*([=+@\-\t\r%|])/.test(cleaned)) {
+    return cleaned.replace(/(^|[\r\n]+)(\s*)([=+@\-\t\r%|])/g, "$1$2'$3");
   }
   return cleaned;
 }
@@ -64,14 +65,18 @@ export function exportToCSV<T extends Record<string, any>>(
   const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
+  // Sanitize filename against path traversal and control characters
+  const safeFilename = filename.replace(/[/\\?%*:|"<>\[\]\r\n\0]/g, "_");
+
   const link = document.createElement("a");
   link.setAttribute("href", url);
   link.setAttribute(
     "download",
-    `${filename}_${new Date().toISOString().slice(0, 10)}.csv`,
+    `${safeFilename}_${new Date().toISOString().slice(0, 10)}.csv`,
   );
   link.style.visibility = "hidden";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
