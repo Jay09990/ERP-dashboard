@@ -28,7 +28,7 @@ export function DeactivateDialog({ company, onClose }: Props) {
   };
 
   return (
-    <div className="altrex-dialog-backdrop" aria-hidden="true">
+    <div className="altrex-dialog-backdrop">
       <button
         type="button"
         tabIndex={-1}
@@ -121,6 +121,7 @@ export function DeactivateDialog({ company, onClose }: Props) {
             className="altrex-button altrex-button-warning"
             onClick={handleConfirm}
             disabled={!confirmed || isPending}
+            aria-busy={isPending}
           >
             {isPending ? "Deactivating…" : "Deactivate company"}
           </button>

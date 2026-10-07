@@ -6,3 +6,7 @@
 ## 2025-05-19 - Skip to Main Content Link for AppShell Layouts
 **Learning:** In AppShell navigation layouts with extensive sidebars and topbars, keyboard users have to tab through dozens of links before reaching page content. Adding a `.altrex-skip-link` at the top of the shell targeting `<main id="main-content" tabIndex={-1}>` enables WCAG 2.4.1 compliance and seamless keyboard navigation bypass.
 **Action:** Include a focus-visible skip link in primary shell layouts and ensure the target main container has `id="main-content"` and `tabIndex={-1}`.
+
+## 2026-10-07 - Avoid Placing aria-hidden on Dialog Backdrop Outer Wrappers
+**Learning:** Setting `aria-hidden="true"` on an outer modal backdrop wrapper container that encloses the actual `<div role="dialog">` hides the entire dialog and all of its interactive children from screen readers and assistive technology.
+**Action:** Ensure `aria-hidden="true"` is only applied to purely decorative backdrop buttons/overlays inside the dialog wrapper, never on outer containers enclosing the active modal content.
