@@ -6,7 +6,7 @@ import type {
   PurchaseRequisition,
   SiteIssue,
 } from "@/features/projects/schema";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { Eye, Plus, RefreshCw, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -376,7 +376,9 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
       <MutationError error={workflowError} />
 
       {activeQuery.isLoading ? (
-        <div className="altrex-table-state">Loading records...</div>
+        <LoadingState
+          message={`Loading ${config.collectionLabel.toLowerCase()} records...`}
+        />
       ) : (
         <section className="altrex-card altrex-table-wrap">
           <table className="altrex-table">
@@ -521,7 +523,9 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
             </header>
             <div className="altrex-dialog-body">
               {detailQuery.isLoading ? (
-                <div className="altrex-table-state">Loading details...</div>
+                <LoadingState
+                  message={`Loading ${config.collectionLabel.toLowerCase()} details...`}
+                />
               ) : detailQuery.error ? (
                 <MutationError error={detailQuery.error} />
               ) : (

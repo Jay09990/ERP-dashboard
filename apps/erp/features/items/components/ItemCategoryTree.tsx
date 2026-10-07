@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { FolderTree, Plus, Trash2, X } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -270,10 +270,7 @@ export function ItemCategoryTree() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading category hierarchy...</span>
-        </div>
+        <LoadingState message="Loading item category hierarchy..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load category hierarchy from server.

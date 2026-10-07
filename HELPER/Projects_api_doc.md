@@ -374,7 +374,7 @@ http://localhost:4500/api/project/:projectId/boq/:boqItemId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_boq_items | update → status |
+| company | tbl_project_boq_items | update → is_deleted |
 | company | audit_logs | add |
 
 ### → ADD PROJECT MILESTONES
@@ -431,7 +431,7 @@ http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_milestones | update → status |
+| company | tbl_project_milestones | update → is_deleted |
 | company | audit_logs | add |
 
 ### → ADD PROJECT TASKS
@@ -491,7 +491,7 @@ http://localhost:4500/api/project/:projectId/tasks/:taskId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_tasks | update → status |
+| company | tbl_project_tasks | update → is_deleted |
 | company | audit_logs | add |
 
 ### → GET DAILY PROGRESS REPORT(DPR)
@@ -563,6 +563,28 @@ DELETE  http://localhost:4500/api/projects/:projectId/documents/:documentId
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
 | company | tbl_project_documents | update → is_deleted |
+| company | audit_logs | add |
+
+---
+
+## MENPOWER ROUTES:—
+
+→ TRADES CREATE AND GET
+
+GET & POST
+
+http://localhost:4500/api/manpower/trades 
+
+```jsx
+{
+  "trade_name": "Electrician"
+}
+```
+
+| DB NAME | TABLE NAME | ACTION |
+| --- | --- | --- |
+| company | labour_trade_mst | add |
+
 | company | audit_logs | add |
 
 ---
@@ -1188,3 +1210,111 @@ http://localhost:4500/api/enquiry/:enquiryId/documents/:documentId
 # FLOW OF THE SOFTWARE PROCESS
 
 Setup forms → Customers/Items → Lead → Enquiry → Quotation → Sales order → Project (with its 8 sub-forms) → Requisition → PO → GRN → Stock → Site issue → Invoice → Credit/Debit note → Close project.
+
+```jsx
+                    ┌───────────────┐
+                    │ PLATFORM ADMIN│
+                    └───────┬───────┘
+                            ↓
+                    ┌───────────────┐
+                    │ CREATE COMPANY│
+                    └───────┬───────┘
+                            ↓
+                    ┌───────────────┐
+                    │ TENANT DB     │
+                    └───────┬───────┘
+                            ↓
+                    ┌───────────────┐
+                    │ USER LOGIN    │
+                    └───────┬───────┘
+                            ↓
+                    ┌───────────────┐
+                    │ MASTER DATA   │
+                    └───────┬───────┘
+                            ↓
+                  ┌────────────────────┐
+                  │       CRM          │
+                  └─────────┬──────────┘
+                            ↓
+                       ┌────────┐
+                       │  LEAD  │
+                       └───┬────┘
+                           ↓
+                     ┌───────────┐
+                     │ CUSTOMER  │
+                     └─────┬─────┘
+                           ↓
+                     ┌───────────┐
+                     │ ENQUIRY   │
+                     └─────┬─────┘
+                           ↓
+                    ┌─────────────┐
+                    │  QUOTATION  │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │ SALES ORDER │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │   PROJECT   │
+                    └──────┬──────┘
+                           │
+           ┌───────────────┼────────────────┐
+           ↓               ↓                ↓
+       ┌────────┐     ┌──────────┐    ┌───────────┐
+       │  BOQ   │     │ MANPOWER │    │ EQUIPMENT │
+       └────────┘     └──────────┘    └───────────┘
+           │               │                │
+           └───────────────┼────────────────┘
+                           ↓
+                    ┌─────────────┐
+                    │ PROCUREMENT │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │ PURCHASE PO │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │     GRN     │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │  WAREHOUSE  │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │ SITE ISSUE  │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │SITE EXECUTION│
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │   PROFORMA  │
+                    └──────┬──────┘
+                           ↓
+                  ┌──────────────────┐
+                  │ DELIVERY CHALLAN │
+                  └────────┬─────────┘
+                           ↓
+                    ┌─────────────┐
+                    │ SALES INVOICE│
+                    └──────┬──────┘
+                           ↓
+                  ┌──────────────────┐
+                  │ PAYMENT / NOTES  │
+                  │ CR / DR NOTE     │
+                  └────────┬─────────┘
+                           ↓
+                    ┌─────────────┐
+                    │   PROJECT   │
+                    │  COMPLETED  │
+                    └──────┬──────┘
+                           ↓
+                    ┌─────────────┐
+                    │    CLOSED   │
+                    └─────────────┘
+```

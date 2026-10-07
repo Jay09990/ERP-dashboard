@@ -3,7 +3,7 @@
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -470,13 +470,7 @@ export function StockSummaryView() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading stock summary...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading stock summary..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock summary data from backend server.

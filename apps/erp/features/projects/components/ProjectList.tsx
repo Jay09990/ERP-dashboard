@@ -2,7 +2,7 @@
 
 import { projectApi } from "@/features/projects/api";
 import type { Project, ProjectStatus } from "@/features/projects/schema";
-import { Button } from "@altrex/ui";
+import { Button, TableSkeleton } from "@altrex/ui";
 import { ArrowRight, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -320,7 +320,7 @@ export function ProjectList() {
       </section>
 
       {projectsQuery.isLoading ? (
-        <div className="altrex-table-state">Loading projects...</div>
+        <TableSkeleton columns={7} message="Loading projects..." />
       ) : projectsQuery.error ? (
         <MutationError error={projectsQuery.error} />
       ) : (

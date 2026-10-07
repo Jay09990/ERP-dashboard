@@ -1,64 +1,37 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { companiesQueryKey, fetchCompanies } from "@/features/companies/api";
+import type { Company } from "@/features/companies/types";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { setToken } from "@/lib/auth/token";
+import { clearToken, setToken } from "@/lib/auth/token";
 import { type SessionSnapshot, useSessionStore } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type AdminLoginValues, adminLoginSchema } from "../schema";
 
-/**
- * Validates post-login redirect path to prevent Open Redirect vulnerabilities.
- * Ensures the target starts with a single slash `/`, does not contain `\\` or control characters,
- * decodes URL-encoded payloads to prevent encoded bypasses (e.g. `%2f%2f` or `%5c`),
- * and stays on the same origin when resolved against a relative base.
- */
-function isSafeRedirect(path: string): boolean {
-  if (
-    !path ||
-    !path.startsWith("/") ||
-    path.startsWith("//") ||
-    path.includes("\\")
-  ) {
-    return false;
-  }
-  let decoded = path;
-  try {
-    for (let i = 0; i < 3; i++) {
-      const prev = decoded;
-      decoded = decodeURIComponent(decoded);
-      if (decoded === prev) break;
-    }
-  } catch {
-    return false;
-  }
-  if (
-    !decoded.startsWith("/") ||
-    decoded.startsWith("//") ||
-    decoded.includes("\\") ||
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: necessary security check for URL-encoded control character open-redirect vectors
-    /[\0-\x1f\x7f]/.test(decoded)
-  ) {
-    return false;
-  }
-  try {
-    const dummyOrigin = "http://localhost";
-    const parsed = new URL(decoded, dummyOrigin);
-    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
-  } catch {
-    return false;
-  }
-}
+type AdminLoginUser = {
+  userId?: string | number;
+  user_id?: string | number;
+  id?: string | number;
+  fullName?: string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  permissions?: SessionSnapshot["permissions"];
+};
 
 export function AdminLoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -83,10 +56,26 @@ export function AdminLoginForm() {
       const user =
         response.user ?? response.data?.user ?? response.data ?? response;
       if (!token) throw new Error("Login response did not include a token");
+
+      // Clear data from a prior account before checking this admin's companies.
+      queryClient.clear();
       setToken(token);
+      let companies: Company[];
+      try {
+        companies = await queryClient.fetchQuery({
+          queryKey: companiesQueryKey(),
+          queryFn: () => fetchCompanies(),
+        });
+      } catch {
+        clearToken();
+        setSession(null);
+        setServerError(
+          "Signed in, but company setup could not be checked. Please try again.",
+        );
+        return;
+      }
       // Normalize user object — the backend may return different shapes.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const u = user as any;
+      const u = user as AdminLoginUser;
       const session: SessionSnapshot = {
         user: {
           id: String(u.userId ?? u.user_id ?? u.id ?? ""),
@@ -98,15 +87,10 @@ export function AdminLoginForm() {
       };
       setSession(session);
 
-      const next = new URLSearchParams(window.location.search).get("next");
-
-      // Redirect logic:
-      // 1. If next parameter exists, use it
-      // 2. Otherwise, go to company-register (which will check if companies exist)
-      if (next && isSafeRedirect(next)) {
-        router.push(next);
-      } else {
+      if (companies.length === 0) {
         router.push("/company-register");
+      } else {
+        router.push("/");
       }
     } catch (error) {
       setServerError(
@@ -165,7 +149,14 @@ export function AdminLoginForm() {
           </div>
         ) : null}
         <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          Sign in
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Signing in and checking companies…
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
         <Link
           href="/register"

@@ -12,7 +12,7 @@ import type {
   ProjectSite,
   ProjectTask,
 } from "@/features/projects/schema";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -265,7 +265,7 @@ export function ProjectDetail({ id }: { id: string }) {
   const deleteDocument = projectApi.useDeleteDocument();
 
   if (detailQuery.isLoading) {
-    return <div className="altrex-table-state">Loading project...</div>;
+    return <LoadingState message="Loading project details..." />;
   }
   if (detailQuery.error) return <MutationError error={detailQuery.error} />;
   if (!project) {

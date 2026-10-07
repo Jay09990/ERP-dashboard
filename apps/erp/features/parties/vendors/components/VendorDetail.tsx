@@ -11,6 +11,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { LoadingState } from "@altrex/ui";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -40,17 +41,7 @@ export function VendorDetail({ id }: VendorDetailProps) {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-          color: "var(--altrex-muted)",
-        }}
-      >
-        Loading vendor profile...
-      </div>
-    );
+    return <LoadingState message="Loading vendor profile..." />;
   }
 
   if (!vendor) {

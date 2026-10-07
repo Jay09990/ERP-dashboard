@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, DataTable, FilterBar } from "@altrex/ui";
+import { Button, DataTable, FilterBar, TableSkeleton } from "@altrex/ui";
 import { KeyRound, Plus, Shield, Trash2, UserPlus, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { UserPermissionMatrixModal } from "../../permissions/components/UserPermissionMatrixModal";
@@ -479,10 +479,7 @@ export function UserList() {
       </FilterBar>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading users...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading users..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load users from the server.

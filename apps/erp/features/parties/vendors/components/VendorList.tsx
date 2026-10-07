@@ -314,13 +314,17 @@ export function VendorList() {
                 <tr>
                   <td
                     colSpan={6}
+                    role="status"
+                    aria-live="polite"
+                    aria-busy="true"
                     style={{
                       textAlign: "center",
                       padding: 40,
                       color: "var(--altrex-muted)",
                     }}
                   >
-                    Loading vendor directory...
+                    <span className="altrex-spinner" aria-hidden="true" /> Loading
+                    vendor directory...
                   </td>
                 </tr>
               ) : error ? (

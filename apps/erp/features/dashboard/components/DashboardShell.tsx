@@ -54,6 +54,16 @@ export function DashboardShell() {
     </header>
 
     {data.hasError && <div className="dashboard-notice"><AlertTriangle size={16} />Some module data could not be loaded; available figures are still shown.</div>}
+    {data.isLoading && (
+      <output
+        className="dashboard-notice dashboard-loading-notice"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <span className="altrex-spinner" aria-hidden="true" />
+        Loading business overview and financial data...
+      </output>
+    )}
 
     <section className="dashboard-metrics" aria-label="Key business figures">
       <Metric icon={CircleDollarSign} label="Sales this month" value={data.isLoading ? "—" : money(data.monthlySales)} foot={`${data.monthlySalesCount} invoices`} tone="green" href="/sales/invoices" />

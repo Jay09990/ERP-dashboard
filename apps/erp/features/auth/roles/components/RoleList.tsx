@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, DataTable, FilterBar } from "@altrex/ui";
+import { Button, DataTable, FilterBar, TableSkeleton } from "@altrex/ui";
 import { Lock, Plus, Settings, Shield, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PermissionMatrixModal } from "../../permissions/components/PermissionMatrixModal";
@@ -351,10 +351,7 @@ export function RoleList() {
       </FilterBar>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading roles...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading roles..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load roles from the server.

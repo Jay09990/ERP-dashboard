@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { Plus, Tag, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCreateItemType, useDeleteItemType, useItemTypes } from "../api";
@@ -148,10 +148,7 @@ export function ItemTypeList() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading item types...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading item types..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load item types from server.

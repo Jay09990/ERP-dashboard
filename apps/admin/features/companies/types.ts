@@ -10,8 +10,6 @@ export type Company = {
   db_name: string;
   db_host?: string;
   db_port?: number;
-  db_username?: string;
-  db_password?: string;
   status: "active" | "inactive";
   is_deleted?: boolean;
   created_at?: string;

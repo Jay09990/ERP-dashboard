@@ -1,7 +1,7 @@
 "use client";
 
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { Building, Download, Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { warehouseApi } from "../api";
@@ -321,13 +321,7 @@ export function WarehouseList() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading warehouses...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading warehouses..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load warehouse data from backend server.

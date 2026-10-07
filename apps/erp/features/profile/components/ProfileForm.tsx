@@ -3,7 +3,7 @@
 import { LocationCascadeSelect } from "@/components/shared/LocationCascadeSelect";
 import { bankApi } from "@/features/masters/api";
 import { useSessionStore } from "@/stores/session-store";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Building2,
@@ -284,12 +284,7 @@ export function ProfileForm({
   const logo = form.watch("logo");
 
   if (isLoading) {
-    return (
-      <div className="altrex-table-state">
-        <span className="altrex-spinner" />
-        <span>Loading profile...</span>
-      </div>
-    );
+    return <LoadingState message="Loading company profile..." />;
   }
 
   return (

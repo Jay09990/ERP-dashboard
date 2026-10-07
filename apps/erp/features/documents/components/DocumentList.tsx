@@ -1402,6 +1402,9 @@ export function DocumentList({
             >
               {isLoading ? (
                 <div
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
                   style={{
                     padding: "24px",
                     textAlign: "center",
@@ -1409,7 +1412,8 @@ export function DocumentList({
                     fontSize: "13px",
                   }}
                 >
-                  Loading list...
+                  <span className="altrex-spinner" aria-hidden="true" /> Loading{" "}
+                  {docType.replaceAll("_", " ")} documents...
                 </div>
               ) : paginatedDocs.length === 0 ? (
                 <div

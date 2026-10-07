@@ -1,7 +1,7 @@
 "use client";
 
 import { bankApi, cityApi, countryApi, stateApi } from "@/features/masters/api";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import {
   Building2,
   Check,
@@ -128,12 +128,7 @@ export function CompanyProfileView() {
   };
 
   if (isLoading) {
-    return (
-      <div className="altrex-table-state" style={{ padding: "48px 0" }}>
-        <span className="altrex-spinner" />
-        <span>Loading company profile...</span>
-      </div>
-    );
+    return <LoadingState message="Loading company profile..." />;
   }
 
   const companyName = profile.company_name || "Company Name Not Set";

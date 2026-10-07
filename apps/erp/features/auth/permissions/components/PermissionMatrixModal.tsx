@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { Check, Search, Shield, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -126,10 +126,7 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
     return (
       <div className="altrex-dialog-backdrop">
         <div className="altrex-dialog">
-          <div className="altrex-table-state">
-            <span className="altrex-spinner" />
-            <span>Loading permissions...</span>
-          </div>
+          <LoadingState message="Loading role permissions..." />
         </div>
       </div>
     );

@@ -2,7 +2,7 @@
 
 import { currencyApi, taxTypesApi, uomApi } from "@/features/masters/api";
 import { sanitizeCSVValue } from "@/lib/export-csv";
-import { Button, DataTable, FilterBar } from "@altrex/ui";
+import { Button, DataTable, FilterBar, TableSkeleton } from "@altrex/ui";
 import {
   ArrowUpRight,
   DollarSign,
@@ -620,10 +620,7 @@ export function ItemList() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading inventory catalog items...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading inventory items..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load items from the backend server.

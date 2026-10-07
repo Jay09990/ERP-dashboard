@@ -12,6 +12,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { LoadingState } from "@altrex/ui";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -42,17 +43,7 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-          color: "var(--altrex-muted)",
-        }}
-      >
-        Loading customer profile...
-      </div>
-    );
+    return <LoadingState message="Loading customer profile..." />;
   }
 
   if (!customer) {

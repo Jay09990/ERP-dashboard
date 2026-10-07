@@ -1,7 +1,7 @@
 "use client";
 
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { Download, Edit, Layers, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { batchApi } from "../api";
@@ -353,13 +353,7 @@ export function BatchList() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading batch records...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading batch records..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load batch data from backend server.

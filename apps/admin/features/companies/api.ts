@@ -6,26 +6,93 @@ import { endpoints } from "@/lib/api/endpoints";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Company } from "./types";
 
+type CompanyListResponse =
+  | Company[]
+  | { companies?: Company[]; data?: unknown; rows?: Company[] };
+type CompanyApiRecord = Company & {
+  db_username?: string;
+  db_password?: string;
+};
+type CompanyDetailResponse =
+  | CompanyApiRecord
+  | {
+      company?: CompanyApiRecord;
+      companies?: CompanyApiRecord[];
+      data?: unknown;
+    };
+
+function removeDatabaseCredentials(company: CompanyApiRecord): Company {
+  const {
+    db_username: _username,
+    db_password: _password,
+    ...safeCompany
+  } = company;
+  return safeCompany;
+}
+
+function normalizeCompanyList(response: CompanyListResponse): Company[] {
+  if (Array.isArray(response)) return response.map(removeDatabaseCredentials);
+  if (Array.isArray(response.companies)) {
+    return response.companies.map(removeDatabaseCredentials);
+  }
+  if (Array.isArray(response.rows)) {
+    return response.rows.map(removeDatabaseCredentials);
+  }
+  if (response.data !== undefined) {
+    return normalizeCompanyList(response.data as CompanyListResponse);
+  }
+  throw new Error("The companies response did not contain a company list.");
+}
+
+export const companiesQueryKey = (params?: Record<string, string>) =>
+  ["companies", "list", params] as const;
+
+export async function fetchCompanies(params?: Record<string, string>) {
+  return normalizeCompanyList(
+    await apiClient.get<CompanyListResponse>(endpoints.companies, params),
+  );
+}
+
+function normalizeCompany(
+  response: CompanyDetailResponse,
+  id: string,
+): Company {
+  if ("company_id" in response) return removeDatabaseCredentials(response);
+  if (response.company) return removeDatabaseCredentials(response.company);
+  if (Array.isArray(response.companies)) {
+    const company = response.companies.find(
+      (item) => String(item.company_id) === id,
+    );
+    if (company) return removeDatabaseCredentials(company);
+    if (response.companies.length === 1) {
+      return removeDatabaseCredentials(response.companies[0]);
+    }
+  }
+  if (response.data !== undefined) {
+    return normalizeCompany(response.data as CompanyDetailResponse, id);
+  }
+  throw new Error("The company response did not contain company details.");
+}
+
 // ── Shared hooks (follow ERP pattern: createResourceHooks called inside each hook) ──
 
 export function useCompanies(params?: Record<string, string>) {
-  const qc = useQueryClient();
-  return createResourceHooks<Company, never, never>(
-    "companies",
-    endpoints.companies,
-    apiClient,
-    qc,
-  ).useList(params);
+  return useQuery({
+    queryKey: companiesQueryKey(params),
+    queryFn: () => fetchCompanies(params),
+  });
 }
 
 export function useCompany(id: string) {
-  const qc = useQueryClient();
-  return createResourceHooks<Company, never, never>(
-    "companies",
-    endpoints.companies,
-    apiClient,
-    qc,
-  ).useDetail(id);
+  return useQuery({
+    queryKey: ["companies", id],
+    queryFn: async () =>
+      normalizeCompany(
+        await apiClient.get<CompanyDetailResponse>(endpoints.company(id)),
+        id,
+      ),
+    enabled: Boolean(id),
+  });
 }
 
 export function useCreateCompany() {

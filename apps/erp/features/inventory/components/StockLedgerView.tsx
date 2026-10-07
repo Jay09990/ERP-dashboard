@@ -4,7 +4,7 @@ import { useItems } from "@/features/items";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownLeft,
@@ -450,13 +450,7 @@ export function StockLedgerView() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading ledger history...</span>
-        </div>
+        <TableSkeleton columns={columns.length} message="Loading stock ledger history..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock ledger data from backend server.

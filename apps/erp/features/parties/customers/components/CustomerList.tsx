@@ -338,13 +338,17 @@ export function CustomerList() {
                 <tr>
                   <td
                     colSpan={6}
+                    role="status"
+                    aria-live="polite"
+                    aria-busy="true"
                     style={{
                       textAlign: "center",
                       padding: 40,
                       color: "var(--altrex-muted)",
                     }}
                   >
-                    Loading customer directory...
+                    <span className="altrex-spinner" aria-hidden="true" /> Loading
+                    customer directory...
                   </td>
                 </tr>
               ) : error ? (
