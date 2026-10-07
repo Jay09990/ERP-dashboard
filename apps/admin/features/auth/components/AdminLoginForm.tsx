@@ -17,17 +17,47 @@ import { type SessionSnapshot, useSessionStore } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type AdminLoginValues, adminLoginSchema } from "../schema";
 
-type AdminLoginUser = {
-  userId?: string | number;
-  user_id?: string | number;
-  id?: string | number;
-  fullName?: string;
-  full_name?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  permissions?: SessionSnapshot["permissions"];
-};
+/**
+ * Validates post-login redirect path to prevent Open Redirect vulnerabilities.
+ * Ensures the target starts with a single slash `/`, does not contain `\\` or control characters,
+ * decodes URL-encoded payloads to prevent encoded bypasses (e.g. `%2f%2f` or `%5c`),
+ * and stays on the same origin when resolved against a relative base.
+ */
+function isSafeRedirect(path: string): boolean {
+  if (
+    !path ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("\\")
+  ) {
+    return false;
+  }
+  let decoded = path;
+  try {
+    for (let i = 0; i < 3; i++) {
+      const prev = decoded;
+      decoded = decodeURIComponent(decoded);
+      if (decoded === prev) break;
+    }
+  } catch {
+    return false;
+  }
+  if (
+    !decoded.startsWith("/") ||
+    decoded.startsWith("//") ||
+    decoded.includes("\\") ||
+    /[\0-\x1f]/.test(decoded)
+  ) {
+    return false;
+  }
+  try {
+    const dummyOrigin = "http://localhost";
+    const parsed = new URL(decoded, dummyOrigin);
+    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
+  } catch {
+    return false;
+  }
+}
 
 export function AdminLoginForm() {
   const router = useRouter();

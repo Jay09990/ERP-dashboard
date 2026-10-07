@@ -43,8 +43,7 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: necessary security check for URL-encoded control character open-redirect vectors
-    /[\0-\x1f\x7f]/.test(decoded)
+    /[\0-\x1f]/.test(decoded)
   ) {
     return false;
   }
