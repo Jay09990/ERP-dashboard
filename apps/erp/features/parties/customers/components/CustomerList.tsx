@@ -359,8 +359,8 @@ export function CustomerList() {
                       color: "var(--altrex-muted)",
                     }}
                   >
-                    <span className="altrex-spinner" aria-hidden="true" /> Loading
-                    customer directory...
+                    <span className="altrex-spinner" aria-hidden="true" />{" "}
+                    Loading customer directory...
                   </td>
                 </tr>
               ) : error ? (

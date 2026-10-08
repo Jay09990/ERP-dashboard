@@ -470,7 +470,10 @@ export function StockSummaryView() {
       </div>
 
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading stock summary..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading stock summary..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock summary data from backend server.

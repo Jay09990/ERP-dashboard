@@ -450,7 +450,10 @@ export function StockLedgerView() {
       </div>
 
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading stock ledger history..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading stock ledger history..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock ledger data from backend server.

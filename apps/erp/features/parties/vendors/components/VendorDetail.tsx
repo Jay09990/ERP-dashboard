@@ -1,6 +1,7 @@
 "use client";
 
 import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
+import { LoadingState } from "@altrex/ui";
 import {
   ArrowLeft,
   Edit2,
@@ -11,7 +12,6 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import { LoadingState } from "@altrex/ui";
 import Link from "next/link";
 import { useState } from "react";
 import {
