@@ -167,7 +167,12 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
 
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories = extractRecords<ItemCategory>(responseData);
+  // Memoize extracted category records to preserve array reference identity across re-renders.
+  // Prevents invalidating downstream useMemo (rootCategories / childrenMap) when typing in modal inputs.
+  const categories = useMemo(
+    () => extractRecords<ItemCategory>(responseData),
+    [responseData],
+  );
 
   const { mutate: createCategory, isPending: isCreating } =
     useCreateItemCategory();
