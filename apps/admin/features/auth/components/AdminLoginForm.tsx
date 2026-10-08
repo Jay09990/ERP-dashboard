@@ -105,31 +105,24 @@ export function AdminLoginForm() {
         return;
       }
       // Normalize user object — the backend may return different shapes.
-      type AdminLoginUser = {
-        userId?: string | number;
-        user_id?: string | number;
-        id?: string | number;
-        fullName?: string;
-        full_name?: string;
-        name?: string;
-        email?: string;
-        phone?: string;
-        permissions?: unknown[];
-      };
-      const u = user as AdminLoginUser;
+      // biome-ignore lint/suspicious/noExplicitAny: Backend user object shape varies
+      const u = user as Record<string, any>;
       const session: SessionSnapshot = {
         user: {
           id: String(u.userId ?? u.user_id ?? u.id ?? ""),
-          name: u.fullName ?? u.full_name ?? u.name ?? u.email ?? "",
-          email: u.email ?? "",
-          phone: u.phone ?? "",
+          name: String(u.fullName ?? u.full_name ?? u.name ?? u.email ?? ""),
+          email: String(u.email ?? ""),
+          phone: String(u.phone ?? ""),
         },
         permissions: (u.permissions ?? []) as SessionSnapshot["permissions"],
       };
       setSession(session);
 
+      const nextParam = new URLSearchParams(window.location.search).get("next");
       if (companies.length === 0) {
         router.push("/company-register");
+      } else if (nextParam && isSafeRedirect(nextParam)) {
+        router.push(nextParam);
       } else {
         router.push("/");
       }
