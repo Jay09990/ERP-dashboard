@@ -6,3 +6,7 @@
 ## 2025-05-19 - Skip to Main Content Link for AppShell Layouts
 **Learning:** In AppShell navigation layouts with extensive sidebars and topbars, keyboard users have to tab through dozens of links before reaching page content. Adding a `.altrex-skip-link` at the top of the shell targeting `<main id="main-content" tabIndex={-1}>` enables WCAG 2.4.1 compliance and seamless keyboard navigation bypass.
 **Action:** Include a focus-visible skip link in primary shell layouts and ensure the target main container has `id="main-content"` and `tabIndex={-1}`.
+
+## 2025-05-20 - Modal Dialog Accessibility and Keyboard Controls
+**Learning:** Modal dialogs, especially matrix or detail modals, should feature `Escape` key listeners for dismissal (guarded when submit/save operations are pending), explicit non-focusable backdrop buttons (`tabIndex={-1}`, `aria-hidden="true"`), and complete WAI-ARIA modal attributes (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`).
+**Action:** Wrap modal popups with keyboard handlers and standard ARIA dialog attributes, preventing dismissal during pending operations.

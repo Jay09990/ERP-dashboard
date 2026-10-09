@@ -28,6 +28,16 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   const [permSearch, setPermSearch] = useState("");
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSaving) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isSaving]);
+
+  useEffect(() => {
     if (allPermissions && rolePermissions) {
       const rolePermissionMap = new Map(
         rolePermissions.map(
@@ -141,10 +151,19 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   }
 
   return (
-    <div className="altrex-dialog-backdrop" onClick={onClose}>
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isSaving && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-lg"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-lg relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="permission-matrix-title"
         style={{
           maxHeight: "min(90vh, calc(100dvh - 32px))",
           display: "flex",
@@ -170,7 +189,9 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
               <Shield size={20} />
             </div>
             <div>
-              <h2 className="altrex-dialog-title">Permissions — {roleName}</h2>
+              <h2 id="permission-matrix-title" className="altrex-dialog-title">
+                Permissions — {roleName}
+              </h2>
               <p className="altrex-dialog-subtitle" style={{ margin: 0 }}>
                 <span
                   style={{ color: "var(--altrex-primary)", fontWeight: 700 }}
