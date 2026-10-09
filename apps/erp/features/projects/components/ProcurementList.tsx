@@ -54,21 +54,11 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Requested items",
-        type: "collection",
+        label: "Items (JSON array)",
+        type: "json",
         required: true,
-        itemFields: [
-          { name: "item_id", label: "Item ID", type: "number", required: true },
-          { name: "description", label: "Item description" },
-          {
-            name: "quantity",
-            label: "Quantity",
-            type: "number",
-            required: true,
-          },
-          { name: "unit_id", label: "Unit ID", type: "number" },
-          { name: "notes", label: "Notes" },
-        ],
+        placeholder:
+          '[{"item_id":2,"description":"Cement OPC 53 Grade","quantity":100,"unit_id":1,"notes":"For foundation"}]',
       },
     ],
   },
@@ -95,26 +85,11 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Received items",
-        type: "collection",
+        label: "Received items (JSON array)",
+        type: "json",
         required: true,
-        itemFields: [
-          {
-            name: "purchase_order_item_id",
-            label: "Purchase order line ID",
-            type: "number",
-          },
-          { name: "item_id", label: "Item ID", type: "number", required: true },
-          { name: "batch_id", label: "Batch ID", type: "number" },
-          {
-            name: "quantity",
-            label: "Received quantity",
-            type: "number",
-            required: true,
-          },
-          { name: "unit_id", label: "Unit ID", type: "number" },
-          { name: "rate", label: "Rate per unit", type: "number" },
-        ],
+        placeholder:
+          '[{"purchase_order_item_id":1,"item_id":2,"batch_id":null,"quantity":50,"unit_id":1,"rate":350}]',
       },
     ],
   },
@@ -147,114 +122,18 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Items to issue",
-        type: "collection",
+        label: "Issued items (JSON array)",
+        type: "json",
         required: true,
-        itemFields: [
-          { name: "item_id", label: "Item ID", type: "number", required: true },
-          { name: "batch_id", label: "Batch ID", type: "number" },
-          {
-            name: "quantity",
-            label: "Quantity",
-            type: "number",
-            required: true,
-          },
-          { name: "unit_id", label: "Unit ID", type: "number" },
-          {
-            name: "boq_item_id",
-            label: "Project budget line ID",
-            type: "number",
-          },
-        ],
+        placeholder:
+          '[{"item_id":2,"batch_id":null,"quantity":20,"unit_id":1,"boq_item_id":4}]',
       },
     ],
   },
 };
 
 function formatLabel(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-const detailLabels: Record<string, string> = {
-  project_id: "Project reference",
-  site_id: "Project site reference",
-  warehouse_id: "Warehouse reference",
-  purchase_order_id: "Purchase order reference",
-  requisition_date: "Request date",
-  required_by: "Needed by",
-  grn_date: "Receipt date",
-  issue_date: "Issue date",
-  itemsDetails: "Items",
-};
-
-function displayValue(key: string, value: unknown): string {
-  if (value == null || value === "") return "Not provided";
-  if (key.endsWith("_date") && typeof value === "string") {
-    const date = new Date(`${value.slice(0, 10)}T00:00:00`);
-    return Number.isNaN(date.getTime())
-      ? value
-      : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
-  }
-  if (key === "status" && typeof value === "string") return formatLabel(value);
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  return String(value);
-}
-
-function dateLabel(value: unknown) {
-  if (typeof value !== "string" || !value) return "—";
-  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
-}
-
-function itemLabel(key: string) {
-  const labels: Record<string, string> = {
-    item_id: "Item reference",
-    quantity: "Quantity",
-    rate: "Rate per unit",
-  };
-  return labels[key] ?? formatLabel(key);
-}
-
-function DetailItems({ items }: { items: unknown[] }) {
-  const rows = items.filter((item): item is Record<string, unknown> =>
-    Boolean(item && typeof item === "object" && !Array.isArray(item)),
-  );
-  if (!rows.length) return <p>No item details are available.</p>;
-  const columns = Object.keys(rows[0]).filter(
-    (key) =>
-      ![
-        "purchase_order_item_id",
-        "batch_id",
-        "unit_id",
-        "boq_item_id",
-      ].includes(key),
-  );
-  return (
-    <div className="altrex-table-wrap">
-      <table className="altrex-table">
-        <thead>
-          <tr>
-            {columns.map((key) => (
-              <th key={key}>{itemLabel(key)}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={String(row.item_id ?? index)}>
-              {columns.map((key) => (
-                <td key={key}>{displayValue(key, row[key])}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  return value.replaceAll("_", " ");
 }
 
 export function ProcurementList({ kind }: { kind: ProcurementKind }) {
@@ -401,19 +280,15 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
                   .map((key) => row[key])
                   .find((value) => value != null);
                 const date =
-                  row.requisition_date ?? row.grn_date ?? row.issue_date;
+                  row.requisition_date ?? row.grn_date ?? row.issue_date ?? "—";
                 const items = Array.isArray(row.itemsDetails)
                   ? row.itemsDetails.length
                   : 0;
                 const projectOrWarehouse =
                   row.project_name ??
-                  (row.project_id == null
-                    ? undefined
-                    : `Project #${row.project_id}`) ??
+                  row.project_id ??
                   row.warehouse_name ??
-                  (row.warehouse_id == null
-                    ? undefined
-                    : `Warehouse #${row.warehouse_id}`) ??
+                  row.warehouse_id ??
                   "—";
                 return (
                   <tr key={id ?? String(number ?? date)}>
@@ -425,7 +300,7 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
                       </strong>
                     </td>
                     <td>{String(projectOrWarehouse)}</td>
-                    <td>{dateLabel(date)}</td>
+                    <td>{String(date)}</td>
                     <td>{items}</td>
                     <td>{formatLabel(status)}</td>
                     <td>
@@ -525,61 +400,11 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
               ) : detailQuery.error ? (
                 <MutationError error={detailQuery.error} />
               ) : (
-                <div>
-                  {detail && typeof detail === "object" ? (
-                    <>
-                      <dl
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fit, minmax(200px, 1fr))",
-                          gap: 14,
-                          margin: 0,
-                        }}
-                      >
-                        {Object.entries(detail as Record<string, unknown>)
-                          .filter(
-                            ([key, value]) =>
-                              key !== "itemsDetails" &&
-                              !["success", "message"].includes(key) &&
-                              (value == null || typeof value !== "object"),
-                          )
-                          .map(([key, value]) => (
-                            <div key={key} className="altrex-stat-card">
-                              <dt
-                                style={{
-                                  color: "var(--altrex-muted)",
-                                  fontSize: 12,
-                                }}
-                              >
-                                {detailLabels[key] ?? formatLabel(key)}
-                              </dt>
-                              <dd
-                                style={{ margin: "6px 0 0", fontWeight: 600 }}
-                              >
-                                {displayValue(key, value)}
-                              </dd>
-                            </div>
-                          ))}
-                      </dl>
-                      {Array.isArray(
-                        (detail as Record<string, unknown>).itemsDetails,
-                      ) && (
-                        <section style={{ marginTop: 20 }}>
-                          <h3>Items</h3>
-                          <DetailItems
-                            items={
-                              (detail as Record<string, unknown>)
-                                .itemsDetails as unknown[]
-                            }
-                          />
-                        </section>
-                      )}
-                    </>
-                  ) : (
-                    <p>Details are not available.</p>
-                  )}
-                </div>
+                <pre
+                  style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+                >
+                  {JSON.stringify(detail ?? {}, null, 2)}
+                </pre>
               )}
             </div>
           </dialog>

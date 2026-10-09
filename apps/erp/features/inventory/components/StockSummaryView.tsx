@@ -86,20 +86,19 @@ export function StockSummaryView() {
 
   // KPI Metrics
   const totalItemsCount = filteredStock.length;
+  const totalQuantitySum = useMemo(() => {
+    return filteredStock.reduce((acc, curr) => {
+      const qty = curr.current_stock ?? curr.quantity ?? 0;
+      return acc + Number(qty);
+    }, 0);
+  }, [filteredStock]);
 
-  // Combine total quantity and low stock count into a single O(N) pass to avoid redundant array iterations on search keystrokes
-  const { totalQuantitySum, lowStockCount } = useMemo(() => {
-    let sum = 0;
-    let lowCount = 0;
-    for (const curr of filteredStock) {
+  const lowStockCount = useMemo(() => {
+    return filteredStock.filter((curr) => {
       const qty = Number(curr.current_stock ?? curr.quantity ?? 0);
-      sum += qty;
       const minLevel = Number(curr.reorder_level ?? 5);
-      if (qty <= minLevel) {
-        lowCount++;
-      }
-    }
-    return { totalQuantitySum: sum, lowStockCount: lowCount };
+      return qty <= minLevel;
+    }).length;
   }, [filteredStock]);
 
   const handleExportCSV = () => {

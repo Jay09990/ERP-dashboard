@@ -143,7 +143,7 @@ export function CustomerList() {
                 ✕
               </button>
             </div>
-            <div className="altrex-dialog-body altrex-dialog-form-container">
+            <div className="altrex-dialog-body">
               <PartyForm
                 partyType="customer"
                 initialValues={editingCustomer || undefined}

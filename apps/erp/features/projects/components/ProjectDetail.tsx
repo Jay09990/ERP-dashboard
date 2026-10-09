@@ -175,55 +175,6 @@ function currency(value: unknown) {
   }).format(Number.isFinite(number) ? number : 0);
 }
 
-function dateLabel(value: string | undefined) {
-  if (!value) return "—";
-  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
-}
-
-function displayLabel(key: string) {
-  const knownLabels: Record<string, string> = {
-    site_id: "Project site reference",
-    item_id: "Item reference",
-    unit_id: "Unit reference",
-    assigned_to: "Assigned user reference",
-    city_id: "City reference",
-    state_id: "State reference",
-    country_id: "Country reference",
-    progress_percent: "Progress",
-    payment_percent: "Payment share",
-    payment_amount: "Payment amount",
-    unit_rate: "Rate per unit",
-    consumed_quantity: "Used quantity",
-    manpower_count: "People on site",
-  };
-  return (
-    knownLabels[key] ??
-    key.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
-  );
-}
-
-function displayDetailValue(key: string, value: unknown) {
-  if (value == null || value === "") return "Not provided";
-  if (key === "status" || key === "priority" || key.endsWith("_type")) {
-    return String(value)
-      .replaceAll("_", " ")
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
-  }
-  if (key.endsWith("_date") || key === "report_date") {
-    const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
-  }
-  if (key.endsWith("_percent")) return `${value}%`;
-  if (["unit_rate", "payment_amount"].includes(key)) return currency(value);
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  return String(value);
-}
-
 export function ProjectDetail({ id }: { id: string }) {
   const detailQuery = projectApi.useDetail(id);
   const financialsQuery = projectApi.useFinancials(id);
@@ -405,9 +356,7 @@ export function ProjectDetail({ id }: { id: string }) {
             <h1>{project.project_name}</h1>
             <p>
               {project.party_name ?? "Customer not provided"} ·{" "}
-              {String(project.status)
-                .replaceAll("_", " ")
-                .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+              {String(project.status).replaceAll("_", " ")}
             </p>
           </div>
         </div>
@@ -503,11 +452,11 @@ export function ProjectDetail({ id }: { id: string }) {
               </div>
               <div>
                 <dt>Start date</dt>
-                <dd>{dateLabel(project.start_date)}</dd>
+                <dd>{project.start_date || "—"}</dd>
               </div>
               <div>
                 <dt>Planned finish</dt>
-                <dd>{dateLabel(project.planned_end_date)}</dd>
+                <dd>{project.planned_end_date || "—"}</dd>
               </div>
               <div>
                 <dt>Progress</dt>
@@ -522,11 +471,7 @@ export function ProjectDetail({ id }: { id: string }) {
               </div>
               <div>
                 <dt>Sales order</dt>
-                <dd>
-                  {project.sales_order_id == null
-                    ? "—"
-                    : `Sales order #${project.sales_order_id}`}
-                </dd>
+                <dd>{project.sales_order_id ?? "—"}</dd>
               </div>
             </dl>
             {project.description && <p>{project.description}</p>}
@@ -603,9 +548,6 @@ export function ProjectDetail({ id }: { id: string }) {
                     .filter(
                       ([key, value]) =>
                         !idKeys[section]?.includes(key) &&
-                        key !== "id" &&
-                        key !== "created_at" &&
-                        key !== "updated_at" &&
                         value !== null &&
                         typeof value !== "object",
                     )
@@ -618,8 +560,7 @@ export function ProjectDetail({ id }: { id: string }) {
                       <td>
                         {displayEntries.map(([key, value]) => (
                           <span key={key} style={{ display: "block" }}>
-                            {displayLabel(key)}:{" "}
-                            {displayDetailValue(key, value)}
+                            {key.replaceAll("_", " ")}: {String(value)}
                           </span>
                         ))}
                       </td>

@@ -691,8 +691,8 @@ export function CompanyProfileView() {
             style={{
               width: "100%",
               maxWidth: "860px",
-              maxHeight: "min(90vh, calc(100dvh - 32px))",
-              overflow: "hidden",
+              maxHeight: "90vh",
+              overflowY: "auto",
               background: "var(--altrex-surface)",
               borderRadius: "16px",
               boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
@@ -756,7 +756,7 @@ export function CompanyProfileView() {
             </div>
 
             {/* Modal Body with Form */}
-            <div className="altrex-dialog-body" style={{ padding: "24px" }}>
+            <div style={{ padding: "24px" }}>
               <ProfileForm
                 isModal
                 onSuccess={() => setIsEditModalOpen(false)}

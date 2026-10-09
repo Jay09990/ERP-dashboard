@@ -75,82 +75,24 @@ const projectFields: FieldDefinition[] = [
   { name: "notes", label: "Notes", type: "textarea" },
   {
     name: "boqItems",
-    label: "Initial bill of quantities",
-    type: "collection",
-    itemFields: [
-      {
-        name: "boq_type",
-        label: "Type",
-        type: "select",
-        required: true,
-        options: ["material", "service", "labour"].map((value) => ({
-          value,
-          label: value[0].toUpperCase() + value.slice(1),
-        })),
-      },
-      { name: "item_id", label: "Item ID", type: "number" },
-      { name: "description", label: "Description", required: true },
-      { name: "quantity", label: "Quantity", type: "number", required: true },
-      { name: "unit_id", label: "Unit ID", type: "number" },
-      {
-        name: "unit_rate",
-        label: "Rate per unit",
-        type: "number",
-        required: true,
-      },
-    ],
+    label: "Initial BOQ items (JSON array)",
+    type: "json",
+    placeholder:
+      '[{"boq_type":"material","item_id":2,"description":"Steel","quantity":10,"unit_id":1,"unit_rate":85}]',
   },
   {
     name: "costBudget",
-    label: "Initial cost budgets",
-    type: "collection",
-    itemFields: [
-      {
-        name: "category",
-        label: "Category",
-        type: "select",
-        required: true,
-        options: [
-          "material",
-          "labour",
-          "equipment",
-          "subcontract",
-          "other",
-        ].map((value) => ({
-          value,
-          label: value[0].toUpperCase() + value.slice(1),
-        })),
-      },
-      {
-        name: "budget_amount",
-        label: "Budget amount",
-        type: "number",
-        required: true,
-      },
-      { name: "actual_amount", label: "Actual amount", type: "number" },
-      { name: "remarks", label: "Notes" },
-    ],
+    label: "Initial cost budget (JSON array)",
+    type: "json",
+    placeholder:
+      '[{"category":"material","budget_amount":100000,"actual_amount":0,"remarks":"Materials"}]',
   },
   {
     name: "milestones",
-    label: "Initial milestones",
-    type: "collection",
-    itemFields: [
-      { name: "milestone_name", label: "Milestone name", required: true },
-      { name: "due_date", label: "Due date", type: "date" },
-      { name: "payment_percent", label: "Payment share (%)", type: "number" },
-      { name: "payment_amount", label: "Payment amount", type: "number" },
-      { name: "sort_order", label: "Order", type: "number" },
-      {
-        name: "status",
-        label: "Status",
-        type: "select",
-        options: ["pending", "in_progress", "completed", "invoiced"].map(
-          (value) => ({ value, label: value.replaceAll("_", " ") }),
-        ),
-      },
-      { name: "remarks", label: "Notes" },
-    ],
+    label: "Initial milestones (JSON array)",
+    type: "json",
+    placeholder:
+      '[{"milestone_name":"Procurement","due_date":"2026-10-15","payment_percent":20,"payment_amount":500000,"sort_order":1,"status":"pending"}]',
   },
 ];
 
@@ -181,20 +123,6 @@ function money(value: number | undefined) {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(Number(value));
-}
-
-function dateLabel(value: string | undefined) {
-  if (!value) return "—";
-  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
-}
-
-function statusLabel(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export function ProjectList() {
@@ -307,7 +235,7 @@ export function ProjectList() {
             </select>
           </label>
           <label className="altrex-field" style={{ maxWidth: 280 }}>
-            <span>Filter by customer reference</span>
+            <span>Filter by party ID</span>
             <input
               className="altrex-input"
               type="number"
@@ -355,15 +283,10 @@ export function ProjectList() {
                         {project.project_code ?? `Project #${id ?? "—"}`}
                       </small>
                     </td>
+                    <td>{project.party_name ?? project.party_id ?? "—"}</td>
                     <td>
-                      {project.party_name ??
-                        (project.party_id == null
-                          ? "—"
-                          : `Customer #${project.party_id}`)}
-                    </td>
-                    <td>
-                      {dateLabel(project.start_date)} –{" "}
-                      {dateLabel(project.planned_end_date)}
+                      {project.start_date || "—"} –{" "}
+                      {project.planned_end_date || "—"}
                     </td>
                     <td>{money(project.contract_value)}</td>
                     <td>{Number(project.progress_percent ?? 0)}%</td>
@@ -384,10 +307,12 @@ export function ProjectList() {
                           }
                         }}
                       >
-                        <option value="">{statusLabel(project.status)}</option>
+                        <option value="">
+                          {project.status.replaceAll("_", " ")}
+                        </option>
                         {allowed.map((value) => (
                           <option key={value} value={value}>
-                            {statusLabel(value)}
+                            {value.replaceAll("_", " ")}
                           </option>
                         ))}
                       </select>

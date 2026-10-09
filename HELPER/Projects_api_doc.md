@@ -1,3 +1,13 @@
+## Frontend implementation coverage
+
+The ERP frontend consumes the project and procurement endpoints below through
+the same-origin API proxy. Project screens are available at `/projects` and
+`/projects/:projectId`; requisitions, GRNs, and site issues are available at
+`/procurement/requisitions`, `/procurement/grn`, and
+`/procurement/site-issues`. The Express backend remains external to this
+repository and must implement these routes. Lead routes later in this document
+are intentionally excluded from the frontend implementation.
+
 ## PROJECT ROUTES:—
 
 ### → GET PROJECTS
@@ -14,7 +24,7 @@ http://localhost:4500/api/project?partyId=5
 
 http://localhost:4500/api/project?status=in_progress&partyId=5
 
-STATUS FLOW : ["planning", "in_progress", "on_hold", "delayed", "completed", "closed", "cancelled”]
+STATUS FLOW : ["planning", "approved", "in_progress", "on_hold", "delayed", "completed", "closed", "cancelled"]
 
 ### → CREATE THE NEW PROJECT
 
@@ -313,13 +323,13 @@ http://localhost:4500/api/project/:projectId/sites
 
 ### → DELETE PROJECT SITES
 
-POST 
+DELETE
 
 http://localhost:4500/api/project/:projectId/sites/:siteId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_sites | update → is_deleted |
+| company | tbl_project_sites | update → status |
 | company | audit_logs | add |
 
 ### → ADD PROJECT BOQ
@@ -368,7 +378,7 @@ http://localhost:4500/api/project/:projectId/boq/:boqId
 
 ### → DELETE PROJECT BOQ
 
-POST 
+DELETE
 
 http://localhost:4500/api/project/:projectId/boq/:boqItemId
 
@@ -410,7 +420,7 @@ http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 {
   "milestone_name": "Foundation Completion",
   "due_date": "2026-11-30",
-  "completion_date": "2026-11-30"
+  "completion_date": "2026-11-30",
   "payment_percent": 20,
   "payment_amount": 5000000,
   "sort_order": 1,
@@ -425,7 +435,7 @@ http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 
 ### → DELETE PROJECT MILESTONES
 
-POST 
+DELETE
 
 http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 
@@ -485,7 +495,7 @@ http://localhost:4500/api/project/:projectId/tasks/:taskId
 
 ### → DELETE PROJECT TASKS
 
-POST 
+DELETE
 
 http://localhost:4500/api/project/:projectId/tasks/:taskId
 
@@ -530,7 +540,13 @@ update → progress_percent |
 
 ### → GET & CREATE PROJECT DOCUMENTS
 
+GET http://localhost:4500/api/projects/:projectId/documents
+
 POST  http://localhost:4500/api/projects/:projectId/documents
+
+The example payload below repeats the DPR fields and should be replaced with the
+document metadata fields supported by the backend (for example, a site reference
+and document/file metadata) before treating it as the authoritative upload schema.
 
 ```jsx
 {
@@ -562,7 +578,7 @@ DELETE  http://localhost:4500/api/projects/:projectId/documents/:documentId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_documents | update → is_deleted |
+| company | tbl_project_documents | update → status |
 | company | audit_logs | add |
 
 ---
@@ -618,7 +634,7 @@ http://localhost:4500/api/procurement/requisition
 
 POST
 
-http://localhost:4500/api/procurement/requisition/:requisitionId/:status 
+http://localhost:4500/api/procurement/requisition/:requisitionId/:status
 
 | CURRENT STATUS | ALLOWED STATUS |
 | --- | --- |
@@ -774,51 +790,7 @@ http://localhost:4500/api/procurement/site-issue/:issueId/:status
 
 ---
 
-# crm-lead-enquiry module
-
-#### CRM
-
-GET & POST    http://localhost:4500/api/crm/lead_sources 
-
-```jsx
-{
-  "source_name": "LinkedIn"
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | lead_sources | ADD |
-| company | audit_logs | add |
-
-GET & POST    http://localhost:4500/api/crm/industries 
-
-```jsx
-{
-  "industry_name": "Construction"
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | industries | ADD |
-| company | audit_logs | add |
-
-GET     
-
-http://localhost:4500/api/crm/follow-ups 
-
-http://localhost:4500/api/crm/follow-ups?scope=today 
-
-// NOTES: scope   :  due (default: overdue + today) | overdue | today | upcoming
-
-http://localhost:4500/api/crm/follow-ups?scope=upcoming&days=7 
-
-http://localhost:4500/api/crm/follow-ups?scope=upcoming&mine=true 
-
-http://localhost:4500/api/crm/follow-ups?scope=upcoming&assignedTo=5 
-
-#### LEAD
+# lead module
 
 GET
 
@@ -850,6 +822,11 @@ POST      http://localhost:4500/api/lead
   "rating": "cold",
   "estimated_value": 1250000.00,
   "next_follow_up_date": "2026-10-05",
+  "last_contacted_at": "2026-10-01 10:30:00",
+  "status": "new",
+  "lost_reason": "",
+  "party_id": "",
+  "converted_at": "",
   "notes": "Interested in annual ERP and inventory management package."
 }
 ```
@@ -862,15 +839,7 @@ POST      http://localhost:4500/api/lead
 PUT      http://localhost:4500/api/lead/:leadId
 
 ```jsx
-{
-  "contact_name": "Rahul Shah",
-  "designation": "General Manager",
-  "phone": "9876543211",
-  "rating": "hot",
-  "estimated_value": 2000000,
-  "next_follow_up_date": "2026-10-08",
-  "notes": "Budget confirmed by customer"
-}
+SAME AS CREATE DATA AND DATABASE
 ```
 
 DELETE      http://localhost:4500/api/lead/:leadId
@@ -882,13 +851,6 @@ DELETE      http://localhost:4500/api/lead/:leadId
 | company | audit_logs | add |
 
 POST    http://localhost:4500/api/lead/:leadId/status/:status 
-
-```jsx
-//if status if lost
-{
-  "lost_reason": "Customer selected another contractor"
-}
-```
 
 | CURRENT STATUS | ALLOWED STATUS |
 | --- | --- |
@@ -906,38 +868,7 @@ POST    http://localhost:4500/api/lead/:leadId/status/:status
 POST    http://localhost:4500/api/lead/:leadId/convert 
 
 ```jsx
-// **NOTES:** The controller also automatically carries information from the lead.
-// You can optionally provide:
 
-{
-  "party": {
-    "party_name": "ABC Engineering Pvt Ltd",
-    "email": "rahul@abcengineering.com",
-    "phone": "9876543210",
-    "gst_no": "24ABCDE1234F1Z5",
-    "pan_no": "ABCDE1234F",
-    "website": "https://abcengineering.com",
-    "currency_id": 1,
-    "addresses": [
-      {
-        "address_type": "both",
-        "address_label": "Head Office",
-        "address_line1": "GIDC Industrial Estate",
-        "city_id": 1,
-        "state_id": 1,
-        "country_id": 1,
-        "pincode": "380001"
-      }
-    ],
-    "contactPersons": [
-      {
-        "name": "Rahul Shah",
-        "email": "rahul@abcengineering.com",
-        "phone": "9876543210"
-      }
-    ]
-  }
-}
 ```
 
 | DB NAME | TABLE NAME | ACTION  |
@@ -945,246 +876,6 @@ POST    http://localhost:4500/api/lead/:leadId/convert
 | company | tbl_party | add |
 | company | tbl_party_addresses | add |
 | company | tbl_party_contact_person | add |
-| company | tbl_lead | UPDATE → status, party_id, converted_at |
+| company | tbl_lead | UPDATE → status, party_id, lost_reason, converted_at, next_follow_up_date |
 | company | tbl_enquiry | update → party_id |
-
-GET & POST    http://localhost:4500/api/lead/:leadId/activities
-
-```jsx
-{
-  "activity_type": "call",
-  "activity_date": "2026-10-02T10:30:00",
-  "subject": "Initial discussion",
-  "outcome": "Customer is interested in MEP installation.",
-  "next_follow_up_date": "2026-10-05"
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_crm_activity | add |
 | company | audit_logs | add |
-
-#### ENQUIRY
-
-GET  
-
- http://localhost:4500/api/enquiry
-
- http://localhost:4500/api/enquiry/:enquiryId 
-
-GET ENQUIRIES WITH FILTERS
-
-all querys :  status, partyId, leadId, assignedTo, priority, search, openOnly, dueWithinDays, tender, sort 
-
-POST
-
- http://localhost:4500/api/enquiry
-
-CREATE INQUIRY WITH LEAD ID
-
-```jsx
-{
-  "lead_id": 1,
-  "enquiry_date": "2026-10-06",
-  "enquiry_title": "Industrial Warehouse Construction",
-  "project_type": "industrial",
-  "customer_ref_no": "RFQ-2026-001",
-  "plant_name": "Ahmedabad Manufacturing Plant",
-  "project_location": "Ahmedabad, Gujarat",
-  "site_address": "Sanand Industrial Estate, Ahmedabad, Gujarat",
-  "scope_of_work": "Civil construction, structural work, roofing and electrical work",
-  "is_tender": true,
-  "tender_no": "TENDER-2026-001",
-  "submission_due_date": "2026-10-20",
-  "prebid_meeting_date": "2026-10-10",
-  "emd_amount": 50000,
-  "site_visit_required": true,
-  "site_visit_date": "2026-10-08",
-  "expected_start_date": "2026-11-01",
-  "expected_end_date": "2027-05-31",
-  "currency_id": 1,
-  "estimated_value": 25000000,
-  "priority": "high",
-  "assigned_to": 5,
-  "estimator_id": 7,
-  "next_follow_up_date": "2026-10-09",
-  "notes": "Customer requires detailed BOQ and commercial quotation."
-}
-```
-
-Create Enquiry directly from Customer
-
-```jsx
-{
-  "party_id": 10,
-  "enquiry_date": "2026-10-06",
-  "enquiry_title": "Factory Expansion Project",
-  "project_type": "commercial",
-  "customer_ref_no": "CUST-RFQ-102",
-  "project_location": "Vadodara, Gujarat",
-  "site_address": "GIDC Industrial Area, Vadodara",
-  "scope_of_work": "Factory building expansion and civil works",
-  "is_tender": false,
-  "site_visit_required": true,
-  "site_visit_date": "2026-10-09",
-  "expected_start_date": "2026-11-15",
-  "expected_end_date": "2027-03-31",
-  "currency_id": 1,
-  "estimated_value": 12000000,
-  "priority": "medium",
-  "assigned_to": 5,
-  "estimator_id": 7,
-  "next_follow_up_date": "2026-10-12",
-  "notes": "Existing customer requesting factory expansion."
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company  | tbl_enquiry | add |
-| company | tbl_lead | UPDATE → status=qualified |
-| company | audit_logs | add |
-
-PUT
-
- http://localhost:4500/api/enquiry/:enquiryId 
-
-```jsx
-{
-  "enquiry_title": "Updated Industrial Warehouse Construction",
-  "priority": "high",
-  "estimated_value": 28000000,
-  "site_visit_required": true,
-  "site_visit_date": "2026-10-10",
-  "expected_start_date": "2026-11-15",
-  "expected_end_date": "2027-06-30",
-  "next_follow_up_date": "2026-10-12",
-  "notes": "Customer increased project scope. Revised estimation required."
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_enquiry | UPDATE |
-| company | audit_logs | add |
-
-DELETE
-
- http://localhost:4500/api/enquiry/:enquiryId 
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_enquiry | update → is_deleted |
-| company | tbl_crm_activity | update → is_deleted |
-| company | tbl_enquiry_documents | update → is_deleted |
-| company | audit_logs | add |
-
-POST
-
-CHANGE STATUS
-
- http://localhost:4500/api/enquiry/:enquiryId/status/:status 
-
-```jsx
-//IF STATUS SET AS A LOST
-{
-  "lost_reason": "Customer selected another contractor due to lower price",
-  "competitor_name": "ABC Construction Pvt Ltd"
-}
-```
-
-| CURRENT STATUS | ALLOWED STATUS |
-| --- | --- |
-| new | "under_review", "site_visit", "estimating", "no_bid", "on_hold", "cancelled” |
-| under_review | "site_visit", "estimating", "no_bid", "on_hold", "cancelled” |
-| site_visit | "estimating", "no_bid", "on_hold", "cancelled” |
-| estimating | "quoted", "no_bid", "on_hold", "cancelled” |
-| quoted | "estimating", "negotiation", "won", "lost", "on_hold", "cancelled" |
-| negotiation | "quoted", "won", "lost", "on_hold", "cancelled” |
-| on_hold | "under_review", "estimating", "cancelled” |
-| lost | under_review |
-| no_bid | under_review |
-| won |  |
-| cancelled |  |
-
-POST
-
-LINK QUOTAION
-
-http://localhost:4500/api/enquiry/:enquiryId/link-quotation/:quotationId 
-
-which verifies:
-
-1. Enquiry exists.
-2. Quotation exists.
-3. Quotation isn't already linked to another enquiry.
-4. Enquiry belongs to a customer.
-5. Quotation customer matches enquiry customer.
-6. Enquiry isn't closed.
-7. Quotation is then linked.
-8. Enquiry can automatically become `quoted`.
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_quotation | UPDATE → enquiry_id |
-| company | tbl_enquiry | UPDATE → status = 'quoted’ |
-| company | audit_logs | add |
-
-ENQUIRY ACTIVITY
-
-GET & POST
-
-http://localhost:4500/api/enquiry/:enquiryId/activities 
-
-```jsx
-{
-  "activity_type": "call",
-  "activity_date": "2026-10-06",
-  "subject": "Customer requirement discussion",
-  "outcome": "Customer confirmed project requirements and requested quotation.",
-  "next_follow_up_date": "2026-10-10"
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_crm_activity | add |
-| company | audit_logs | add |
-
-ENQUIRY DOCUMENTS
-
-GET & POST
-
-http://localhost:4500/api/enquiry/:enquiryId/documents  
-
-```jsx
-{
-  "document_type": "rfq",
-  "document_name": "Customer_RFQ_001.pdf",
-  "file_url": "https://example.com/files/Customer_RFQ_001.pdf",
-  "remarks": "Original RFQ received from customer."
-}
-```
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_enquiry_documents | add |
-| company | audit_logs | add |
-
-DELETE
-
-http://localhost:4500/api/enquiry/:enquiryId/documents/:documentId 
-
-| DB NAME | TABLE NAME | ACTION  |
-| --- | --- | --- |
-| company | tbl_enquiry_documents | update → is_deleted |
-| company | audit_logs | add |
-
----
-
----
-
-# FLOW OF THE SOFTWARE PROCESS
-
-Setup forms → Customers/Items → Lead → Enquiry → Quotation → Sales order → Project (with its 8 sub-forms) → Requisition → PO → GRN → Stock → Site issue → Invoice → Credit/Debit note → Close project.

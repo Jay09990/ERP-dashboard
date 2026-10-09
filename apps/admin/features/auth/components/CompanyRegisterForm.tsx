@@ -191,7 +191,6 @@ export function CompanyRegisterForm() {
   const selectedPlanId = form.watch("subscriptionPlanId");
 
   // GSAP step transition
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Trigger GSAP animation whenever active step changes
   useEffect(() => {
     async function animate() {
       const gsap = (await import("gsap")).gsap;
