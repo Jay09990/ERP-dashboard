@@ -2,7 +2,8 @@
 
 import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { Plus, Tag, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCreateItemType, useDeleteItemType, useItemTypes } from "../api";
 import type { ItemType } from "../schema";
 
@@ -17,9 +18,38 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Static module-level helper functions for item type property extraction.
+// Extracting them outside the component prevents recreating functions on every render
+// and preserves reference identity.
+function getTypeId(t: ItemType): number | string | undefined {
+  const rec = t as Record<string, unknown>;
+  return (
+    t.item_type_id ??
+    (rec.itemTypesId as number | string) ??
+    (rec.item_type_id as number | string) ??
+    (rec.id as number | string)
+  );
+}
+
+function getTypeName(t: ItemType): string {
+  const rec = t as Record<string, unknown>;
+  return (
+    t.item_type_name ??
+    (rec.itemTypeName as string) ??
+    (rec.name as string) ??
+    "Unnamed item type"
+  );
+}
+
 export function ItemTypeList() {
   const { data: responseData, isLoading, error } = useItemTypes();
-  const types = extractRecords<ItemType>(responseData);
+
+  // Memoize extracted item types array to prevent deep recursive object traversals
+  // on every component render (e.g., when typing in modal inputs or state changes).
+  const types = useMemo(
+    () => extractRecords<ItemType>(responseData),
+    [responseData],
+  );
 
   const { mutate: createItemType, isPending: isCreating } = useCreateItemType();
   const { mutate: deleteItemType, isPending: isDeleting } = useDeleteItemType();
@@ -40,18 +70,7 @@ export function ItemTypeList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpenModal]);
 
-  const getTypeId = (t: ItemType) =>
-    t.item_type_id ??
-    (t as any).itemTypesId ??
-    (t as any).item_type_id ??
-    (t as any).id;
-  const getTypeName = (t: ItemType) =>
-    t.item_type_name ??
-    (t as any).itemTypeName ??
-    (t as any).name ??
-    "Unnamed item type";
-
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = (e: FormEvent) => {
     e.preventDefault();
     if (!typeName.trim()) return;
 
