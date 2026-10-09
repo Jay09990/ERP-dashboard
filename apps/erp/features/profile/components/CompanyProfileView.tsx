@@ -33,9 +33,19 @@ export function toSafeExternalUrl(url?: string | null): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
 
+  // Reject URLs containing control characters or HTML entities
+  if (
+    trimmed
+      .split("")
+      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
+    /&#?[a-z0-9]+;/i.test(trimmed)
+  ) {
+    return null;
+  }
+
   let candidate = trimmed;
   if (!/^https?:\/\//i.test(candidate)) {
-    if (/^(javascript|data|vbscript):/i.test(candidate)) {
+    if (/^(javascript|data|vbscript|file|blob|about):/i.test(candidate)) {
       return null;
     }
     candidate = `https://${candidate}`;
