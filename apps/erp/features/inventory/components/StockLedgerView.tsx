@@ -44,6 +44,11 @@ function extractRecords<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Module-scope rowKey extractor to avoid closure creation on every render
+function getLedgerRowKey(e: StockLedgerEntry, idx: number) {
+  return e.id ?? idx;
+}
+
 export function StockLedgerView() {
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
@@ -82,23 +87,26 @@ export function StockLedgerView() {
       return extractRecords<any>(res);
     },
   });
-  const warehousesList: any[] = warehousesResponse || [];
+  // Memoize warehouses list to preserve reference identity across re-renders
+  const warehousesList = useMemo(
+    () => (warehousesResponse ? extractRecords<any>(warehousesResponse) : []),
+    [warehousesResponse],
+  );
 
+  // Optimized filtering: computes trimmed lowercase query once outside loop and
+  // short-circuits in O(1) time with 0 allocations when search is empty.
   const filteredEntries = useMemo(() => {
-    return ledgerEntries.filter((entry) => {
-      const itemName = entry.item_name || "";
-      const whName = entry.warehouse_name || "";
-      const voucherNo = entry.voucher_no || "";
-      const voucherType = entry.voucher_type || "";
-      const remarks = entry.remarks || "";
+    const q = search.toLowerCase().trim();
+    if (!q) return ledgerEntries;
 
-      const q = search.toLowerCase();
+    return ledgerEntries.filter((entry) => {
       return (
-        itemName.toLowerCase().includes(q) ||
-        whName.toLowerCase().includes(q) ||
-        voucherNo.toLowerCase().includes(q) ||
-        voucherType.toLowerCase().includes(q) ||
-        remarks.toLowerCase().includes(q)
+        (entry.item_name && entry.item_name.toLowerCase().includes(q)) ||
+        (entry.warehouse_name &&
+          entry.warehouse_name.toLowerCase().includes(q)) ||
+        (entry.voucher_no && entry.voucher_no.toLowerCase().includes(q)) ||
+        (entry.voucher_type && entry.voucher_type.toLowerCase().includes(q)) ||
+        (entry.remarks && entry.remarks.toLowerCase().includes(q))
       );
     });
   }, [ledgerEntries, search]);
@@ -147,173 +155,179 @@ export function StockLedgerView() {
     );
   };
 
-  const columns = [
-    {
-      key: "transaction_date" as const,
-      label: "Date",
-      render: (e: StockLedgerEntry) => {
-        const rawDate = e.transaction_date || e.created_at;
-        const fmtDate = rawDate
-          ? new Date(rawDate).toLocaleDateString("en-IN")
-          : "—";
-        return (
-          <span
-            style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
-          >
-            {fmtDate}
-          </span>
-        );
+  // Memoized columns definition prevents recreating table column metadata on every render
+  const columns = useMemo(
+    () => [
+      {
+        key: "transaction_date" as const,
+        label: "Date",
+        render: (e: StockLedgerEntry) => {
+          const rawDate = e.transaction_date || e.created_at;
+          const fmtDate = rawDate
+            ? new Date(rawDate).toLocaleDateString("en-IN")
+            : "—";
+          return (
+            <span
+              style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+            >
+              {fmtDate}
+            </span>
+          );
+        },
       },
-    },
-    {
-      key: "item_name" as const,
-      label: "Item Details",
-      render: (e: StockLedgerEntry) => (
-        <div>
-          <span
-            style={{
-              fontWeight: 600,
-              color: "var(--altrex-text, #0f172a)",
-              fontSize: "13px",
-              display: "block",
-            }}
-          >
-            {e.item_name || `Item #${e.item_id}`}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "warehouse_name" as const,
-      label: "Warehouse Location",
-      render: (e: StockLedgerEntry) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Building
-            size={14}
-            style={{ color: "var(--altrex-muted, #94a3b8)" }}
-          />
-          <span
-            style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
-          >
-            {e.warehouse_name ||
-              (e.warehouse_id ? `Warehouse #${e.warehouse_id}` : "N/A")}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "voucher_no" as const,
-      label: "Reference Voucher",
-      render: (e: StockLedgerEntry) => (
-        <div>
-          <span
-            style={{
-              fontWeight: 500,
-              color: "var(--altrex-text, #0f172a)",
-              fontSize: "13px",
-            }}
-          >
-            {e.voucher_no || "—"}
-          </span>
-          {e.voucher_type && (
+      {
+        key: "item_name" as const,
+        label: "Item Details",
+        render: (e: StockLedgerEntry) => (
+          <div>
             <span
               style={{
+                fontWeight: 600,
+                color: "var(--altrex-text, #0f172a)",
+                fontSize: "13px",
                 display: "block",
-                color: "var(--altrex-muted, #64748b)",
-                fontSize: "11px",
               }}
             >
-              {e.voucher_type}
+              {e.item_name || `Item #${e.item_id}`}
             </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "transaction_type" as const,
-      label: "Movement Type",
-      render: (e: StockLedgerEntry) => {
-        const type = (e.transaction_type || "IN").toUpperCase();
-        const isIn = type === "IN";
-        const isOut = type === "OUT";
-
-        const bgColor = isIn
-          ? "rgba(16, 185, 129, 0.1)"
-          : isOut
-            ? "rgba(239, 68, 68, 0.1)"
-            : "rgba(37, 99, 235, 0.1)";
-        const textColor = isIn ? "#10b981" : isOut ? "#ef4444" : "#2563eb";
-        const borderColor = isIn
-          ? "rgba(16, 185, 129, 0.2)"
-          : isOut
-            ? "rgba(239, 68, 68, 0.2)"
-            : "rgba(37, 99, 235, 0.2)";
-
-        return (
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "12px",
-              fontWeight: 600,
-              backgroundColor: bgColor,
-              color: textColor,
-              border: `1px solid ${borderColor}`,
-            }}
-          >
-            {isIn ? (
-              <ArrowDownLeft size={13} />
-            ) : isOut ? (
-              <ArrowUpRight size={13} />
-            ) : (
-              <BookOpen size={13} />
+          </div>
+        ),
+      },
+      {
+        key: "warehouse_name" as const,
+        label: "Warehouse Location",
+        render: (e: StockLedgerEntry) => (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Building
+              size={14}
+              style={{ color: "var(--altrex-muted, #94a3b8)" }}
+            />
+            <span
+              style={{ color: "var(--altrex-text, #0f172a)", fontSize: "13px" }}
+            >
+              {e.warehouse_name ||
+                (e.warehouse_id ? `Warehouse #${e.warehouse_id}` : "N/A")}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: "voucher_no" as const,
+        label: "Reference Voucher",
+        render: (e: StockLedgerEntry) => (
+          <div>
+            <span
+              style={{
+                fontWeight: 500,
+                color: "var(--altrex-text, #0f172a)",
+                fontSize: "13px",
+              }}
+            >
+              {e.voucher_no || "—"}
+            </span>
+            {e.voucher_type && (
+              <span
+                style={{
+                  display: "block",
+                  color: "var(--altrex-muted, #64748b)",
+                  fontSize: "11px",
+                }}
+              >
+                {e.voucher_type}
+              </span>
             )}
-            {type}
-          </span>
-        );
+          </div>
+        ),
       },
-    },
-    {
-      key: "quantity" as const,
-      label: "Quantity",
-      render: (e: StockLedgerEntry) => {
-        const qty = Number(e.quantity || 0);
-        const type = (e.transaction_type || "IN").toUpperCase();
-        const isOut = type === "OUT";
+      {
+        key: "transaction_type" as const,
+        label: "Movement Type",
+        render: (e: StockLedgerEntry) => {
+          const type = (e.transaction_type || "IN").toUpperCase();
+          const isIn = type === "IN";
+          const isOut = type === "OUT";
 
-        return (
+          const bgColor = isIn
+            ? "rgba(16, 185, 129, 0.1)"
+            : isOut
+              ? "rgba(239, 68, 68, 0.1)"
+              : "rgba(37, 99, 235, 0.1)";
+          const textColor = isIn ? "#10b981" : isOut ? "#ef4444" : "#2563eb";
+          const borderColor = isIn
+            ? "rgba(16, 185, 129, 0.2)"
+            : isOut
+              ? "rgba(239, 68, 68, 0.2)"
+              : "rgba(37, 99, 235, 0.2)";
+
+          return (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "12px",
+                fontWeight: 600,
+                backgroundColor: bgColor,
+                color: textColor,
+                border: `1px solid ${borderColor}`,
+              }}
+            >
+              {isIn ? (
+                <ArrowDownLeft size={13} />
+              ) : isOut ? (
+                <ArrowUpRight size={13} />
+              ) : (
+                <BookOpen size={13} />
+              )}
+              {type}
+            </span>
+          );
+        },
+      },
+      {
+        key: "quantity" as const,
+        label: "Quantity",
+        render: (e: StockLedgerEntry) => {
+          const qty = Number(e.quantity || 0);
+          const type = (e.transaction_type || "IN").toUpperCase();
+          const isOut = type === "OUT";
+
+          return (
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: "13px",
+                color: isOut ? "#ef4444" : "#10b981",
+              }}
+            >
+              {isOut ? "-" : "+"}
+              {qty.toLocaleString("en-IN")}
+            </span>
+          );
+        },
+      },
+      {
+        key: "balance" as const,
+        label: "Balance Stock",
+        render: (e: StockLedgerEntry) => (
           <span
             style={{
-              fontWeight: 700,
+              fontWeight: 600,
+              color: "var(--altrex-text, #0f172a)",
               fontSize: "13px",
-              color: isOut ? "#ef4444" : "#10b981",
             }}
           >
-            {isOut ? "-" : "+"}
-            {qty.toLocaleString("en-IN")}
+            {e.balance != null
+              ? Number(e.balance).toLocaleString("en-IN")
+              : "—"}
           </span>
-        );
+        ),
       },
-    },
-    {
-      key: "balance" as const,
-      label: "Balance Stock",
-      render: (e: StockLedgerEntry) => (
-        <span
-          style={{
-            fontWeight: 600,
-            color: "var(--altrex-text, #0f172a)",
-            fontSize: "13px",
-          }}
-        >
-          {e.balance != null ? Number(e.balance).toLocaleString("en-IN") : "—"}
-        </span>
-      ),
-    },
-  ];
+    ],
+    [],
+  );
 
   return (
     <>
@@ -460,13 +474,9 @@ export function StockLedgerView() {
         </div>
       ) : (
         <DataTable
-          columns={columns.map((c) => ({
-            key: c.key,
-            label: c.label,
-            ...(c.render ? { render: c.render } : {}),
-          }))}
+          columns={columns}
           data={filteredEntries}
-          rowKey={(e, idx) => e.id ?? idx}
+          rowKey={getLedgerRowKey}
         />
       )}
     </>
