@@ -291,6 +291,48 @@ export const DOCUMENT_PRINT_CONFIG: Record<
   },
 };
 
+/**
+ * Validates and sanitizes image URLs or data URIs for HTML output.
+ * Ensures the image source uses `http:`, `https:`, or a safe `data:image/...` URI
+ * without control characters or HTML entity bypasses.
+ */
+export function toSafeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  if (
+    trimmed
+      .split("")
+      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
+    /&#?[a-z0-9]+;/i.test(trimmed)
+  ) {
+    return null;
+  }
+
+  if (/^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);base64,/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  let candidate = trimmed;
+  if (!/^https?:\/\//i.test(candidate)) {
+    if (/^(javascript|data|vbscript|file|blob|about):/i.test(candidate)) {
+      return null;
+    }
+    candidate = `https://${candidate}`;
+  }
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function numberToWordsIndian(value: number): string {
   const ones = [
     "",
@@ -814,6 +856,9 @@ async function printDocument(document: any, docType: DocumentType) {
   const origDocDate =
     quotation.doc_date ?? quotation.document_date ?? quotation.pi_date ?? "";
 
+  const safeLogo = toSafeImageUrl(company.logo);
+  const safeSignature = toSafeImageUrl(company.authorized_signature);
+
   popup.document.open();
   popup.document.write(`<!doctype html>
 <html><head><title>${escapeHtml(config.label)} #${escapeHtml(String(docRefNo))}</title>
@@ -859,7 +904,7 @@ async function printDocument(document: any, docType: DocumentType) {
 <section class="page">
   <header>
     <div style="max-width:56%">
-      ${company.logo ? `<img src="${company.logo}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+      ${safeLogo ? `<img src="${escapeHtml(safeLogo)}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
       <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:2px">${escapeHtml(company.company_name ?? "Teton Projects Pvt. Ltd.")}</div>
       ${companyAddressText() ? `<p style="color:#475569">${escapeHtml(companyAddressText())}</p>` : ""}
       ${company.phone ? `<p style="color:#475569">+91${escapeHtml(company.phone.replace(/^(\+91|91)/, ""))}</p>` : ""}
@@ -1011,7 +1056,7 @@ async function printDocument(document: any, docType: DocumentType) {
       </div>
 
       <div class="sig-box">
-        ${company.authorized_signature ? `<img src="${company.authorized_signature}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+        ${safeSignature ? `<img src="${escapeHtml(safeSignature)}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
         <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
       </div>
     `
