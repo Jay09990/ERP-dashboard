@@ -84,7 +84,12 @@ export function StockLedgerView() {
   });
   const warehousesList: any[] = warehousesResponse || [];
 
+  // Hoist query lowercasing outside filter loop and provide early O(1) return on empty search queries
+  // to avoid redundant string allocations and loop iterations across entries on every render.
   const filteredEntries = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return ledgerEntries;
+
     return ledgerEntries.filter((entry) => {
       const itemName = entry.item_name || "";
       const whName = entry.warehouse_name || "";
@@ -92,7 +97,6 @@ export function StockLedgerView() {
       const voucherType = entry.voucher_type || "";
       const remarks = entry.remarks || "";
 
-      const q = search.toLowerCase();
       return (
         itemName.toLowerCase().includes(q) ||
         whName.toLowerCase().includes(q) ||
