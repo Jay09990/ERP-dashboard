@@ -20,6 +20,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toSafeImageUrl } from "@/features/profile/components/CompanyProfileView";
 import { DocumentForm, type DocumentType } from "./DocumentForm";
 import { DocumentPreviewModal } from "./DocumentPreviewModal";
 
@@ -859,7 +860,7 @@ async function printDocument(document: any, docType: DocumentType) {
 <section class="page">
   <header>
     <div style="max-width:56%">
-      ${company.logo ? `<img src="${company.logo}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+      ${toSafeImageUrl(company.logo) ? `<img src="${toSafeImageUrl(company.logo)}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
       <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:2px">${escapeHtml(company.company_name ?? "Teton Projects Pvt. Ltd.")}</div>
       ${companyAddressText() ? `<p style="color:#475569">${escapeHtml(companyAddressText())}</p>` : ""}
       ${company.phone ? `<p style="color:#475569">+91${escapeHtml(company.phone.replace(/^(\+91|91)/, ""))}</p>` : ""}
@@ -1011,7 +1012,7 @@ async function printDocument(document: any, docType: DocumentType) {
       </div>
 
       <div class="sig-box">
-        ${company.authorized_signature ? `<img src="${company.authorized_signature}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+        ${toSafeImageUrl(company.authorized_signature) ? `<img src="${toSafeImageUrl(company.authorized_signature)}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
         <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
       </div>
     `

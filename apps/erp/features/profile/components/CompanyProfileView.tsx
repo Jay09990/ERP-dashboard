@@ -62,6 +62,41 @@ export function toSafeExternalUrl(url?: string | null): string | null {
   return null;
 }
 
+/**
+ * Validates and sanitizes image URL sources for render & HTML interpolation.
+ * Permits safe `http:`, `https:`, and `data:image/` URIs while rejecting
+ * `javascript:`, control characters, HTML tags/entities, and unescaped double quotes.
+ */
+export function toSafeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  if (
+    trimmed
+      .split("")
+      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
+    /["<>]|&#?[a-z0-9]+;/i.test(trimmed)
+  ) {
+    return null;
+  }
+
+  if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function extractRecords(value: unknown): Array<Record<string, any>> {
   if (Array.isArray(value)) return value as Array<Record<string, any>>;
   if (!value || typeof value !== "object") return [];
