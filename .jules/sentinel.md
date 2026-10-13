@@ -22,3 +22,8 @@
 **Vulnerability:** External user-supplied URLs validated with simple string checks like `if (!/^https?:\/\//i.test(url))` allowed malicious schemes (`javascript:`, `vbscript:`, `data:`) or obfuscated variants containing ASCII control characters or HTML entities (`jav\tascript:`, `&#x0a;`) to bypass scheme checks before being executed in `<a>` `href` links.
 **Learning:** Checking URL scheme strings without filtering control characters or HTML entities allows obfuscated payloads to bypass regex checks while being resolved or executed by browser rendering engines.
 **Prevention:** Filter control characters (`charCodeAt < 32` or `127`) and HTML entity patterns before scheme validation, check against forbidden schemes (`javascript`, `data`, `vbscript`, `file`, `blob`, `about`), and enforce that resolved URLs strictly parse as `http:` or `https:` protocols.
+
+## 2025-05-25 - ASCII Control Character Range Gap in Open Redirect Sanitization
+**Vulnerability:** `isSafeRedirect` tested control characters using regex `/[\x00-\x1f]/`, omitting ASCII DEL (`127` / `%7f`), which permitted URL-encoded DEL characters to bypass control character checks in redirect targets.
+**Learning:** Using regex range `\x00-\x1f` misses ASCII 127 (`DEL`), and literal control characters in regex literals can trigger linter warnings.
+**Prevention:** Use explicit character code checking (`charCodeAt(0) < 32 || charCodeAt(0) === 127`) on multi-pass decoded strings to reliably filter all ASCII control characters without linter control character warnings.
