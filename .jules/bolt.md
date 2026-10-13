@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-25 - Isolating Form Repeater Items and Cascade Selectors with React.memo
+**Learning:** Rendering complex form repeater items (containing cascading location dropdowns) inline inside an array map causes every keystroke anywhere in the form to re-render all repeater cards, creating fresh inline callback references and triggering redundant recursive master data extractions in cascade selectors. Extracting repeater cards into a memoized `React.memo` component with `useCallback` location change handlers isolates form updates to the active card and eliminates cascade select recalculations across all other cards.
+**Action:** Always extract complex form repeater rows into `React.memo` components with `useCallback` handlers when child controls fetch or process master lookup data.
+
 ## 2025-05-24 - Single-Pass Statistics and Grouping Memoization
 **Learning:** Performing separate `filter` and `every` passes over large item arrays in component render bodies causes redundant $O(N)$ allocations and loop iterations on every state update or keystroke. Combining array grouping and statistics calculation into a single pass inside `useMemo` avoids redundant traversals and temporary array creations.
 **Action:** Consolidate array statistics and grouping logic into a single $O(N)$ pass within `useMemo`.
