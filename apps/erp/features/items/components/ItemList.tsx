@@ -308,6 +308,7 @@ export function ItemList() {
           >
             <Button
               variant="outline"
+              aria-label={`Edit ${i.item_name}`}
               onClick={() => {
                 setActiveItem(i);
                 setIsOpenDrawer(true);
@@ -325,6 +326,8 @@ export function ItemList() {
             </Button>
             <Button
               variant="outline"
+              aria-label={`Delete ${i.item_name}`}
+              title={`Delete ${i.item_name}`}
               onClick={() => {
                 if (
                   confirm(
