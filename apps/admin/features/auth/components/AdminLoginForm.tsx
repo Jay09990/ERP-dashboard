@@ -46,9 +46,7 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    decoded
-      .split("")
-      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127)
+    /\p{Control}/u.test(decoded)
   ) {
     return false;
   }

@@ -131,6 +131,8 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
           </Button>
           <Button
             variant="outline"
+            aria-label={`Delete category ${extractCategoryName(cat)}`}
+            title={`Delete category ${extractCategoryName(cat)}`}
             onClick={() => onDeleteCategory(cat)}
             disabled={isDeleting}
             style={{
@@ -331,6 +333,8 @@ export function ItemCategoryTree() {
                 type="button"
                 className="altrex-icon-button"
                 onClick={() => setIsOpenModal(false)}
+                aria-label="Close"
+                title="Close"
               >
                 <X size={18} />
               </button>

@@ -37,6 +37,16 @@ export function UserPermissionMatrixModal({
   const [permSearch, setPermSearch] = useState("");
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSaving) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isSaving]);
+
+  useEffect(() => {
     if (allPermissions) {
       const roleMap = new Map(
         (rolePermissions || []).map(
@@ -156,10 +166,20 @@ export function UserPermissionMatrixModal({
   }
 
   return (
-    <div className="altrex-dialog-backdrop" onClick={onClose}>
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isSaving && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-lg"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-lg relative z-10"
+        // biome-ignore lint/a11y/useSemanticElements: custom modal container uses WAI-ARIA role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-permission-matrix-title"
         style={{
           maxHeight: "min(90vh, calc(100dvh - 32px))",
           display: "flex",
@@ -185,7 +205,12 @@ export function UserPermissionMatrixModal({
               <Shield size={20} />
             </div>
             <div>
-              <h2 className="altrex-dialog-title">Permissions — {userName}</h2>
+              <h2
+                id="user-permission-matrix-title"
+                className="altrex-dialog-title"
+              >
+                Permissions — {userName}
+              </h2>
               <p className="altrex-dialog-subtitle" style={{ margin: 0 }}>
                 <span
                   style={{ color: "var(--altrex-primary)", fontWeight: 700 }}
