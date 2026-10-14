@@ -43,7 +43,7 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    /[\x00-\x1f]/.test(decoded)
+    /\p{Control}/u.test(decoded)
   ) {
     return false;
   }
@@ -70,38 +70,33 @@ export function CompanyLoginForm() {
       const response = await apiClient.post<{
         token?: string;
         access_token?: string;
-        user?: Record<string, any>;
-        data?: Record<string, any>;
+        user?: Record<string, unknown>;
+        data?: Record<string, unknown>;
       }>(endpoints.auth.login, values);
       const token = response.token ?? response.access_token;
       const user =
         response.user ?? response.data?.user ?? response.data ?? response;
       if (!token) throw new Error("Login response did not include a token");
+      // biome-ignore lint/suspicious/noExplicitAny: Backend user object shape varies
+      const u = user as Record<string, any>;
       setToken(token);
       const session: SessionSnapshot = {
         user: {
-          id: String(user.userId ?? user.user_id ?? user.id ?? ""),
-          name:
-            user.fullName ?? user.full_name ?? user.name ?? user.email ?? "",
-          email: user.email ?? "",
-          phone: user.phone ?? "",
+          id: String(u.userId ?? u.user_id ?? u.id ?? ""),
+          name: u.fullName ?? u.full_name ?? u.name ?? u.email ?? "",
+          email: u.email ?? "",
+          phone: u.phone ?? "",
         },
-        permissions: normalizePermissionNames(user.permissions),
+        permissions: normalizePermissionNames(u.permissions),
         company:
-          user.companyId || user.company_id || user.company
+          u.companyId || u.company_id || u.company
             ? {
-                id: String(
-                  user.companyId ?? user.company_id ?? user.company?.id ?? "",
-                ),
-                name:
-                  user.companyName ??
-                  user.company_name ??
-                  user.company?.name ??
-                  "",
-                gstNo: user.gstNo ?? user.gst_no ?? "",
-                phone: user.companyPhone ?? user.company_phone ?? "",
-                email: user.companyEmail ?? user.company_email ?? "",
-                address: user.address ?? "",
+                id: String(u.companyId ?? u.company_id ?? u.company?.id ?? ""),
+                name: u.companyName ?? u.company_name ?? u.company?.name ?? "",
+                gstNo: u.gstNo ?? u.gst_no ?? "",
+                phone: u.companyPhone ?? u.company_phone ?? "",
+                email: u.companyEmail ?? u.company_email ?? "",
+                address: u.address ?? "",
               }
             : undefined,
       };
