@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import { toSafeImageUrl } from "@/features/profile/components/CompanyProfileView";
 import { Edit, FileText, Printer, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DocumentType } from "./DocumentForm";
@@ -574,9 +575,9 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ maxWidth: "56%" }}>
-          {company.logo && (
+          {toSafeImageUrl(company.logo) && (
             <img
-              src={company.logo}
+              src={toSafeImageUrl(company.logo)!}
               alt="Company Logo"
               style={{
                 maxHeight: "55px",
