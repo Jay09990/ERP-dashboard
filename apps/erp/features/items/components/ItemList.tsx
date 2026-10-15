@@ -192,13 +192,24 @@ export function ItemList() {
     URL.revokeObjectURL(url);
   };
 
-  const activeCount = items.filter((i) => i.status === "active").length;
-  const salesItemsCount = items.filter(
-    (i) => Number(i.sales_rate || 0) > 0,
-  ).length;
-  const purchaseItemsCount = items.filter(
-    (i) => Number(i.purchase_rate || 0) > 0,
-  ).length;
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline .filter passes in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, salesItemsCount, purchaseItemsCount } = useMemo(() => {
+    let active = 0;
+    let sales = 0;
+    let purchase = 0;
+    for (const i of items) {
+      if (i.status === "active") active++;
+      if (Number(i.sales_rate || 0) > 0) sales++;
+      if (Number(i.purchase_rate || 0) > 0) purchase++;
+    }
+    return {
+      activeCount: active,
+      salesItemsCount: sales,
+      purchaseItemsCount: purchase,
+    };
+  }, [items]);
 
   const columns = [
     {
