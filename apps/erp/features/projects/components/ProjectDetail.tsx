@@ -1,6 +1,10 @@
 "use client";
 
 import { projectApi } from "@/features/projects/api";
+import {
+  type ReferenceOption,
+  useProjectChildLookups,
+} from "@/features/projects/lookups";
 import type {
   DailyProgressReport,
   Project,
@@ -39,9 +43,9 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
   sites: [
     { name: "site_name", label: "Site name", required: true },
     { name: "address_line1", label: "Address" },
-    { name: "city_id", label: "City ID", type: "number" },
-    { name: "state_id", label: "State ID", type: "number" },
-    { name: "country_id", label: "Country ID", type: "number" },
+    { name: "city_id", label: "City", type: "reference" },
+    { name: "state_id", label: "State", type: "reference" },
+    { name: "country_id", label: "Country", type: "reference" },
     { name: "pincode", label: "Postal code" },
     { name: "contact_person", label: "Contact person" },
     { name: "contact_phone", label: "Contact phone" },
@@ -52,10 +56,10 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
       label: "Type (material, service, labour)",
       required: true,
     },
-    { name: "item_id", label: "Item ID", type: "number" },
+    { name: "item_id", label: "Item", type: "reference" },
     { name: "description", label: "Description", required: true },
     { name: "quantity", label: "Quantity", type: "number", required: true },
-    { name: "unit_id", label: "Unit ID", type: "number" },
+    { name: "unit_id", label: "Unit", type: "reference" },
     { name: "unit_rate", label: "Unit rate", type: "number", required: true },
     { name: "consumed_quantity", label: "Consumed quantity", type: "number" },
   ],
@@ -70,9 +74,9 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   tasks: [
-    { name: "site_id", label: "Site ID", type: "number" },
+    { name: "site_id", label: "Project site", type: "reference" },
     { name: "task_name", label: "Task", required: true },
-    { name: "assigned_to", label: "Assigned user ID", type: "number" },
+    { name: "assigned_to", label: "Assigned user", type: "reference" },
     { name: "start_date", label: "Start date", type: "date" },
     { name: "due_date", label: "Due date", type: "date" },
     { name: "priority", label: "Priority", placeholder: "low, medium, high" },
@@ -81,7 +85,7 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   reports: [
-    { name: "site_id", label: "Site ID", type: "number" },
+    { name: "site_id", label: "Project site", type: "reference" },
     { name: "report_date", label: "Report date", type: "date", required: true },
     { name: "weather", label: "Weather" },
     { name: "manpower_count", label: "Manpower count", type: "number" },
@@ -101,7 +105,7 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   documents: [
-    { name: "site_id", label: "Site ID", type: "number" },
+    { name: "site_id", label: "Project site", type: "reference" },
     { name: "document_name", label: "Document name", required: true },
     { name: "document_type", label: "Document type" },
     { name: "file_url", label: "File URL", required: true },
@@ -225,13 +229,14 @@ function displayDetailValue(key: string, value: unknown) {
 }
 
 export function ProjectDetail({ id }: { id: string }) {
-  const detailQuery = projectApi.useDetail(id);
-  const financialsQuery = projectApi.useFinancials(id);
-  const dprQuery = projectApi.useDprList(id);
-  const documentsQuery = projectApi.useDocuments(id);
   const [section, setSection] = useState<Section>("overview");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
+  const detailQuery = projectApi.useDetail(id);
+  const financialsQuery = projectApi.useFinancials(id, section === "overview");
+  const dprQuery = projectApi.useDprList(id, section === "reports");
+  const documentsQuery = projectApi.useDocuments(id, section === "documents");
+  const lookups = useProjectChildLookups(dialogOpen);
   const project = useMemo(
     () => extractRecord<Project & Record<string, unknown>>(detailQuery.data),
     [detailQuery.data],
@@ -283,6 +288,18 @@ export function ProjectDetail({ id }: { id: string }) {
   }
 
   const projectRecord = project as Record<string, unknown>;
+  const siteOptions: ReferenceOption[] = childRows(
+    projectRecord,
+    sectionKeys.sites ?? [],
+  ).flatMap((site) => {
+    const siteId = recordId(site, ["site_id", "id"]);
+    if (siteId == null) return [];
+    const siteName = site.site_name ?? site.address_line1 ?? "Project site";
+    return [
+      { value: String(siteId), label: `${String(siteName)} (#${siteId})` },
+    ];
+  });
+  const fieldOptions = { ...lookups.options, site_id: siteOptions };
   const rowsFor = (target: Section) => {
     if (target === "reports") {
       return reports as unknown as Record<string, unknown>[];
@@ -681,6 +698,9 @@ export function ProjectDetail({ id }: { id: string }) {
         <EntityFormDialog
           title={`${editing ? "Update" : "Add"} ${sectionLabels[section]}`}
           fields={activeFields}
+          fieldOptions={fieldOptions}
+          lookupLoading={lookups.isLoading}
+          lookupError={lookups.error}
           initialValues={editing ?? undefined}
           isPending={isSaving}
           onClose={() => setDialogOpen(false)}

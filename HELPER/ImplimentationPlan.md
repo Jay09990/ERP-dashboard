@@ -104,7 +104,9 @@
 - [x] Replace project and procurement JSON-array text entry with labeled repeatable item forms
 - [x] Replace raw procurement JSON detail output with readable record summaries and item tables
 - [ ] Validate all request/response shapes and child-route methods against a running backend; the API server is outside this repository
-- [ ] Replace manually entered reference IDs with searchable selectors when backend lookup contracts are confirmed
+- [x] Add searchable selectors for references backed by documented list routes (customers, quotations, sales orders, users, currencies, items, units, projects, warehouses, and batches); load lookups on demand and reuse shared query-cache entries
+- [x] Load the selected project's documented detail route to populate project-specific site and BOQ selectors on site issues
+- [ ] Replace the purchase-order-line ID with a selector once the GET response shape for order line items is confirmed
 - [ ] Add permission gating for project/procurement mutations once the backend permission keys are documented
 - [ ] Confirm project document upload/storage contract; current UI accepts document metadata and a file URL, not binary uploads
 
