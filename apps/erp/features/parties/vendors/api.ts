@@ -26,10 +26,7 @@ function extractPartyArray(res: any): PartyRecord[] {
   return [];
 }
 
-function extractPartySingle(
-  res: any,
-  id: string | number,
-): PartyRecord | null {
+function extractPartySingle(res: any, id: string | number): PartyRecord | null {
   if (!res) return null;
   if (Array.isArray(res)) {
     const matchingParty = res.find(

@@ -131,6 +131,8 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
           </Button>
           <Button
             variant="outline"
+            aria-label={`Delete category ${extractCategoryName(cat)}`}
+            title={`Delete category ${extractCategoryName(cat)}`}
             onClick={() => onDeleteCategory(cat)}
             disabled={isDeleting}
             style={{
@@ -167,7 +169,12 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
 
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories = extractRecords<ItemCategory>(responseData);
+  // Memoize extracted category records to preserve array reference identity across re-renders.
+  // Prevents invalidating downstream useMemo (rootCategories / childrenMap) when typing in modal inputs.
+  const categories = useMemo(
+    () => extractRecords<ItemCategory>(responseData),
+    [responseData],
+  );
 
   const { mutate: createCategory, isPending: isCreating } =
     useCreateItemCategory();
@@ -326,6 +333,8 @@ export function ItemCategoryTree() {
                 type="button"
                 className="altrex-icon-button"
                 onClick={() => setIsOpenModal(false)}
+                aria-label="Close"
+                title="Close"
               >
                 <X size={18} />
               </button>

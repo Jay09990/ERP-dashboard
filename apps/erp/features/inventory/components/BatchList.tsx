@@ -353,7 +353,10 @@ export function BatchList() {
       </div>
 
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading batch records..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading batch records..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load batch data from backend server.

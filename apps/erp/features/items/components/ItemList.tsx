@@ -308,6 +308,7 @@ export function ItemList() {
           >
             <Button
               variant="outline"
+              aria-label={`Edit ${i.item_name}`}
               onClick={() => {
                 setActiveItem(i);
                 setIsOpenDrawer(true);
@@ -325,6 +326,8 @@ export function ItemList() {
             </Button>
             <Button
               variant="outline"
+              aria-label={`Delete ${i.item_name}`}
+              title={`Delete ${i.item_name}`}
               onClick={() => {
                 if (
                   confirm(
@@ -620,7 +623,10 @@ export function ItemList() {
 
       {/* Table */}
       {isLoading ? (
-        <TableSkeleton columns={columns.length} message="Loading inventory items..." />
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading inventory items..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load items from the backend server.

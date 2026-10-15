@@ -17,3 +17,13 @@
 **Vulnerability:** `isSafeRedirect` passed the un-decoded raw string to `new URL(path, dummyOrigin)` and failed to filter ASCII control characters (such as `%09` / `\t`), allowing URL-encoded tab characters (`/%09//evil.com`) to bypass double-slash checks and pass `new URL` origin validation, while resolving to external origins when processed by browser navigation.
 **Learning:** `new URL()` does not decode URL-encoded control characters like `%09` when parsing raw strings, but browser navigation and WHATWG URL parsers strip decoded control characters during URL resolution (`/\t//evil.com` -> `//evil.com`).
 **Prevention:** Always test control characters (`/[\0-\x1f]/`) on multi-pass decoded redirect strings and pass the fully `decoded` string into `new URL(decoded, dummyOrigin)`.
+
+## 2025-05-24 - External URL Sanitization and Obfuscated Scheme Execution
+**Vulnerability:** External user-supplied URLs validated with simple string checks like `if (!/^https?:\/\//i.test(url))` allowed malicious schemes (`javascript:`, `vbscript:`, `data:`) or obfuscated variants containing ASCII control characters or HTML entities (`jav\tascript:`, `&#x0a;`) to bypass scheme checks before being executed in `<a>` `href` links.
+**Learning:** Checking URL scheme strings without filtering control characters or HTML entities allows obfuscated payloads to bypass regex checks while being resolved or executed by browser rendering engines.
+**Prevention:** Filter control characters (`charCodeAt < 32` or `127`) and HTML entity patterns before scheme validation, check against forbidden schemes (`javascript`, `data`, `vbscript`, `file`, `blob`, `about`), and enforce that resolved URLs strictly parse as `http:` or `https:` protocols.
+
+## 2025-05-25 - DOM XSS in Document Printing via Unsanitized Image Sources
+**Vulnerability:** Document print generation injected raw user-controlled `company.logo` and `company.authorized_signature` strings into HTML template literals (`<img src="${company.logo}">`) passed to `popup.document.write()`, allowing attribute breaking and execution of arbitrary scripts in the printed popup window.
+**Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
+**Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.

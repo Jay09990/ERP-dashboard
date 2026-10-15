@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-25 - Hoisting Search Lowercasing and Fast-Pathing Empty Queries in Array Filter Hooks
+**Learning:** Re-evaluating `search.toLowerCase()` inside array `.filter()` callbacks causes $O(N)$ string lowercasing operations per render. Moreover, filtering over large arrays when search is empty or whitespace-only executes redundant string lowercasing and `.includes("")` comparisons across all elements. Hoisting query normalization outside the loop and returning the array directly when empty provides an $O(1)$ fast-path and eliminates $O(N)$ redundant string allocations.
+**Action:** Always compute normalized search queries outside `.filter()` callbacks and return early if the search string is empty.
+
 ## 2025-05-24 - Single-Pass Statistics and Grouping Memoization
 **Learning:** Performing separate `filter` and `every` passes over large item arrays in component render bodies causes redundant $O(N)$ allocations and loop iterations on every state update or keystroke. Combining array grouping and statistics calculation into a single pass inside `useMemo` avoids redundant traversals and temporary array creations.
 **Action:** Consolidate array statistics and grouping logic into a single $O(N)$ pass within `useMemo`.

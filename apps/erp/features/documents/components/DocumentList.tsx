@@ -72,6 +72,113 @@ function extractObject(value: any, keys: string[]): any {
   return value;
 }
 
+// Data extractor helpers defined at module scope to avoid re-creating closures on every component render
+function getDocId(doc: any) {
+  return (
+    doc?.quotation_id ??
+    doc?.sales_order_id ??
+    doc?.proforma_id ??
+    doc?.delivery_challan_id ??
+    doc?.invoice_id ??
+    doc?.purchase_order_id ??
+    doc?.purchase_invoice_id ??
+    doc?.credit_note_id ??
+    doc?.debit_note_id ??
+    doc?.id ??
+    ""
+  );
+}
+
+function getDocNo(doc: any): string {
+  return String(
+    doc?.invoice_no ??
+      doc?.purchase_invoice_no ??
+      doc?.pi_no ??
+      doc?.quotation_no ??
+      doc?.sales_order_no ??
+      doc?.proforma_no ??
+      doc?.delivery_challan_no ??
+      doc?.credit_note_no ??
+      doc?.debit_note_no ??
+      doc?.doc_no ??
+      `#${getDocId(doc)}`,
+  );
+}
+
+function getDocDate(doc: any): string {
+  return String(
+    doc?.invoice_date ??
+      doc?.pi_date ??
+      doc?.quotation_date ??
+      doc?.sales_order_date ??
+      doc?.proforma_date ??
+      doc?.delivery_date ??
+      doc?.credit_date ??
+      doc?.credit_note_date ??
+      doc?.debit_date ??
+      doc?.debit_note_date ??
+      doc?.purchase_order_date ??
+      doc?.created_at ??
+      "",
+  );
+}
+
+function getDocDueDate(doc: any): string {
+  return String(
+    doc?.due_date ?? doc?.valid_until ?? doc?.expected_delivery_date ?? "",
+  );
+}
+
+function getDocPartyName(doc: any): string {
+  const party = doc?.party;
+  return String(
+    doc?.party_name ??
+      doc?.company_name ??
+      doc?.customer_name ??
+      doc?.vendor_name ??
+      party?.company_name ??
+      party?.party_name ??
+      "N/A",
+  );
+}
+
+function getDocTaxAmount(doc: any): number {
+  if (doc?.total_tax_amount != null) return Number(doc.total_tax_amount);
+  if (Array.isArray(doc?.itemsDetails)) {
+    return doc.itemsDetails.reduce(
+      (sum: number, i: any) => sum + Number(i.tax_amount || 0),
+      0,
+    );
+  }
+  return 0;
+}
+
+function getDocGrandTotal(doc: any, precomputedTax?: number): number {
+  if (doc?.total_amount != null) return Number(doc.total_amount);
+  if (doc?.grand_total != null) return Number(doc.grand_total);
+  const sub = Number(doc?.subtotal_amount || 0);
+  const tax = precomputedTax ?? getDocTaxAmount(doc);
+  return sub + tax;
+}
+
+function getDocBalanceDue(doc: any, precomputedGrandTotal?: number): number {
+  if (doc?.balance_due != null) return Number(doc.balance_due);
+  const total = precomputedGrandTotal ?? getDocGrandTotal(doc);
+  const paid = Number(doc?.paid_amount || 0);
+  return total - paid;
+}
+
+function getDocStats(doc: any): {
+  tax: number;
+  amount: number;
+  balance: number;
+} {
+  const tax = getDocTaxAmount(doc);
+  const amount = getDocGrandTotal(doc, tax);
+  const balance = getDocBalanceDue(doc, amount);
+  return { tax, amount, balance };
+}
+
 export const DOCUMENT_PRINT_CONFIG: Record<
   DocumentType,
   {
@@ -183,6 +290,48 @@ export const DOCUMENT_PRINT_CONFIG: Record<
     taxRefKey: "debit_note_item_id",
   },
 };
+
+/**
+ * Validates and sanitizes image URLs or data URIs for HTML output.
+ * Ensures the image source uses `http:`, `https:`, or a safe `data:image/...` URI
+ * without control characters or HTML entity bypasses.
+ */
+export function toSafeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  if (
+    trimmed
+      .split("")
+      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
+    /&#?[a-z0-9]+;/i.test(trimmed)
+  ) {
+    return null;
+  }
+
+  if (/^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);base64,/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  let candidate = trimmed;
+  if (!/^https?:\/\//i.test(candidate)) {
+    if (/^(javascript|data|vbscript|file|blob|about):/i.test(candidate)) {
+      return null;
+    }
+    candidate = `https://${candidate}`;
+  }
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
 
 export function numberToWordsIndian(value: number): string {
   const ones = [
@@ -707,6 +856,9 @@ async function printDocument(document: any, docType: DocumentType) {
   const origDocDate =
     quotation.doc_date ?? quotation.document_date ?? quotation.pi_date ?? "";
 
+  const safeLogo = toSafeImageUrl(company.logo);
+  const safeSignature = toSafeImageUrl(company.authorized_signature);
+
   popup.document.open();
   popup.document.write(`<!doctype html>
 <html><head><title>${escapeHtml(config.label)} #${escapeHtml(String(docRefNo))}</title>
@@ -752,7 +904,7 @@ async function printDocument(document: any, docType: DocumentType) {
 <section class="page">
   <header>
     <div style="max-width:56%">
-      ${company.logo ? `<img src="${company.logo}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+      ${safeLogo ? `<img src="${escapeHtml(safeLogo)}" style="max-height:55px;max-width:220px;object-fit:contain;margin-bottom:4px"><br>` : ""}
       <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:2px">${escapeHtml(company.company_name ?? "Teton Projects Pvt. Ltd.")}</div>
       ${companyAddressText() ? `<p style="color:#475569">${escapeHtml(companyAddressText())}</p>` : ""}
       ${company.phone ? `<p style="color:#475569">+91${escapeHtml(company.phone.replace(/^(\+91|91)/, ""))}</p>` : ""}
@@ -904,7 +1056,7 @@ async function printDocument(document: any, docType: DocumentType) {
       </div>
 
       <div class="sig-box">
-        ${company.authorized_signature ? `<img src="${company.authorized_signature}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
+        ${safeSignature ? `<img src="${escapeHtml(safeSignature)}" style="max-height:45px;object-fit:contain;margin-bottom:4px"><br>` : ""}
         <div style="border-top:1px solid #cbd5e1;padding-top:4px;font-size:10px;font-weight:700;color:#0f172a">Provider Signature</div>
       </div>
     `
@@ -996,84 +1148,6 @@ export function DocumentList({
   const { mutate: updateDoc, isPending: isUpdating } = useUpdate();
   const { mutate: deleteDoc, isPending: isDeleting } = useDelete();
 
-  const getId = (doc: any) =>
-    doc.quotation_id ??
-    doc.sales_order_id ??
-    doc.proforma_id ??
-    doc.delivery_challan_id ??
-    doc.invoice_id ??
-    doc.purchase_order_id ??
-    doc.purchase_invoice_id ??
-    doc.credit_note_id ??
-    doc.debit_note_id ??
-    doc.id;
-
-  const getDocNo = (doc: any) =>
-    doc.invoice_no ??
-    doc.purchase_invoice_no ??
-    doc.pi_no ??
-    doc.quotation_no ??
-    doc.sales_order_no ??
-    doc.proforma_no ??
-    doc.delivery_challan_no ??
-    doc.credit_note_no ??
-    doc.debit_note_no ??
-    doc.doc_no ??
-    `#${getId(doc)}`;
-
-  const getDate = (doc: any) =>
-    doc.invoice_date ??
-    doc.pi_date ??
-    doc.quotation_date ??
-    doc.sales_order_date ??
-    doc.proforma_date ??
-    doc.delivery_date ??
-    doc.credit_date ??
-    doc.credit_note_date ??
-    doc.debit_date ??
-    doc.debit_note_date ??
-    doc.purchase_order_date ??
-    doc.created_at ??
-    "";
-
-  const getDueDate = (doc: any) =>
-    doc.due_date ?? doc.valid_until ?? doc.expected_delivery_date ?? "";
-
-  const getPartyName = (doc: any) =>
-    doc.party_name ??
-    doc.company_name ??
-    doc.customer_name ??
-    doc.vendor_name ??
-    doc.party?.company_name ??
-    doc.party?.party_name ??
-    "N/A";
-
-  const getTaxAmount = (doc: any) => {
-    if (doc.total_tax_amount != null) return Number(doc.total_tax_amount);
-    if (Array.isArray(doc.itemsDetails)) {
-      return doc.itemsDetails.reduce(
-        (sum: number, i: any) => sum + Number(i.tax_amount || 0),
-        0,
-      );
-    }
-    return 0;
-  };
-
-  const getGrandTotal = (doc: any) => {
-    if (doc.total_amount != null) return Number(doc.total_amount);
-    if (doc.grand_total != null) return Number(doc.grand_total);
-    const sub = Number(doc.subtotal_amount || 0);
-    const tax = getTaxAmount(doc);
-    return sub + tax;
-  };
-
-  const getBalanceDue = (doc: any) => {
-    if (doc.balance_due != null) return Number(doc.balance_due);
-    const total = getGrandTotal(doc);
-    const paid = Number(doc.paid_amount || 0);
-    return total - paid;
-  };
-
   const isVendorDoc =
     docType === "purchase_order" ||
     docType === "purchase_invoice" ||
@@ -1092,7 +1166,7 @@ export function DocumentList({
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((d) =>
-        [getDocNo(d), getPartyName(d), d.notes, d.status].some(
+        [getDocNo(d), getDocPartyName(d), d.notes, d.status].some(
           (val) => val && String(val).toLowerCase().includes(q),
         ),
       );
@@ -1108,29 +1182,29 @@ export function DocumentList({
       let valB: any = "";
 
       if (sortField === "date") {
-        valA = getDate(a);
-        valB = getDate(b);
+        valA = getDocDate(a);
+        valB = getDocDate(b);
       } else if (sortField === "docNo") {
         valA = getDocNo(a);
         valB = getDocNo(b);
       } else if (sortField === "party") {
-        valA = getPartyName(a);
-        valB = getPartyName(b);
+        valA = getDocPartyName(a);
+        valB = getDocPartyName(b);
       } else if (sortField === "dueDate") {
-        valA = getDueDate(a);
-        valB = getDueDate(b);
+        valA = getDocDueDate(a);
+        valB = getDocDueDate(b);
       } else if (sortField === "tax") {
-        valA = getTaxAmount(a);
-        valB = getTaxAmount(b);
+        valA = getDocTaxAmount(a);
+        valB = getDocTaxAmount(b);
       } else if (sortField === "amount") {
-        valA = getGrandTotal(a);
-        valB = getGrandTotal(b);
+        valA = getDocGrandTotal(a);
+        valB = getDocGrandTotal(b);
       } else if (sortField === "balance") {
-        valA = getBalanceDue(a);
-        valB = getBalanceDue(b);
+        valA = getDocBalanceDue(a);
+        valB = getDocBalanceDue(b);
       } else {
-        valA = getId(a);
-        valB = getId(b);
+        valA = getDocId(a);
+        valB = getDocId(b);
       }
 
       if (valA < valB) return sortAsc ? -1 : 1;
@@ -1148,36 +1222,38 @@ export function DocumentList({
     return sorted.slice(start, start + pageSize);
   }, [sorted, safeCurrentPage, pageSize]);
 
-  // Calculate totals in a single pass over paginatedDocs and sorted arrays to reduce loop iterations from 6 to 2
+  // Single pass statistics calculation per item to eliminate redundant nested sub-calls
   const { pageTaxTotal, pageAmountTotal, pageBalanceTotal } = useMemo(() => {
-    let tax = 0;
-    let amount = 0;
-    let balance = 0;
+    let taxSum = 0;
+    let amountSum = 0;
+    let balanceSum = 0;
     for (const d of paginatedDocs) {
-      tax += getTaxAmount(d);
-      amount += getGrandTotal(d);
-      balance += getBalanceDue(d);
+      const stats = getDocStats(d);
+      taxSum += stats.tax;
+      amountSum += stats.amount;
+      balanceSum += stats.balance;
     }
     return {
-      pageTaxTotal: tax,
-      pageAmountTotal: amount,
-      pageBalanceTotal: balance,
+      pageTaxTotal: taxSum,
+      pageAmountTotal: amountSum,
+      pageBalanceTotal: balanceSum,
     };
   }, [paginatedDocs]);
 
   const { grandTaxTotal, grandAmountTotal, grandBalanceTotal } = useMemo(() => {
-    let tax = 0;
-    let amount = 0;
-    let balance = 0;
+    let taxSum = 0;
+    let amountSum = 0;
+    let balanceSum = 0;
     for (const d of sorted) {
-      tax += getTaxAmount(d);
-      amount += getGrandTotal(d);
-      balance += getBalanceDue(d);
+      const stats = getDocStats(d);
+      taxSum += stats.tax;
+      amountSum += stats.amount;
+      balanceSum += stats.balance;
     }
     return {
-      grandTaxTotal: tax,
-      grandAmountTotal: amount,
-      grandBalanceTotal: balance,
+      grandTaxTotal: taxSum,
+      grandAmountTotal: amountSum,
+      grandBalanceTotal: balanceSum,
     };
   }, [sorted]);
 
@@ -1192,7 +1268,7 @@ export function DocumentList({
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedIds(new Set(paginatedDocs.map((d) => String(getId(d)))));
+      setSelectedIds(new Set(paginatedDocs.map((d) => String(getDocId(d)))));
     } else {
       setSelectedIds(new Set());
     }
@@ -1237,17 +1313,20 @@ export function DocumentList({
       "Balance",
       "Dr/Cr",
     ];
-    const rows = sorted.map((d) => [
-      fmtTableDate(getDate(d)),
-      getDocNo(d),
-      d.status || "draft",
-      getPartyName(d),
-      fmtTableDate(getDueDate(d)),
-      getTaxAmount(d).toFixed(2),
-      getGrandTotal(d).toFixed(2),
-      getBalanceDue(d).toFixed(2),
-      docType === "credit_note" ? "Cr" : "Dr",
-    ]);
+    const rows = sorted.map((d) => {
+      const stats = getDocStats(d);
+      return [
+        fmtTableDate(getDocDate(d)),
+        getDocNo(d),
+        d.status || "draft",
+        getDocPartyName(d),
+        fmtTableDate(getDocDueDate(d)),
+        stats.tax.toFixed(2),
+        stats.amount.toFixed(2),
+        stats.balance.toFixed(2),
+        docType === "credit_note" ? "Cr" : "Dr",
+      ];
+    });
 
     const csvContent = [
       headers
@@ -1279,7 +1358,7 @@ export function DocumentList({
 
   const handleFormSubmit = (payload: any) => {
     if (activeDoc) {
-      const id = getId(activeDoc).toString();
+      const id = getDocId(activeDoc).toString();
       updateDoc(
         { id, body: payload },
         {
@@ -1428,12 +1507,12 @@ export function DocumentList({
                 </div>
               ) : (
                 paginatedDocs.map((d) => {
-                  const idStr = String(getId(d));
-                  const isSelected = String(getId(previewDoc)) === idStr;
+                  const idStr = String(getDocId(d));
+                  const isSelected = String(getDocId(previewDoc)) === idStr;
                   const docNo = getDocNo(d);
-                  const amount = getGrandTotal(d);
-                  const dateStr = fmtTableDate(getDate(d));
-                  const partyName = getPartyName(d);
+                  const amount = getDocGrandTotal(d);
+                  const dateStr = fmtTableDate(getDocDate(d));
+                  const partyName = getDocPartyName(d);
                   const docTag =
                     docType === "credit_note"
                       ? "CN"
@@ -1618,7 +1697,7 @@ export function DocumentList({
                 setIsOpenForm(true);
               }}
               onDelete={() => {
-                const idStr = String(getId(previewDoc));
+                const idStr = String(getDocId(previewDoc));
                 const docNo = getDocNo(previewDoc);
                 if (confirm(`Delete document ${docNo}?`)) {
                   deleteDoc(idStr, {
@@ -1800,7 +1879,7 @@ export function DocumentList({
                       checked={
                         paginatedDocs.length > 0 &&
                         paginatedDocs.every((d) =>
-                          selectedIds.has(String(getId(d))),
+                          selectedIds.has(String(getDocId(d))),
                         )
                       }
                       style={{ cursor: "pointer" }}
@@ -1997,9 +2076,10 @@ export function DocumentList({
                   </tr>
                 ) : (
                   paginatedDocs.map((doc) => {
-                    const idStr = String(getId(doc));
+                    const idStr = String(getDocId(doc));
                     const isSelected = selectedIds.has(idStr);
                     const docNo = getDocNo(doc);
+                    const stats = getDocStats(doc);
                     const isApproved =
                       (doc.status || "draft") === "approved" ||
                       (doc.status || "draft") === "sent";
@@ -2037,7 +2117,7 @@ export function DocumentList({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {fmtTableDate(getDate(doc))}
+                          {fmtTableDate(getDocDate(doc))}
                         </td>
                         <td
                           style={{ padding: "10px 12px", whiteSpace: "nowrap" }}
@@ -2112,9 +2192,9 @@ export function DocumentList({
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
                             }}
-                            title={getPartyName(doc)}
+                            title={getDocPartyName(doc)}
                           >
-                            {getPartyName(doc)}
+                            {getDocPartyName(doc)}
                           </span>
                         </td>
                         <td
@@ -2124,7 +2204,7 @@ export function DocumentList({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {fmtTableDate(getDueDate(doc))}
+                          {fmtTableDate(getDocDueDate(doc))}
                         </td>
                         <td
                           style={{
@@ -2133,7 +2213,7 @@ export function DocumentList({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {fmtCurrency(getTaxAmount(doc))}
+                          {fmtCurrency(stats.tax)}
                         </td>
                         <td
                           style={{
@@ -2142,7 +2222,7 @@ export function DocumentList({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {fmtCurrency(getGrandTotal(doc))}
+                          {fmtCurrency(stats.amount)}
                         </td>
                         <td
                           style={{
@@ -2162,7 +2242,7 @@ export function DocumentList({
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {fmtCurrency(getBalanceDue(doc))}
+                          {fmtCurrency(stats.balance)}
                         </td>
                         <td
                           style={{
