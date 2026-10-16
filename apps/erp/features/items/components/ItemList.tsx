@@ -31,6 +31,9 @@ function extractList<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Hoisted static helper to maintain reference identity and avoid recreation on every render
+const getItemId = (i: Item) => i.item_id ?? (i as any).id;
+
 export function ItemList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,18 +59,27 @@ export function ItemList() {
 
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
 
-  const getItemId = (i: Item) => i.item_id ?? (i as any).id;
-
+  // Performance Optimization: Hoist query lowercasing outside filter loop and fast-path empty search
   const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchSearch =
-        !search.trim() ||
-        i.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.item_code?.toLowerCase().includes(search.toLowerCase()) ||
-        i.hsn_code?.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    const hasStatusFilter = statusFilter !== "all";
 
-      const matchStatus = statusFilter === "all" || i.status === statusFilter;
-      return matchSearch && matchStatus;
+    // O(1) fast-path when no search query or status filter is applied
+    if (!q && !hasStatusFilter) {
+      return items;
+    }
+
+    return items.filter((i) => {
+      const matchStatus = !hasStatusFilter || i.status === statusFilter;
+      if (!matchStatus) return false;
+
+      if (!q) return true;
+
+      return (
+        i.item_name?.toLowerCase().includes(q) ||
+        i.item_code?.toLowerCase().includes(q) ||
+        i.hsn_code?.toLowerCase().includes(q)
+      );
     });
   }, [items, search, statusFilter]);
 
@@ -192,13 +204,24 @@ export function ItemList() {
     URL.revokeObjectURL(url);
   };
 
-  const activeCount = items.filter((i) => i.status === "active").length;
-  const salesItemsCount = items.filter(
-    (i) => Number(i.sales_rate || 0) > 0,
-  ).length;
-  const purchaseItemsCount = items.filter(
-    (i) => Number(i.purchase_rate || 0) > 0,
-  ).length;
+  // Performance Optimization: Single-pass KPI statistics calculation inside useMemo
+  // Avoids 3 separate filter traversals and intermediate array allocations on every render
+  const { activeCount, salesItemsCount, purchaseItemsCount } = useMemo(() => {
+    let active = 0;
+    let sales = 0;
+    let purchase = 0;
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      if (item.status === "active") active++;
+      if (Number(item.sales_rate || 0) > 0) sales++;
+      if (Number(item.purchase_rate || 0) > 0) purchase++;
+    }
+    return {
+      activeCount: active,
+      salesItemsCount: sales,
+      purchaseItemsCount: purchase,
+    };
+  }, [items]);
 
   const columns = [
     {
