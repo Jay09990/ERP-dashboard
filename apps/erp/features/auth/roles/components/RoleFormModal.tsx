@@ -59,10 +59,7 @@ export function RoleFormModal({ role, onClose }: Props) {
   }, [onClose, isPending]);
 
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      onClick={onClose}
-    >
+    <div className="altrex-dialog-backdrop" onClick={onClose}>
       <div
         className="altrex-dialog altrex-dialog-md"
         role="dialog"
