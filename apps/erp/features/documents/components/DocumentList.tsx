@@ -305,7 +305,8 @@ export function toSafeImageUrl(url?: string | null): string | null {
     trimmed
       .split("")
       .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
-    /&#?[a-z0-9]+;/i.test(trimmed)
+    /&#([0-9]+|x[0-9a-f]+);/i.test(trimmed) ||
+    /&(Tab|NewLine);/i.test(trimmed)
   ) {
     return null;
   }
@@ -314,9 +315,26 @@ export function toSafeImageUrl(url?: string | null): string | null {
     return trimmed;
   }
 
+  // Safely decode URL components to inspect for obfuscated schemes (e.g. jav%61script:)
+  let decoded = trimmed;
+  try {
+    for (let i = 0; i < 3; i++) {
+      const prev = decoded;
+      decoded = decodeURIComponent(decoded);
+      if (decoded === prev) break;
+    }
+  } catch {
+    // Retain partially decoded state on URIError
+  }
+
+  const cleanDecoded = decoded.replace(/[\x00-\x1f\x7f]/g, "").trim();
+  if (/^(javascript|data|vbscript|file|blob|about):/i.test(cleanDecoded)) {
+    return null;
+  }
+
   let candidate = trimmed;
   if (!/^https?:\/\//i.test(candidate)) {
-    if (/^(javascript|data|vbscript|file|blob|about):/i.test(candidate)) {
+    if (/^[a-z0-9+.-]+:/i.test(cleanDecoded)) {
       return null;
     }
     candidate = `https://${candidate}`;
