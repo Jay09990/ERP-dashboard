@@ -57,9 +57,10 @@ export function CustomerList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
-  // Filtered customer list
+  // Performance optimization: Hoist query normalization and fast-path empty searches to avoid
+  // redundant O(N) string operations and filter passes.
   const filteredCustomers = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return customers;
     return customers.filter(
       (c: PartyRecord) =>
@@ -70,6 +71,29 @@ export function CustomerList() {
         c.contact_name?.toLowerCase().includes(q),
     );
   }, [customers, searchQuery]);
+
+  // Performance optimization: Consolidate directory metrics into a single O(N) pass.
+  // Prevents multiple array iterations and temporary filter allocations on every render.
+  const stats = useMemo(() => {
+    let activeCount = 0;
+    let gstinCount = 0;
+    let totalLocations = 0;
+
+    for (let i = 0; i < customers.length; i++) {
+      const c = customers[i];
+      if (c.status !== "inactive") {
+        activeCount++;
+      }
+      if (c.gst_no) {
+        gstinCount++;
+      }
+      const addrCount =
+        c.addresses?.length || c.tbl_party_addresses?.length || 0;
+      totalLocations += addrCount;
+    }
+
+    return { activeCount, gstinCount, totalLocations };
+  }, [customers]);
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
@@ -197,12 +221,7 @@ export function CustomerList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {
-              customers.filter((c: PartyRecord) => c.status !== "inactive")
-                .length
-            }
-          </div>
+          <div className="altrex-stat-value">{stats.activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for quotation & sales
           </span>
@@ -238,9 +257,7 @@ export function CustomerList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {customers.filter((c: PartyRecord) => Boolean(c.gst_no)).length}
-          </div>
+          <div className="altrex-stat-value">{stats.gstinCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -274,14 +291,7 @@ export function CustomerList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {customers.reduce(
-              (acc: number, c: PartyRecord) =>
-                acc +
-                (c.addresses?.length || c.tbl_party_addresses?.length || 0),
-              0,
-            )}
-          </div>
+          <div className="altrex-stat-value">{stats.totalLocations}</div>
           <span className="altrex-stat-helper">Billing & shipping points</span>
         </div>
       </div>
