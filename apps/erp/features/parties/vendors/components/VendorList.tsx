@@ -56,8 +56,10 @@ export function VendorList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
+  // Performance optimization: Hoist query normalization and fast-path empty searches to avoid
+  // redundant O(N) string operations and filter passes.
   const filteredVendors = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return vendors;
     return vendors.filter(
       (v: PartyRecord) =>
@@ -68,6 +70,29 @@ export function VendorList() {
         v.contact_name?.toLowerCase().includes(q),
     );
   }, [vendors, searchQuery]);
+
+  // Performance optimization: Consolidate directory metrics into a single O(N) pass.
+  // Prevents multiple array iterations and temporary filter allocations on every render.
+  const stats = useMemo(() => {
+    let activeCount = 0;
+    let gstinCount = 0;
+    let totalLocations = 0;
+
+    for (let i = 0; i < vendors.length; i++) {
+      const v = vendors[i];
+      if (v.status !== "inactive") {
+        activeCount++;
+      }
+      if (v.gst_no) {
+        gstinCount++;
+      }
+      const addrCount =
+        v.addresses?.length || v.tbl_party_addresses?.length || 0;
+      totalLocations += addrCount;
+    }
+
+    return { activeCount, gstinCount, totalLocations };
+  }, [vendors]);
 
   const handleFormSubmit = async (values: PartyFormValues) => {
     try {
@@ -183,9 +208,7 @@ export function VendorList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.filter((v: PartyRecord) => v.status !== "inactive").length}
-          </div>
+          <div className="altrex-stat-value">{stats.activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for purchase orders
           </span>
@@ -221,9 +244,7 @@ export function VendorList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.filter((v: PartyRecord) => Boolean(v.gst_no)).length}
-          </div>
+          <div className="altrex-stat-value">{stats.gstinCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -257,14 +278,7 @@ export function VendorList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.reduce(
-              (acc: number, v: PartyRecord) =>
-                acc +
-                (v.addresses?.length || v.tbl_party_addresses?.length || 0),
-              0,
-            )}
-          </div>
+          <div className="altrex-stat-value">{stats.totalLocations}</div>
           <span className="altrex-stat-helper">Delivery & billing points</span>
         </div>
       </div>
