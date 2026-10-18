@@ -59,16 +59,19 @@ export function RoleFormModal({ role, onClose }: Props) {
   }, [onClose, isPending]);
 
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      onClick={onClose}
-    >
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isPending && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-md"
+        className="altrex-dialog altrex-dialog-md relative z-10"
         role="dialog"
         aria-modal="true"
         aria-labelledby="role-dialog-title"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -123,7 +126,6 @@ export function RoleFormModal({ role, onClose }: Props) {
                 className="altrex-input"
                 placeholder="e.g. Sales Manager, Warehouse Lead"
                 {...form.register("role_name")}
-                autoFocus
               />
               {form.formState.errors.role_name && (
                 <span className="altrex-form-error">
