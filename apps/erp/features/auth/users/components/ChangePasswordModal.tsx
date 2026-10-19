@@ -99,10 +99,11 @@ export function ChangePasswordModal({ onClose }: Props) {
             onSubmit={form.handleSubmit(onSubmit)}
             style={{ display: "grid", gap: "16px" }}
           >
-            <label className="altrex-field">
-              <span>Current Password</span>
+            <div className="altrex-field">
+              <label htmlFor="current-password-input">Current Password</label>
               <div className="altrex-password-row">
                 <input
+                  id="current-password-input"
                   className="altrex-input"
                   type={showCurrent ? "text" : "password"}
                   placeholder="Enter current password"
@@ -126,12 +127,13 @@ export function ChangePasswordModal({ onClose }: Props) {
                   {form.formState.errors.current_password.message}
                 </span>
               )}
-            </label>
+            </div>
 
-            <label className="altrex-field">
-              <span>New Password</span>
+            <div className="altrex-field">
+              <label htmlFor="new-password-input">New Password</label>
               <div className="altrex-password-row">
                 <input
+                  id="new-password-input"
                   className="altrex-input"
                   type={showNew ? "text" : "password"}
                   placeholder="Enter new password (min 6 characters)"
@@ -153,7 +155,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                   {form.formState.errors.new_password.message}
                 </span>
               )}
-            </label>
+            </div>
 
             {error && (
               <p className="altrex-form-error" role="alert">
