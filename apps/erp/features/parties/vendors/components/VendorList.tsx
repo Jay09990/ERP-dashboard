@@ -56,6 +56,25 @@ export function VendorList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .reduce) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, gstCount, locationCount } = useMemo(() => {
+    let active = 0;
+    let gst = 0;
+    let locations = 0;
+    for (const v of vendors as PartyRecord[]) {
+      if (v.status !== "inactive") active++;
+      if (v.gst_no) gst++;
+      locations += v.addresses?.length || v.tbl_party_addresses?.length || 0;
+    }
+    return {
+      activeCount: active,
+      gstCount: gst,
+      locationCount: locations,
+    };
+  }, [vendors]);
+
   const filteredVendors = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return vendors;
@@ -183,9 +202,7 @@ export function VendorList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.filter((v: PartyRecord) => v.status !== "inactive").length}
-          </div>
+          <div className="altrex-stat-value">{activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for purchase orders
           </span>
@@ -221,9 +238,7 @@ export function VendorList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.filter((v: PartyRecord) => Boolean(v.gst_no)).length}
-          </div>
+          <div className="altrex-stat-value">{gstCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -257,14 +272,7 @@ export function VendorList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {vendors.reduce(
-              (acc: number, v: PartyRecord) =>
-                acc +
-                (v.addresses?.length || v.tbl_party_addresses?.length || 0),
-              0,
-            )}
-          </div>
+          <div className="altrex-stat-value">{locationCount}</div>
           <span className="altrex-stat-helper">Delivery & billing points</span>
         </div>
       </div>
