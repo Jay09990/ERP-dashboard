@@ -1,6 +1,10 @@
 "use client";
 
-import { procurementApi } from "@/features/projects/api";
+import { procurementApi, projectApi } from "@/features/projects/api";
+import {
+  type ReferenceOption,
+  useProcurementLookups,
+} from "@/features/projects/lookups";
 import type {
   GoodsReceipt,
   PurchaseRequisition,
@@ -40,8 +44,8 @@ const configurations: Record<
     createFields: [
       {
         name: "project_id",
-        label: "Project ID",
-        type: "number",
+        label: "Project",
+        type: "reference",
         required: true,
       },
       {
@@ -58,7 +62,12 @@ const configurations: Record<
         type: "collection",
         required: true,
         itemFields: [
-          { name: "item_id", label: "Item ID", type: "number", required: true },
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
           { name: "description", label: "Item description" },
           {
             name: "quantity",
@@ -66,7 +75,7 @@ const configurations: Record<
             type: "number",
             required: true,
           },
-          { name: "unit_id", label: "Unit ID", type: "number" },
+          { name: "unit_id", label: "Unit", type: "reference" },
           { name: "notes", label: "Notes" },
         ],
       },
@@ -81,14 +90,14 @@ const configurations: Record<
     createFields: [
       {
         name: "purchase_order_id",
-        label: "Purchase order ID",
-        type: "number",
+        label: "Purchase order",
+        type: "reference",
         required: true,
       },
       {
         name: "warehouse_id",
-        label: "Warehouse ID",
-        type: "number",
+        label: "Warehouse",
+        type: "reference",
         required: true,
       },
       { name: "grn_date", label: "Receipt date", type: "date", required: true },
@@ -104,15 +113,20 @@ const configurations: Record<
             label: "Purchase order line ID",
             type: "number",
           },
-          { name: "item_id", label: "Item ID", type: "number", required: true },
-          { name: "batch_id", label: "Batch ID", type: "number" },
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
+          { name: "batch_id", label: "Batch", type: "reference" },
           {
             name: "quantity",
             label: "Received quantity",
             type: "number",
             required: true,
           },
-          { name: "unit_id", label: "Unit ID", type: "number" },
+          { name: "unit_id", label: "Unit", type: "reference" },
           { name: "rate", label: "Rate per unit", type: "number" },
         ],
       },
@@ -127,20 +141,21 @@ const configurations: Record<
     createFields: [
       {
         name: "project_id",
-        label: "Project ID",
-        type: "number",
+        label: "Project",
+        type: "reference",
         required: true,
       },
       {
         name: "site_id",
-        label: "Project site ID",
-        type: "number",
+        label: "Project site",
+        type: "reference",
+        referenceSource: "project-sites",
         required: true,
       },
       {
         name: "warehouse_id",
-        label: "Warehouse ID",
-        type: "number",
+        label: "Warehouse",
+        type: "reference",
         required: true,
       },
       { name: "issue_date", label: "Issue date", type: "date", required: true },
@@ -151,19 +166,25 @@ const configurations: Record<
         type: "collection",
         required: true,
         itemFields: [
-          { name: "item_id", label: "Item ID", type: "number", required: true },
-          { name: "batch_id", label: "Batch ID", type: "number" },
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
+          { name: "batch_id", label: "Batch", type: "reference" },
           {
             name: "quantity",
             label: "Quantity",
             type: "number",
             required: true,
           },
-          { name: "unit_id", label: "Unit ID", type: "number" },
+          { name: "unit_id", label: "Unit", type: "reference" },
           {
             name: "boq_item_id",
-            label: "Project budget line ID",
-            type: "number",
+            label: "Project BOQ item",
+            type: "reference",
+            referenceSource: "project-boq",
           },
         ],
       },
@@ -219,6 +240,28 @@ function itemLabel(key: string) {
   return labels[key] ?? formatLabel(key);
 }
 
+function projectReferenceOptions(
+  project: Record<string, unknown> | null,
+  collectionKeys: string[],
+  idKeys: string[],
+  labelKeys: string[],
+): ReferenceOption[] {
+  const collection = collectionKeys
+    .map((key) => project?.[key])
+    .find(Array.isArray);
+  return extractRecords<Record<string, unknown>>(collection).flatMap((row) => {
+    const id = recordId(row, idKeys);
+    if (id == null) return [];
+    const label =
+      labelKeys
+        .map((key) => row[key])
+        .find(
+          (value) => typeof value === "string" || typeof value === "number",
+        ) ?? "Record";
+    return [{ value: String(id), label: `${String(label)} (#${id})` }];
+  });
+}
+
 function DetailItems({ items }: { items: unknown[] }) {
   const rows = items.filter((item): item is Record<string, unknown> =>
     Boolean(item && typeof item === "object" && !Array.isArray(item)),
@@ -261,9 +304,32 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
   const config = configurations[kind];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | number | null>(null);
-  const requisitionsQuery = procurementApi.useRequisitions();
-  const grnsQuery = procurementApi.useGrns();
-  const siteIssuesQuery = procurementApi.useSiteIssues();
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const selectedProjectQuery = projectApi.useDetail(selectedProjectId || null);
+  const requisitionsQuery = procurementApi.useRequisitions(
+    kind === "requisition",
+  );
+  const grnsQuery = procurementApi.useGrns(kind === "grn");
+  const siteIssuesQuery = procurementApi.useSiteIssues(kind === "site-issue");
+  const lookups = useProcurementLookups(dialogOpen, kind);
+  const selectedProject = extractRecord<Record<string, unknown>>(
+    selectedProjectQuery.data,
+  );
+  const fieldOptions = {
+    ...lookups.options,
+    site_id: projectReferenceOptions(
+      selectedProject,
+      ["sites", "project_sites", "tbl_project_sites"],
+      ["site_id", "project_site_id", "id"],
+      ["site_name", "address_line1"],
+    ),
+    boq_item_id: projectReferenceOptions(
+      selectedProject,
+      ["boqItems", "boq_items", "project_boq_items"],
+      ["boq_item_id", "project_boq_item_id", "boq_id", "id"],
+      ["description", "item_name"],
+    ),
+  };
   const requisitionDetail = procurementApi.useRequisition(
     kind === "requisition" ? detailId : null,
   );
@@ -357,7 +423,12 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
           <Button variant="outline" onClick={() => activeQuery.refetch()}>
             <RefreshCw size={15} /> Refresh
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button
+            onClick={() => {
+              setSelectedProjectId("");
+              setDialogOpen(true);
+            }}
+          >
             <Plus size={15} /> New {config.collectionLabel}
           </Button>
         </div>
@@ -489,6 +560,14 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
         <EntityFormDialog
           title={`Create ${config.collectionLabel}`}
           fields={config.createFields}
+          fieldOptions={fieldOptions}
+          lookupLoading={lookups.isLoading || selectedProjectQuery.isLoading}
+          lookupError={lookups.error ?? selectedProjectQuery.error}
+          onFieldChange={(name, value) => {
+            if (kind === "site-issue" && name === "project_id") {
+              setSelectedProjectId(value);
+            }
+          }}
           isPending={createPending}
           onClose={() => setDialogOpen(false)}
           onSubmit={submit}
