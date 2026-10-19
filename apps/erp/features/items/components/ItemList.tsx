@@ -58,16 +58,24 @@ export function ItemList() {
 
   const getItemId = (i: Item) => i.item_id ?? (i as any).id;
 
+  // Hoist search lowercasing outside the filter loop and provide an O(1) fast path
+  // when search is empty to avoid redundant string lowercasing operations per element.
   const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchSearch =
-        !search.trim() ||
-        i.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.item_code?.toLowerCase().includes(search.toLowerCase()) ||
-        i.hsn_code?.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    if (!q) {
+      if (statusFilter === "all") return items;
+      return items.filter((i) => i.status === statusFilter);
+    }
 
+    return items.filter((i) => {
       const matchStatus = statusFilter === "all" || i.status === statusFilter;
-      return matchSearch && matchStatus;
+      if (!matchStatus) return false;
+
+      return (
+        i.item_name?.toLowerCase().includes(q) ||
+        i.item_code?.toLowerCase().includes(q) ||
+        i.hsn_code?.toLowerCase().includes(q)
+      );
     });
   }, [items, search, statusFilter]);
 
@@ -211,158 +219,175 @@ export function ItemList() {
     };
   }, [items]);
 
-  const columns = [
-    {
-      key: "item_name" as const,
-      label: "Item Details",
-      render: (i: Item) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "38px",
-              height: "38px",
-              borderRadius: "10px",
-              background: "rgba(37,99,235,0.1)",
-              color: "var(--altrex-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            <Package size={18} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
+    for (const item of items) {
+      if (item.status === "active") active++;
+      if (Number(item.sales_rate || 0) > 0) sales++;
+      if (Number(item.purchase_rate || 0) > 0) purchase++;
+    }
+
+    return {
+      activeCount: active,
+      salesItemsCount: sales,
+      purchaseItemsCount: purchase,
+    };
+  }, [items]);
+
+  // Memoize columns array to maintain stable reference identity across re-renders
+  const columns = useMemo(
+    () => [
+      {
+        key: "item_name" as const,
+        label: "Item Details",
+        render: (i: Item) => (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
               style={{
-                fontWeight: 600,
-                color: "var(--altrex-text)",
-                fontSize: "14px",
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                background: "rgba(37,99,235,0.1)",
+                color: "var(--altrex-primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                flexShrink: 0,
               }}
             >
-              {i.item_name}
-            </span>
-            <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>
-              Code: {i.item_code || "N/A"}{" "}
-              {i.hsn_code ? `• HSN: ${i.hsn_code}` : ""}
-            </span>
+              <Package size={18} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "var(--altrex-text)",
+                  fontSize: "14px",
+                }}
+              >
+                {i.item_name}
+              </span>
+              <span style={{ fontSize: "12px", color: "var(--altrex-muted)" }}>
+                Code: {i.item_code || "N/A"}{" "}
+                {i.hsn_code ? `• HSN: ${i.hsn_code}` : ""}
+              </span>
+            </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      key: "sales_rate" as const,
-      label: "Selling Rate",
-      render: (i: Item) => (
-        <span style={{ fontWeight: 600, color: "#10b981", fontSize: "13px" }}>
-          ₹
-          {Number(i.sales_rate || 0).toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}
-        </span>
-      ),
-    },
-    {
-      key: "purchase_rate" as const,
-      label: "Purchase Rate",
-      render: (i: Item) => (
-        <span style={{ fontWeight: 600, color: "#3b82f6", fontSize: "13px" }}>
-          ₹
-          {Number(i.purchase_rate || 0).toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-          })}
-        </span>
-      ),
-    },
-    {
-      key: "status" as const,
-      label: "Status",
-      render: (i: Item) => (
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "3px 10px",
-            borderRadius: "12px",
-            fontSize: "12px",
-            fontWeight: 600,
-            background:
-              i.status === "active"
-                ? "rgba(16, 185, 129, 0.12)"
-                : "rgba(100, 116, 139, 0.12)",
-            color: i.status === "active" ? "#10b981" : "var(--altrex-muted)",
-          }}
-        >
+        ),
+      },
+      {
+        key: "sales_rate" as const,
+        label: "Selling Rate",
+        render: (i: Item) => (
+          <span style={{ fontWeight: 600, color: "#10b981", fontSize: "13px" }}>
+            ₹
+            {Number(i.sales_rate || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+            })}
+          </span>
+        ),
+      },
+      {
+        key: "purchase_rate" as const,
+        label: "Purchase Rate",
+        render: (i: Item) => (
+          <span style={{ fontWeight: 600, color: "#3b82f6", fontSize: "13px" }}>
+            ₹
+            {Number(i.purchase_rate || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+            })}
+          </span>
+        ),
+      },
+      {
+        key: "status" as const,
+        label: "Status",
+        render: (i: Item) => (
           <span
             style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              backgroundColor: i.status === "active" ? "#10b981" : "#94a3b8",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "3px 10px",
+              borderRadius: "12px",
+              fontSize: "12px",
+              fontWeight: 600,
+              background:
+                i.status === "active"
+                  ? "rgba(16, 185, 129, 0.12)"
+                  : "rgba(100, 116, 139, 0.12)",
+              color: i.status === "active" ? "#10b981" : "var(--altrex-muted)",
             }}
-          />
-          {i.status === "active" ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
-    {
-      key: "item_id" as const,
-      label: "Actions",
-      render: (i: Item) => {
-        const id = getItemId(i)?.toString() ?? "";
-        return (
-          <div
-            className="altrex-row-actions"
-            style={{ display: "flex", gap: "8px" }}
           >
-            <Button
-              variant="outline"
-              aria-label={`Edit ${i.item_name}`}
-              onClick={() => {
-                setActiveItem(i);
-                setIsOpenDrawer(true);
-              }}
+            <span
               style={{
-                fontSize: "12px",
-                padding: "4px 10px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: i.status === "active" ? "#10b981" : "#94a3b8",
               }}
-            >
-              <Edit size={13} />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              aria-label={`Delete ${i.item_name}`}
-              title={`Delete ${i.item_name}`}
-              onClick={() => {
-                if (
-                  confirm(
-                    `Are you sure you want to delete item "${i.item_name}"?`,
-                  )
-                ) {
-                  deleteItem(id);
-                }
-              }}
-              disabled={isDeleting}
-              style={{
-                color: "var(--altrex-danger-text)",
-                borderColor: "rgba(220, 38, 38, 0.2)",
-                fontSize: "12px",
-                padding: "4px 10px",
-              }}
-            >
-              <Trash2 size={13} />
-            </Button>
-          </div>
-        );
+            />
+            {i.status === "active" ? "Active" : "Inactive"}
+          </span>
+        ),
       },
-    },
-  ];
+      {
+        key: "item_id" as const,
+        label: "Actions",
+        render: (i: Item) => {
+          const id = getItemId(i)?.toString() ?? "";
+          return (
+            <div
+              className="altrex-row-actions"
+              style={{ display: "flex", gap: "8px" }}
+            >
+              <Button
+                variant="outline"
+                aria-label={`Edit ${i.item_name}`}
+                onClick={() => {
+                  setActiveItem(i);
+                  setIsOpenDrawer(true);
+                }}
+                style={{
+                  fontSize: "12px",
+                  padding: "4px 10px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <Edit size={13} />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                aria-label={`Delete ${i.item_name}`}
+                title={`Delete ${i.item_name}`}
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Are you sure you want to delete item "${i.item_name}"?`,
+                    )
+                  ) {
+                    deleteItem(id);
+                  }
+                }}
+                disabled={isDeleting}
+                style={{
+                  color: "var(--altrex-danger-text)",
+                  borderColor: "rgba(220, 38, 38, 0.2)",
+                  fontSize: "12px",
+                  padding: "4px 10px",
+                }}
+              >
+                <Trash2 size={13} />
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [deleteItem, isDeleting],
+  );
 
   return (
     <>
