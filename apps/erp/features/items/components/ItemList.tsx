@@ -58,16 +58,32 @@ export function ItemList() {
 
   const getItemId = (i: Item) => i.item_id ?? (i as any).id;
 
+  // Hoist search query lowercasing outside the filter callback and provide an O(1) fast-path when filters are empty.
+  // Re-evaluating search.toLowerCase() inside .filter causes redundant string lowercasing operations per item on every render.
   const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchSearch =
-        !search.trim() ||
-        i.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.item_code?.toLowerCase().includes(search.toLowerCase()) ||
-        i.hsn_code?.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    const hasStatusFilter = statusFilter !== "all";
 
-      const matchStatus = statusFilter === "all" || i.status === statusFilter;
-      return matchSearch && matchStatus;
+    // O(1) fast-path when no search query or status filter is applied
+    if (!q && !hasStatusFilter) {
+      return items;
+    }
+
+    return items.filter((i) => {
+      // Evaluate status filter first to short-circuit string comparisons
+      if (hasStatusFilter && i.status !== statusFilter) {
+        return false;
+      }
+
+      if (!q) {
+        return true;
+      }
+
+      return (
+        i.item_name?.toLowerCase().includes(q) ||
+        i.item_code?.toLowerCase().includes(q) ||
+        i.hsn_code?.toLowerCase().includes(q)
+      );
     });
   }, [items, search, statusFilter]);
 
