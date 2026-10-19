@@ -47,14 +47,9 @@ export function useAllPermissions() {
       const response = await apiClient.get<
         { permissions?: PermissionItem[] } | PermissionItem[]
       >(endpoints.auth.permissions);
-      const backendPermissions = permissionArray(response);
-      const knownNames = new Set(
-        backendPermissions.map((permission) => permission.permission_name),
-      );
-      const missingPermissions = additionalPermissionCatalog
-        .filter((permission) => !knownNames.has(permission.permission_name))
-        .map((permission) => ({ ...permission, is_allowed: false }));
-      return [...missingPermissions, ...backendPermissions];
+      return Array.isArray(response)
+        ? response
+        : (response as any).permissions || [];
     },
   });
 }
@@ -66,7 +61,7 @@ export function useRolePermissions(roleId: string) {
       const res = await apiClient.get<
         { permissions?: PermissionItem[] } | PermissionItem[]
       >(endpoints.auth.rolePermissions(roleId));
-      return permissionArray(res);
+      return Array.isArray(res) ? res : (res as any).permissions || [];
     },
     enabled: !!roleId,
   });
@@ -99,7 +94,7 @@ export function useUserPermissions(userId: string) {
       const res = await apiClient.get<
         { permissions?: PermissionItem[] } | PermissionItem[]
       >(endpoints.auth.userPermissions(userId));
-      return permissionArray(res);
+      return Array.isArray(res) ? res : (res as any).permissions || [];
     },
     enabled: !!userId,
   });

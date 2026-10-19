@@ -895,7 +895,7 @@ export function DocumentForm({
         className="altrex-dialog altrex-dialog-lg altrex-document-dialog"
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          maxHeight: "94vh",
           display: "flex",
           flexDirection: "column",
           width: "min(1000px, calc(100vw - 32px))",

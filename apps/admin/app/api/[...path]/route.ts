@@ -45,26 +45,10 @@ async function proxy(request: NextRequest, path: string[]) {
 
   let response: Response;
   try {
-    const disallowedHeaders = new Set([
-      "host",
-      "connection",
-      "keep-alive",
-      "transfer-encoding",
-      "upgrade",
-      "proxy-authorization",
-      "proxy-authenticate",
-      "te",
-      "trailer",
-      "content-length",
-    ]);
     const headers = new Headers();
     request.headers.forEach((value, key) => {
-      if (!disallowedHeaders.has(key.toLowerCase())) {
-        // Strip control characters (CRLF/null bytes) to prevent header injection
-        const cleanValue = value.replace(/[\r\n\0]/g, "").trim();
-        if (cleanValue) {
-          headers.set(key, cleanValue);
-        }
+      if (key.toLowerCase() !== "host" && key.toLowerCase() !== "connection") {
+        headers.set(key, value);
       }
     });
 

@@ -215,3 +215,55 @@ export interface SiteIssue {
   notes?: string;
   itemsDetails?: SiteIssueItem[];
 }
+
+export interface LabourTrade {
+  trade_id?: number;
+  id?: number;
+  trade_name: string;
+}
+
+export interface ProjectManpowerLog {
+  manpower_log_id?: number;
+  id?: number;
+  project_id?: number;
+  site_id?: number | null;
+  log_date: string;
+  trade_id: number;
+  trade_name?: string;
+  headcount: number;
+  regular_hours?: number;
+  overtime_hours?: number;
+  rate_per_hour: number;
+  ot_rate_per_hour?: number;
+  subcontractor_id?: number | null;
+  remarks?: string;
+}
+
+export interface Equipment {
+  equipment_id?: number;
+  id?: number;
+  equipment_name: string;
+  equipment_type: string;
+  ownership: "owned" | "rented" | string;
+  vendor_id?: number | null;
+  rate_per_hour?: number;
+  rate_per_day?: number;
+  status: "active" | "inactive" | "maintenance" | string;
+  notes?: string;
+}
+
+export interface ProjectEquipmentLog {
+  equipment_log_id?: number;
+  id?: number;
+  project_id?: number;
+  equipment_id: number;
+  equipment_name?: string;
+  site_id?: number | null;
+  log_date: string;
+  hours_used: number;
+  rate_per_hour: number;
+  fuel_cost?: number;
+  operator_name?: string;
+  remarks?: string;
+}
+

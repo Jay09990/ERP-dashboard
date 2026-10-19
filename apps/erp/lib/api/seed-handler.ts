@@ -1,6 +1,6 @@
-import { erpSeed } from "@/mocks/seed";
 /** Serves local ERP fixtures through the BFF without contacting the backend. */
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { erpSeed } from "@/mocks/seed";
 
 type SeedRecord = Record<string, unknown>;
 

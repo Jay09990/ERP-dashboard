@@ -25,7 +25,7 @@ import {
   Landmark,
   LayoutDashboard,
   type LucideIcon,
-  Map as MapIcon,
+  Map,
   MapPin,
   Network,
   Package,
@@ -44,7 +44,6 @@ import {
   Users,
   Users2,
 } from "lucide-react";
-import { permissions } from "./permissions";
 
 export interface NavChildItem {
   id: string;
@@ -170,20 +169,6 @@ export const navigationConfig: NavParentItem[] = [
         label: "Site Issues",
         href: "/procurement/site-issues",
         icon: Truck,
-      },
-    ],
-  },
-  {
-    id: "crm",
-    label: "CRM",
-    icon: Users,
-    children: [
-      {
-        id: "leads",
-        label: "Leads & Follow-ups",
-        href: "/crm/leads",
-        icon: Users,
-        permission: permissions.leadsRead,
       },
     ],
   },
@@ -416,7 +401,7 @@ export const navigationConfig: NavParentItem[] = [
             id: "states",
             label: "States",
             href: "/masters/states",
-            icon: MapIcon,
+            icon: Map,
           },
           {
             id: "cities",

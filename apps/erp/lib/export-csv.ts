@@ -13,19 +13,17 @@ export function sanitizeCSVValue(val: unknown): string {
   if (/(^|[\r\n]+)\s*([=+@\-\t\r%|])/.test(cleaned)) {
     return cleaned.replace(/(^|[\r\n]+)(\s*)([=+@\-\t\r%|])/g, "$1$2'$3");
   }
-  return cleaned;
+  return str;
 }
 
 /**
  * Helper utility to export array of objects to CSV file
  */
-// biome-ignore lint/suspicious/noExplicitAny: Generic CSV export supports arbitrary record types
 export function exportToCSV<T extends Record<string, any>>(
   filename: string,
   headers: {
     key: keyof T | string;
     label: string;
-    // biome-ignore lint/suspicious/noExplicitAny: Value type varies by exported field
     transform?: (val: any, row: T) => string;
   }[],
   data: T[],
@@ -46,8 +44,7 @@ export function exportToCSV<T extends Record<string, any>>(
   // Data rows
   for (const row of data) {
     const values = headers.map((h) => {
-      // biome-ignore lint/suspicious/noExplicitAny: Property dynamic access for CSV values
-      let rawVal: any = (row as any)[h.key];
+      let rawVal: any = row[h.key];
       if (h.transform) {
         rawVal = h.transform(rawVal, row);
       } else if (rawVal === null || rawVal === undefined) {

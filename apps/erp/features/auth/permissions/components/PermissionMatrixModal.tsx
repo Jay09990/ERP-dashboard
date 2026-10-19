@@ -101,13 +101,12 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   };
 
   const totalCount = permissions.length;
+  const grantedCount = permissions.filter((p) => p.is_allowed).length;
 
-  // Cache grouped permissions and granted count in a single O(N) pass to avoid redundant array allocations and traversals on every render or search keystroke
-  const { permissionsByModule, grantedCount } = useMemo(() => {
+  // Cache grouped permissions by module to avoid O(N) array filter scans on every sidebar module switch or search keystroke
+  const permissionsByModule = useMemo(() => {
     const map = new Map<string, PermissionItem[]>();
-    let granted = 0;
     for (const p of permissions) {
-      if (p.is_allowed) granted++;
       const mod = p.module_name || "General";
       let list = map.get(mod);
       if (!list) {
@@ -116,29 +115,22 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
       }
       list.push(p);
     }
-    return { permissionsByModule: map, grantedCount: granted };
+    return map;
   }, [permissions]);
 
-  // Compute filtered items and active module granted count in a single pass
-  const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
-    useMemo(() => {
-      const items = permissionsByModule.get(activeModule) || [];
-      const query = permSearch.trim().toLowerCase();
-      const filtered = query
-        ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
-        : items;
+  const activeModuleItems = useMemo(() => {
+    const items = permissionsByModule.get(activeModule) || [];
+    if (!permSearch.trim()) return items;
+    const lowerSearch = permSearch.toLowerCase();
+    return items.filter((p) =>
+      p.permission_name.toLowerCase().includes(lowerSearch),
+    );
+  }, [permissionsByModule, activeModule, permSearch]);
 
-      let granted = 0;
-      for (const p of filtered) {
-        if (p.is_allowed) granted++;
-      }
-
-      return {
-        activeModuleItems: filtered,
-        activeModuleAllowed: filtered.length > 0 && granted === filtered.length,
-        activeModuleGranted: granted,
-      };
-    }, [permissionsByModule, activeModule, permSearch]);
+  const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
+  const activeModuleGranted = activeModuleItems.filter(
+    (p) => p.is_allowed,
+  ).length;
 
   if (isLoadingAll || isLoadingRole) {
     return (

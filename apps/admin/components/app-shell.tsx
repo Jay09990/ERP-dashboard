@@ -43,9 +43,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       className={`altrex-shell ${collapsed ? "altrex-shell-collapsed" : ""}`}
     >
-      <a href="#main-content" className="altrex-skip-link">
-        Skip to main content
-      </a>
       <aside className="altrex-sidebar">
         <div className="altrex-brand">
           <span className="altrex-brand-mark">A</span>
@@ -108,9 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="altrex-content">
-          {children}
-        </main>
+        <main className="altrex-content">{children}</main>
       </div>
     </div>
   );

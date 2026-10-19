@@ -22,7 +22,6 @@ export type FieldDefinition = {
   nullable?: boolean;
   referenceSource?: "project-sites" | "project-boq";
   options?: { value: string; label: string }[];
-  itemFields?: Omit<FieldDefinition, "itemFields">[];
 };
 
 export function extractRecords<T>(
@@ -222,37 +221,14 @@ export function EntityFormDialog({
     Object.fromEntries(
       fields.map((field) => {
         const value = initialValues?.[field.name];
-        const displayValue = value == null ? "" : String(value);
+        const displayValue =
+          field.type === "json" && value !== undefined
+            ? JSON.stringify(value, null, 2)
+            : value == null
+              ? ""
+              : String(value);
         return [field.name, displayValue];
       }),
-    ),
-  );
-  const [collectionValues, setCollectionValues] = useState<
-    Record<string, Record<string, string>[]>
-  >(() =>
-    Object.fromEntries(
-      fields
-        .filter((field) => field.type === "collection")
-        .map((field) => {
-          const rows = initialValues?.[field.name];
-          return [
-            field.name,
-            Array.isArray(rows)
-              ? rows.map((row) =>
-                  Object.fromEntries(
-                    (field.itemFields ?? []).map((itemField) => [
-                      itemField.name,
-                      (row as Record<string, unknown>)[itemField.name] == null
-                        ? ""
-                        : String(
-                            (row as Record<string, unknown>)[itemField.name],
-                          ),
-                    ]),
-                  ),
-                )
-              : [],
-          ];
-        }),
     ),
   );
   const [formError, setFormError] = useState("");
@@ -356,10 +332,8 @@ export function EntityFormDialog({
           if (field.required && parsedRows.length === 0) {
             throw new Error(`${field.label} needs at least one item.`);
           }
-          payload[field.name] = parsedRows;
-          continue;
-        }
-        if (field.type === "number") {
+          payload[field.name] = parsed;
+        } else if (field.type === "number") {
           const number = Number(value);
           if (!Number.isFinite(number)) {
             throw new Error(`${field.label} must be a valid number.`);
@@ -429,12 +403,13 @@ export function EntityFormDialog({
               }}
             >
               {fields.map((field) => (
-                <div
+                <label
                   className="altrex-field"
                   key={field.name}
+                  htmlFor={field.name}
                   style={{
                     gridColumn:
-                      field.type === "textarea" || field.type === "collection"
+                      field.type === "json" || field.type === "textarea"
                         ? "1 / -1"
                         : undefined,
                   }}
@@ -608,7 +583,7 @@ export function EntityFormDialog({
                     <textarea
                       id={field.name}
                       className="altrex-input"
-                      rows={field.rows ?? 3}
+                      rows={field.rows ?? (field.type === "json" ? 7 : 3)}
                       value={values[field.name] ?? ""}
                       placeholder={field.placeholder}
                       required={field.required}
@@ -658,7 +633,7 @@ export function EntityFormDialog({
                       }
                     />
                   )}
-                </div>
+                </label>
               ))}
             </div>
             {lookupLoading && (
