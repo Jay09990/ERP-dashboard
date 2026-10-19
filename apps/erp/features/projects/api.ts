@@ -281,7 +281,151 @@ export const projectApi = {
         ),
       projectInvalidations,
     ),
+  useTrades: (enabled = true) =>
+    useReadList(["manpower", "trades"], endpoints.manpower.trades, enabled),
+  useCreateTrade: () =>
+    useWrite(
+      ({ body }: MutationInput) =>
+        apiClient.post(endpoints.manpower.trades, body),
+      projectInvalidations,
+    ),
+  useManpowerLogs: (id: Id, filters?: Record<string, string>, enabled = true) =>
+    useQuery({
+      queryKey: ["project-manpower", id, filters],
+      queryFn: () =>
+        apiClient.get<unknown>(endpoints.manpower.logs(id), filters),
+      enabled,
+    }),
+  useCreateManpowerLog: () =>
+    useWrite(
+      ({ id, body }: MutationInput) =>
+        apiClient.post(endpoints.manpower.logs(needId(id, "Project ID")), body),
+      projectInvalidations,
+    ),
+  useUpdateManpowerLog: () =>
+    useWrite(
+      ({ id, childId, body }: MutationInput) =>
+        apiClient.put(
+          endpoints.manpower.log(
+            needId(id, "Project ID"),
+            needId(childId, "Manpower log ID"),
+          ),
+          body,
+        ),
+      projectInvalidations,
+    ),
+  useDeleteManpowerLog: () =>
+    useWrite(
+      ({ id, childId }: MutationInput) =>
+        apiClient.delete(
+          endpoints.manpower.log(
+            needId(id, "Project ID"),
+            needId(childId, "Manpower log ID"),
+          ),
+        ),
+      projectInvalidations,
+    ),
+  useEquipmentList: (filters?: Record<string, string>, enabled = true) =>
+    useQuery({
+      queryKey: ["equipment", filters],
+      queryFn: () => apiClient.get<unknown>(endpoints.equipment.list, filters),
+      enabled,
+    }),
+  useEquipment: (id: Id | null) =>
+    useRead(
+      ["equipment", id],
+      id == null ? "" : endpoints.equipment.detail(id),
+      id != null,
+    ),
+  useCreateEquipment: () =>
+    useWrite(
+      ({ body }: MutationInput) =>
+        apiClient.post(endpoints.equipment.list, body),
+      projectInvalidations,
+    ),
+  useUpdateEquipment: () =>
+    useWrite(
+      ({ id, body }: MutationInput) =>
+        apiClient.put(
+          endpoints.equipment.detail(needId(id, "Equipment ID")),
+          body,
+        ),
+      projectInvalidations,
+    ),
+  useDeleteEquipment: () =>
+    useWrite(
+      ({ id }: MutationInput) =>
+        apiClient.delete(
+          endpoints.equipment.detail(needId(id, "Equipment ID")),
+        ),
+      projectInvalidations,
+    ),
+  useEquipmentLogs: (
+    id: Id,
+    filters?: Record<string, string>,
+    enabled = true,
+  ) =>
+    useQuery({
+      queryKey: ["project-equipment", id, filters],
+      queryFn: () =>
+        apiClient.get<unknown>(endpoints.equipment.projectLogs(id), filters),
+      enabled,
+    }),
+  useCreateEquipmentLog: () =>
+    useWrite(
+      ({ id, body }: MutationInput) =>
+        apiClient.post(
+          endpoints.equipment.projectLogs(needId(id, "Project ID")),
+          body,
+        ),
+      projectInvalidations,
+    ),
+  useUpdateEquipmentLog: () =>
+    useWrite(
+      ({ id, childId, body }: MutationInput) =>
+        apiClient.put(
+          endpoints.equipment.projectLog(
+            needId(id, "Project ID"),
+            needId(childId, "Equipment log ID"),
+          ),
+          body,
+        ),
+      projectInvalidations,
+    ),
+  useDeleteEquipmentLog: () =>
+    useWrite(
+      ({ id, childId }: MutationInput) =>
+        apiClient.delete(
+          endpoints.equipment.projectLog(
+            needId(id, "Project ID"),
+            needId(childId, "Equipment log ID"),
+          ),
+        ),
+      projectInvalidations,
+    ),
 };
+
+export const manpowerApi = {
+  useTrades: projectApi.useTrades,
+  useCreateTrade: projectApi.useCreateTrade,
+  useLogs: projectApi.useManpowerLogs,
+  useCreateLog: projectApi.useCreateManpowerLog,
+  useUpdateLog: projectApi.useUpdateManpowerLog,
+  useDeleteLog: projectApi.useDeleteManpowerLog,
+};
+
+export const equipmentApi = {
+  useList: projectApi.useEquipmentList,
+  useDetail: projectApi.useEquipment,
+  useCreate: projectApi.useCreateEquipment,
+  useUpdate: projectApi.useUpdateEquipment,
+  useDelete: projectApi.useDeleteEquipment,
+  useProjectLogs: projectApi.useEquipmentLogs,
+  useCreateProjectLog: projectApi.useCreateEquipmentLog,
+  useUpdateProjectLog: projectApi.useUpdateEquipmentLog,
+  useDeleteProjectLog: projectApi.useDeleteEquipmentLog,
+};
+
 
 export const procurementApi = {
   useRequisitions: (enabled = true) =>

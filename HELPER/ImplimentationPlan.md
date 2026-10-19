@@ -97,6 +97,9 @@
 ### Phase 11 — Project Management & Procurement
 - [x] Project register with status/party filters, project create/edit/delete, sales-order conversion, and documented status transitions
 - [x] Project details with financial summary, site, BOQ/budget, milestone, task, DPR, and document sections
+- [x] Labour trades master (`/api/manpower/trades`) and project manpower logs (`/api/manpower/:projectId/logs`) with headcount, hours, overtime, rate, and total labour cost calculation
+- [x] Equipment master registry (`/api/equipment`) and project equipment logs (`/api/equipment/project/:projectId/logs`) with hours used, hourly rate, fuel cost, and total usage cost calculation
+- [x] Project detail sections for Manpower and Equipment with live cost calculations and audit log integration
 - [x] Project requisitions with list/detail, create, and approve/cancel actions
 - [x] Goods receipts (GRN) with list/detail, create, and approve/cancel actions
 - [x] Project site issues with list/detail, create, and approve/cancel actions
@@ -104,22 +107,29 @@
 - [x] Replace project and procurement JSON-array text entry with labeled repeatable item forms
 - [x] Replace raw procurement JSON detail output with readable record summaries and item tables
 - [ ] Validate all request/response shapes and child-route methods against a running backend; the API server is outside this repository
-- [x] Add searchable selectors for references backed by documented list routes (customers, quotations, sales orders, users, currencies, items, units, projects, warehouses, and batches); load lookups on demand and reuse shared query-cache entries
+- [x] Add searchable selectors for references backed by documented list routes (customers, quotations, sales orders, users, currencies, items, units, projects, warehouses, batches, labour trades, and equipment); load lookups on demand and reuse shared query-cache entries
 - [x] Load the selected project's documented detail route to populate project-specific site and BOQ selectors on site issues
 - [ ] Replace the purchase-order-line ID with a selector once the GET response shape for order line items is confirmed
 - [ ] Add permission gating for project/procurement mutations once the backend permission keys are documented
 - [ ] Confirm project document upload/storage contract; current UI accepts document metadata and a file URL, not binary uploads
 
-### Phase 12 — CRM Leads
+### Phase 12 — CRM Leads & Enquiries
 - [x] Lead list, create/edit, documented status transitions, loss reason, and customer conversion
 - [x] Lead activity history and activity logging
 - [x] Lead source and industry lists/create forms
 - [x] Follow-up list with documented due, overdue, today, and upcoming scopes
 - [x] Add CRM permission keys, hide unauthorized actions, and protect the Leads navigation entry
 - [x] Include CRM permission catalog entries in role and user permission matrices when the backend catalog is stale
+- [x] Implement Enquiry endpoints and API integration (`/api/enquiry`) with lead conversion, party linking, status transitions (`new` to `quoted`/`won`/`lost`), quotation linking, activity logs, and document attachments
 - [ ] Confirm lead source/industry update/delete routes and provide selectors for documented references
 - [ ] Confirm the follow-up list response shape and whether it returns lead records or activity records
-- [ ] Implement Enquiry after its request and response payload contract is documented
+
+### Phase 13 — HRMS Modules
+- [x] Document HRMS routes and payloads in `Projects_api_doc.md` and `Modules.md`
+- [x] Implement HRMS endpoint definitions in `endpoints.ts` and API contracts
+- [ ] Scaffold HRMS Employee management UI (`/hrms/employees`), attendance (`/hrms/attendance`), leave requests (`/hrms/leaves`), and payroll runs (`/hrms/payroll`)
+- [ ] Implement shift rosters, project assignments, and project timesheets
+- [ ] Connect HRMS analytics dashboard to `/api/hrms/analytics`
 
 ---
 
@@ -130,7 +140,7 @@ These exist in `modules.md` as 🚧/🔮 and are **not** part of the phases abov
 2. Slot it into the appropriate phase above (Sales Documents for Proforma/Delivery Challan/Credit Notes; Purchase Documents for Debit Notes; Item Management for Item Attributes/Item Images).
 3. Reuse the master document-form template or resource-hook factory — do not architect it fresh.
 
-Known future modules: Proforma (backend documented, not confirmed), Delivery Challan, Credit Notes, Debit Notes, Item Attributes, Item Images, and Enquiry pending its payload contract. Additionally, the Departments/Branch/Designations/Shift/Holiday masters exist ahead of any consuming HR module — an HR module is plausible future scope given these masters already exist. Note: Warehouse Master and full Inventory Module are now completed as part of Phase 6.
+Known future modules: Proforma (backend documented, not confirmed), Delivery Challan, Item Attributes, and Item Images. Note: Project Manpower, Equipment, and CRM Enquiry contracts are now fully documented and active. Full HRMS module roadmap documented in Phase 13. Warehouse Master and full Inventory Module are completed as part of Phase 6.
 
 ---
 

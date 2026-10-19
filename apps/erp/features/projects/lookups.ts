@@ -160,6 +160,27 @@ const listDefinitions = {
     idKeys: ["purchase_order_id", "id"],
     labelKeys: ["purchase_order_no", "purchase_order_number", "po_no"],
   },
+  vendors: {
+    queryKey: ["vendors", "list", undefined],
+    endpoint: endpoints.party.vendors,
+    listKeys: ["vendors", "parties", "data"],
+    idKeys: ["party_id", "id"],
+    labelKeys: ["party_name", "vendor_name", "name"],
+  },
+  trades: {
+    queryKey: ["manpower", "trades"],
+    endpoint: endpoints.manpower.trades,
+    listKeys: ["trades", "trade", "data"],
+    idKeys: ["trade_id", "id"],
+    labelKeys: ["trade_name", "name"],
+  },
+  equipment: {
+    queryKey: ["equipment", "list", undefined],
+    endpoint: endpoints.equipment.list,
+    listKeys: ["equipment", "equipments", "data"],
+    idKeys: ["equipment_id", "id"],
+    labelKeys: ["equipment_name", "name"],
+  },
 } satisfies Record<string, ListDefinition>;
 
 function normalizeKey(value: string) {
@@ -368,7 +389,20 @@ export function useProjectChildLookups(enabled: boolean) {
   const cities = useReferenceList(listDefinitions.cities, enabled);
   const states = useReferenceList(listDefinitions.states, enabled);
   const countries = useReferenceList(listDefinitions.countries, enabled);
-  const queries = [users, items, units, cities, states, countries];
+  const trades = useReferenceList(listDefinitions.trades, enabled);
+  const equipment = useReferenceList(listDefinitions.equipment, enabled);
+  const vendors = useReferenceList(listDefinitions.vendors, enabled);
+  const queries = [
+    users,
+    items,
+    units,
+    cities,
+    states,
+    countries,
+    trades,
+    equipment,
+    vendors,
+  ];
   return {
     options: {
       assigned_to: users.data ?? [],
@@ -377,6 +411,10 @@ export function useProjectChildLookups(enabled: boolean) {
       city_id: cities.data ?? [],
       state_id: states.data ?? [],
       country_id: countries.data ?? [],
+      trade_id: trades.data ?? [],
+      equipment_id: equipment.data ?? [],
+      subcontractor_id: vendors.data ?? [],
+      vendor_id: vendors.data ?? [],
     },
     isLoading: enabled && queries.some((query) => query.isLoading),
     error: queries.find((query) => query.error)?.error,
