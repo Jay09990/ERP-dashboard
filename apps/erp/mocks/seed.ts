@@ -1087,6 +1087,25 @@ export const erpSeed = {
         module_name: "customers",
         is_allowed: true,
       },
+      ...[
+        ["lead:view", "CRM"],
+        ["lead:create", "CRM"],
+        ["lead:update", "CRM"],
+        ["lead:delete", "CRM"],
+        ["lead:status:update", "CRM"],
+        ["lead:convert", "CRM"],
+        ["lead_activity:view", "CRM"],
+        ["lead_activity:create", "CRM"],
+        ["lead_source:view", "CRM"],
+        ["lead_source:create", "CRM"],
+        ["industry:view", "CRM"],
+        ["industry:create", "CRM"],
+        ["follow_up:view", "CRM"],
+      ].map(([permission_name, module_name]) => ({
+        permission_name,
+        module_name,
+        is_allowed: true,
+      })),
     ],
     userPermissions: [
       {

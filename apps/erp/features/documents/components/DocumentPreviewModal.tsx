@@ -896,13 +896,17 @@ export function DocumentPreviewModal({
             <tr>
               <td
                 colSpan={isDeliveryChallan ? 4 : hasDiscountInItems ? 10 : 9}
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
                 style={{
                   padding: "24px",
                   textAlign: "center",
                   color: "#64748b",
                 }}
               >
-                Loading preview details...
+                <span className="altrex-spinner" aria-hidden="true" /> Loading
+                document preview details...
               </td>
             </tr>
           ) : items.length === 0 ? (

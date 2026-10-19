@@ -1,7 +1,7 @@
 "use client";
 
 import { bankApi, cityApi, countryApi, stateApi } from "@/features/masters/api";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import {
   Building2,
   Check,
@@ -33,9 +33,37 @@ export function toSafeExternalUrl(url?: string | null): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
 
+  // Reject URLs containing control characters or HTML entities
+  if (
+    trimmed
+      .split("")
+      .some((ch) => ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127) ||
+    /&#([0-9]+|x[0-9a-f]+);/i.test(trimmed) ||
+    /&(Tab|NewLine);/i.test(trimmed)
+  ) {
+    return null;
+  }
+
+  // Safely decode URL components to inspect for obfuscated schemes (e.g. jav%61script:)
+  let decoded = trimmed;
+  try {
+    for (let i = 0; i < 3; i++) {
+      const prev = decoded;
+      decoded = decodeURIComponent(decoded);
+      if (decoded === prev) break;
+    }
+  } catch {
+    // Retain partially decoded state on URIError (e.g. unescaped % in query)
+  }
+
+  const cleanDecoded = decoded.replace(/[\x00-\x1f\x7f]/g, "").trim();
+  if (/^(javascript|data|vbscript|file|blob|about):/i.test(cleanDecoded)) {
+    return null;
+  }
+
   let candidate = trimmed;
   if (!/^https?:\/\//i.test(candidate)) {
-    if (/^(javascript|data|vbscript):/i.test(candidate)) {
+    if (/^[a-z0-9+.-]+:/i.test(cleanDecoded)) {
       return null;
     }
     candidate = `https://${candidate}`;
@@ -128,12 +156,7 @@ export function CompanyProfileView() {
   };
 
   if (isLoading) {
-    return (
-      <div className="altrex-table-state" style={{ padding: "48px 0" }}>
-        <span className="altrex-spinner" />
-        <span>Loading company profile...</span>
-      </div>
-    );
+    return <LoadingState message="Loading company profile..." />;
   }
 
   const companyName = profile.company_name || "Company Name Not Set";

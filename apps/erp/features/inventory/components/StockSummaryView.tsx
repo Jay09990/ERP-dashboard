@@ -3,7 +3,7 @@
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -69,13 +69,17 @@ export function StockSummaryView() {
 
   const warehousesList: any[] = warehousesResponse || [];
 
+  // Hoist query lowercasing outside filter loop and provide early O(1) return on empty search queries
+  // to avoid redundant string allocations and loop iterations across items on every render.
   const filteredStock = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return stockItems;
+
     return stockItems.filter((item) => {
       const name = item.item_name || "";
       const code = item.item_code || "";
       const whName = item.warehouse_name || "";
 
-      const q = search.toLowerCase();
       return (
         name.toLowerCase().includes(q) ||
         code.toLowerCase().includes(q) ||
@@ -469,13 +473,10 @@ export function StockSummaryView() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading stock summary...</span>
-        </div>
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading stock summary..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock summary data from backend server.

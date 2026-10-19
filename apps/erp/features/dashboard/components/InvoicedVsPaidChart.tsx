@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "@altrex/ui";
 import {
   Area,
   AreaChart,
@@ -319,17 +320,7 @@ export function InvoicedVsPaidChart() {
       {/* Chart Section */}
       <div style={{ width: "100%", height: 280, position: "relative" }}>
         {isLoading ? (
-          <div
-            style={{
-              display: "grid",
-              placeItems: "center",
-              height: "100%",
-              color: "var(--altrex-muted)",
-              fontSize: 13,
-            }}
-          >
-            Loading chart data…
-          </div>
+          <LoadingState message="Loading invoiced and paid chart data..." />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart

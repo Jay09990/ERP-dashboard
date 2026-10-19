@@ -153,14 +153,43 @@ Earlier versions of this API had the frontend compute and submit `tax_percent`/`
 - **Frontend status:** ✅ initial frontend implementation available in `apps/erp/features/projects/`.
 - **Project routes:** `/api/project`, `/api/project/:projectId`, `/api/project/from-sales-order/:salesOrderId`, `/api/project/:projectId/status/:status`, and `/api/project/:projectId/financials`.
 - **Project child routes:** sites, BOQ, milestones, and tasks use `/api/project/:projectId/{sites|boq|milestones|tasks}` and the corresponding child-ID routes. Daily progress and documents use the plural `/api/projects/:projectId/{dpr|documents}` paths as written in the API document.
-- **Project data:** project header and status; nested `boqItems`, `costBudget`, and `milestones` on create; project sites; BOQ quantities and consumed quantity; milestone payment/schedule details; assigned tasks; daily progress reports; document metadata; and financial totals (`contract_value`, `estimated_cost`, `actual_cost`, `cost_variance`, `billed_amount`, `received_amount`, `outstanding_amount`, `expected_profit`, `current_profit`, and `progress_percent`).
+- **Manpower routes:** labour trades master at `/api/manpower/trades` (GET list, POST create). Project manpower logs at `/api/manpower/:projectId/logs` (GET with `from`, `to`, `tradeId` query filters, POST create) and `/api/manpower/:projectId/logs/:manpowerLogId` (PUT update, DELETE remove).
+- **Manpower cost calculation:** Labour costs are calculated per log entry as:
+  - `regular_cost = headcount * regular_hours * rate_per_hour`
+  - `overtime_cost = headcount * overtime_hours * ot_rate_per_hour`
+  - `total_labour_cost = regular_cost + overtime_cost`
+  - Posting or updating a manpower log automatically creates a record in `tbl_project_costs` and recalculates `tbl_project.actual_cost`.
+- **Equipment routes:** equipment registry master at `/api/equipment` (GET with `status`, `type`, `search` filters, POST create) and `/api/equipment/:equipmentId` (GET detail, PUT update, DELETE with dependency check against usage logs). Project equipment logs at `/api/equipment/project/:projectId/logs` (GET with `from`, `to`, `equipmentId` filters, POST create) and `/api/equipment/project/:projectId/logs/:equipmentLogId` (PUT update, DELETE remove).
+- **Equipment cost calculation:** Usage costs are computed as `(hours_used * rate_per_hour) + fuel_cost`, rounded to 2 decimal places. Posting or updating an equipment log records into `tbl_project_costs` and updates `tbl_project.actual_cost`.
+- **Project data:** project header and status; nested `boqItems`, `costBudget`, and `milestones` on create; project sites; BOQ quantities and consumed quantity; milestone payment/schedule details; assigned tasks; manpower logs and labour trades; equipment master and project equipment logs; daily progress reports; document metadata; and financial totals (`contract_value`, `estimated_cost`, `actual_cost`, `cost_variance`, `billed_amount`, `received_amount`, `outstanding_amount`, `expected_profit`, `current_profit`, and `progress_percent`).
 - **Project status flow:** `planning → approved → in_progress → on_hold|delayed|completed|cancelled`; `on_hold → in_progress|cancelled`; `delayed → in_progress|completed|cancelled`; `completed → closed`. The API contract also permits cancellation from `planning` and `approved`.
 - **Procurement routes:** requisitions at `/api/procurement/requisition`, goods receipts at `/api/procurement/grn`, and project site issues at `/api/procurement/site-issue`; each supports list/detail, create, and status transition as described in `Projects_api_doc.md`.
 - **Procurement payloads:** requisitions contain `project_id`, dates, notes, and `itemsDetails[]`; GRNs contain purchase order/warehouse/date and received `itemsDetails[]`; site issues contain project/site/warehouse/date and issued `itemsDetails[]` including the BOQ link.
 - **Status rules:** requisition, GRN, and site issue records may move from `draft` to `approved` or `cancelled`, and from `approved` to `cancelled`. GRN approval posts receipts into stock; site-issue approval validates and deducts stock and updates BOQ consumption. Those stock/business effects are owned by the backend.
-- **Frontend routes:** `/projects`, `/projects/:projectId`, `/procurement/requisitions`, `/procurement/grn`, and `/procurement/site-issues`.
-- **Current UI limitations:** reference IDs are entered as numeric IDs and initial/repeating line-item collections are entered as JSON arrays. Project document records accept document metadata and a file URL; this frontend does not implement binary upload. Confirm the backend's actual detail response and child-route HTTP methods against the API document before relying on deployment behavior.
-- **Lead module:** excluded from this frontend scope.
+- **Frontend routes:** `/projects`, `/projects/:projectId` (with Overview, Sites, BOQ, Milestones, Tasks, Manpower Logs, Equipment Logs, DPR, Documents sections), `/projects/equipment`, `/procurement/requisitions`, `/procurement/grn`, and `/procurement/site-issues`.
+- **Current UI:** collection data is entered through labeled repeatable item rows. Procurement details display as readable labeled fields and item tables instead of raw JSON. Searchable selectors use the documented list routes for customers, quotations, sales orders, users, currencies, items, units, projects, warehouses, batches, labour trades, and equipment; these queries load on demand and reuse the shared query cache. Site-issue site/BOQ selectors load from the selected project's detail response. Project detail loads DPR, documents, manpower, and equipment logs when those sections are active.
+- **CRM frontend:** `/crm/leads` includes lead creation/update, status changes, conversion, activity logging, lead-source and industry lists, and follow-up scopes.
+- **CRM Enquiry module:** Documented in `Projects_api_doc.md`.
+  - Routes: `/api/enquiry` (GET with filters: `status`, `partyId`, `leadId`, `assignedTo`, `priority`, `search`, `openOnly`, `dueWithinDays`, `tender`, `sort`), `/api/enquiry/:enquiryId` (GET, PUT, DELETE), `/api/enquiry/:enquiryId/status/:status` (POST status change with optional `lost_reason` and `competitor_name`), `/api/enquiry/:enquiryId/link-quotation/:quotationId` (POST link quotation, transitioning status to `quoted`), `/api/enquiry/:enquiryId/activities` (GET list, POST create), and `/api/enquiry/:enquiryId/documents` (GET list, POST create, DELETE by document ID).
+  - Create options: Direct from Lead (`lead_id`, auto-transitions lead to `qualified`), or direct from Party (`party_id`).
+  - Status lifecycle: `new → under_review → site_visit → estimating → quoted → negotiation → won|lost`. Allows `on_hold`, `no_bid`, `cancelled` where appropriate.
+- **CRM permissions:** `lead:view`, `lead:create`, `lead:update`, `lead:delete`, `lead:status:update`, `lead:convert`, `lead_activity:view`, `lead_activity:create`, `lead_source:view`, `lead_source:create`, `industry:view`, `industry:create`, and `follow_up:view`.
+
+## 7.2 HRMS Module
+
+Documented in `Projects_api_doc.md`. Covers end-to-end human resource management:
+- **Prerequisite Masters:** Departments (`departments`), Designations (`designations`), Branches (`branch_mst`), Shifts (`shift_master`).
+- **Employee CRUD:** `POST /api/hrms/employees` (permissions: `hrms_employee:create`), `GET /api/hrms/employees` (filters: `status`, `departmentId`, `search`), `GET /api/hrms/employees/:id`, `PUT /api/hrms/employees/:id`, `DELETE /api/hrms/employees/:id`.
+- **Attendance & Alerts:** `POST /api/hrms/attendance`, `GET /api/hrms/attendance` (filters: `employeeId`, `fromDate`, `toDate`, `status`), `GET /api/hrms/attendance/alerts` (`date`, `graceMinutes`).
+- **Leave Management:** `GET & PUT /api/hrms/leave-balances/:employeeId`, `POST & GET /api/hrms/leave-requests`, `PUT /api/hrms/leave-requests/:id` (approval workflow).
+- **Overtime:** `POST & GET /api/hrms/overtime-requests`, `PUT /api/hrms/overtime-requests/:id/review`.
+- **Payroll & Deductions:** `POST, GET, PUT /api/hrms/deduction-rules`, `POST /api/hrms/payroll`, `GET /api/hrms/payroll`, `PUT /api/hrms/payroll/:id/approve`, `GET /api/hrms/payroll/:id/payslips/:employeeId`.
+- **Employee Documents:** `POST & GET /api/hrms/employees/:id/documents`, `DELETE /api/hrms/documents/:id`.
+- **Onboarding:** `POST, GET, PUT /api/hrms/onboarding-tasks`.
+- **Shift Rosters:** `POST & GET /api/hrms/rosters`.
+- **Project Assignments & Timesheets:** `POST, GET, PUT /api/hrms/project-assignments`, `POST, GET, PUT /api/hrms/project-timesheets`.
+- **HRMS Analytics:** `GET /api/hrms/analytics` (`fromDate`, `toDate`).
+
 
 ---
 

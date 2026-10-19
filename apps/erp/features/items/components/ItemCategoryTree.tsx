@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { FolderTree, Plus, Trash2, X } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -131,6 +131,8 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
           </Button>
           <Button
             variant="outline"
+            aria-label={`Delete category ${extractCategoryName(cat)}`}
+            title={`Delete category ${extractCategoryName(cat)}`}
             onClick={() => onDeleteCategory(cat)}
             disabled={isDeleting}
             style={{
@@ -167,7 +169,12 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
 
 export function ItemCategoryTree() {
   const { data: responseData, isLoading, error } = useItemCategories();
-  const categories = extractRecords<ItemCategory>(responseData);
+  // Memoize extracted category records to preserve array reference identity across re-renders.
+  // Prevents invalidating downstream useMemo (rootCategories / childrenMap) when typing in modal inputs.
+  const categories = useMemo(
+    () => extractRecords<ItemCategory>(responseData),
+    [responseData],
+  );
 
   const { mutate: createCategory, isPending: isCreating } =
     useCreateItemCategory();
@@ -270,10 +277,7 @@ export function ItemCategoryTree() {
       </div>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading category hierarchy...</span>
-        </div>
+        <LoadingState message="Loading item category hierarchy..." />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load category hierarchy from server.
@@ -329,6 +333,8 @@ export function ItemCategoryTree() {
                 type="button"
                 className="altrex-icon-button"
                 onClick={() => setIsOpenModal(false)}
+                aria-label="Close"
+                title="Close"
               >
                 <X size={18} />
               </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, DataTable, FilterBar } from "@altrex/ui";
+import { Button, DataTable, FilterBar, TableSkeleton } from "@altrex/ui";
 import { Edit, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -253,10 +253,10 @@ export function MasterListModal<T extends Record<string, any>>({
       </FilterBar>
 
       {isLoading ? (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" />
-          <span>Loading master records...</span>
-        </div>
+        <TableSkeleton
+          columns={tableColumns.length}
+          message={`Loading ${title.toLowerCase()} records...`}
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load records from server.

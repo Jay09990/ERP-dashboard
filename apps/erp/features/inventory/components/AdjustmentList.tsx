@@ -1,7 +1,7 @@
 "use client";
 
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import {
   CheckCircle2,
   Download,
@@ -422,13 +422,10 @@ export function AdjustmentList() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading adjustment records...</span>
-        </div>
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading stock adjustment records..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock adjustment data from backend server.

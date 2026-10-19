@@ -1,5 +1,7 @@
 "use client";
 
+import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
+import { LoadingState } from "@altrex/ui";
 import {
   ArrowLeft,
   Edit2,
@@ -40,17 +42,7 @@ export function VendorDetail({ id }: VendorDetailProps) {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-          color: "var(--altrex-muted)",
-        }}
-      >
-        Loading vendor profile...
-      </div>
-    );
+    return <LoadingState message="Loading vendor profile..." />;
   }
 
   if (!vendor) {
@@ -75,7 +67,10 @@ export function VendorDetail({ id }: VendorDetailProps) {
 
   const addresses = vendor.addresses || vendor.tbl_party_addresses || [];
   const contactPersons =
-    vendor.contactPersons || vendor.tbl_party_contact_person || [];
+    vendor.contactPersons ||
+    vendor.contactperson ||
+    vendor.tbl_party_contact_person ||
+    [];
   const balance = Number.parseFloat(String(vendor.opening_balance || 0));
 
   return (

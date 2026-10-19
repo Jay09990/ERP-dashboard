@@ -1,6 +1,11 @@
 "use client";
 
-import { DataTable, FilterBar, StatusPill } from "@/components/shared";
+import {
+  DataTable,
+  FilterBar,
+  StatusPill,
+  TableSkeleton,
+} from "@/components/shared";
 import Link from "next/link";
 import { useState } from "react";
 import { useChangeCompanyStatus, useCompanies } from "../api";
@@ -20,22 +25,21 @@ export function CompanyList() {
     null,
   );
 
-  const {
-    data: companies = [],
-    isLoading,
-    error,
-  } = useCompanies(statusFilter ? { status: statusFilter } : undefined);
+  const { data: companies = [], isLoading, error } = useCompanies();
 
-  const { mutate: changeStatus } = useChangeCompanyStatus();
+  const { mutate: changeStatus, isPending: isChangingStatus } =
+    useChangeCompanyStatus();
 
-  const filtered = search.trim()
-    ? companies.filter(
-        (c) =>
-          c.company_name.toLowerCase().includes(search.toLowerCase()) ||
-          c.company_code.toLowerCase().includes(search.toLowerCase()) ||
-          c.company_email.toLowerCase().includes(search.toLowerCase()),
-      )
-    : companies;
+  const query = search.trim().toLowerCase();
+  const filtered = companies.filter((company) => {
+    const matchesStatus = !statusFilter || company.status === statusFilter;
+    const matchesSearch =
+      !query ||
+      company.company_name?.toLowerCase().includes(query) ||
+      company.company_code?.toLowerCase().includes(query) ||
+      company.company_email?.toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
 
   const columns = [
     {
@@ -79,6 +83,7 @@ export function CompanyList() {
             <button
               type="button"
               className="altrex-button altrex-button-sm altrex-button-neutral"
+              disabled={isChangingStatus}
               onClick={() =>
                 changeStatus({ id: c.company_id, status: "active" })
               }
@@ -139,12 +144,7 @@ export function CompanyList() {
       </FilterBar>
 
       {/* States */}
-      {isLoading && (
-        <div className="altrex-table-state">
-          <span className="altrex-spinner" aria-label="Loading companies" />
-          <span>Loading companies…</span>
-        </div>
-      )}
+      {isLoading && <TableSkeleton columns={6} />}
 
       {error && !isLoading && (
         <div

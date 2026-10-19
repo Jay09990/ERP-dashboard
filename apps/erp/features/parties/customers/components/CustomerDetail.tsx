@@ -1,5 +1,7 @@
 "use client";
 
+import { toSafeExternalUrl } from "@/features/profile/components/CompanyProfileView";
+import { LoadingState } from "@altrex/ui";
 import {
   ArrowLeft,
   Building2,
@@ -42,17 +44,7 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
   };
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-          color: "var(--altrex-muted)",
-        }}
-      >
-        Loading customer profile...
-      </div>
-    );
+    return <LoadingState message="Loading customer profile..." />;
   }
 
   if (!customer) {
@@ -77,7 +69,10 @@ export function CustomerDetail({ id }: CustomerDetailProps) {
 
   const addresses = customer.addresses || customer.tbl_party_addresses || [];
   const contactPersons =
-    customer.contactPersons || customer.tbl_party_contact_person || [];
+    customer.contactPersons ||
+    customer.contactperson ||
+    customer.tbl_party_contact_person ||
+    [];
   const balance = Number.parseFloat(String(customer.opening_balance || 0));
 
   return (

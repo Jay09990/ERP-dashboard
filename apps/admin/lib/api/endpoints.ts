@@ -2,8 +2,6 @@ export const endpoints = {
   admin: {
     register: "/api/admin/register",
     login: "/api/admin/login",
-
-    me: "/api/admin/me",
   },
 
   companies: "/api/admin/companies",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { Check, Search, Shield, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -35,6 +35,16 @@ export function UserPermissionMatrixModal({
   const [permissions, setPermissions] = useState<PermissionItem[]>([]);
   const [activeModule, setActiveModule] = useState<string>("");
   const [permSearch, setPermSearch] = useState("");
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSaving) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isSaving]);
 
   useEffect(() => {
     if (allPermissions) {
@@ -149,21 +159,32 @@ export function UserPermissionMatrixModal({
     return (
       <div className="altrex-dialog-backdrop">
         <div className="altrex-dialog">
-          <div className="altrex-table-state">
-            <span className="altrex-spinner" />
-            <span>Loading user & role permissions...</span>
-          </div>
+          <LoadingState message="Loading user and role permissions..." />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="altrex-dialog-backdrop" onClick={onClose}>
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isSaving && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-lg"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        className="altrex-dialog altrex-dialog-lg relative z-10"
+        // biome-ignore lint/a11y/useSemanticElements: custom modal container uses WAI-ARIA role="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-permission-matrix-title"
+        style={{
+          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {/* Header */}
         <div className="altrex-dialog-header" style={{ flexShrink: 0 }}>
@@ -184,7 +205,12 @@ export function UserPermissionMatrixModal({
               <Shield size={20} />
             </div>
             <div>
-              <h2 className="altrex-dialog-title">Permissions — {userName}</h2>
+              <h2
+                id="user-permission-matrix-title"
+                className="altrex-dialog-title"
+              >
+                Permissions — {userName}
+              </h2>
               <p className="altrex-dialog-subtitle" style={{ margin: 0 }}>
                 <span
                   style={{ color: "var(--altrex-primary)", fontWeight: 700 }}

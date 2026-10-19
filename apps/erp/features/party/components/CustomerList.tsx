@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable, FilterBar, StatusPill } from "@altrex/ui";
+import { DataTable, FilterBar, LoadingState, StatusPill } from "@altrex/ui";
 import { useState } from "react";
 import { useCustomers, useDeleteCustomer } from "../api";
 import type { PartyFormValues } from "../schema";
@@ -37,12 +37,7 @@ export function CustomerList() {
   };
 
   if (isLoading) {
-    return (
-      <div className="altrex-table-state">
-        <span className="altrex-spinner" />
-        <span>Loading customers...</span>
-      </div>
-    );
+    return <LoadingState message="Loading customer records..." />;
   }
 
   if (error) {

@@ -1,8 +1,9 @@
 "use client";
 
 import { projectApi } from "@/features/projects/api";
+import { useProjectHeaderLookups } from "@/features/projects/lookups";
 import type { Project, ProjectStatus } from "@/features/projects/schema";
-import { Button } from "@altrex/ui";
+import { Button, TableSkeleton } from "@altrex/ui";
 import { ArrowRight, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -10,6 +11,7 @@ import {
   EntityFormDialog,
   type FieldDefinition,
   MutationError,
+  SearchableReferencePicker,
   extractRecords,
   recordId,
 } from "./ProjectUi";
@@ -38,9 +40,9 @@ const transitions: Record<string, ProjectStatus[]> = {
 
 const projectFields: FieldDefinition[] = [
   { name: "project_name", label: "Project name", required: true },
-  { name: "party_id", label: "Customer / party ID", type: "number" },
-  { name: "quotation_id", label: "Quotation ID", type: "number" },
-  { name: "sales_order_id", label: "Sales order ID", type: "number" },
+  { name: "party_id", label: "Customer", type: "reference" },
+  { name: "quotation_id", label: "Quotation", type: "reference" },
+  { name: "sales_order_id", label: "Sales order", type: "reference" },
   { name: "contract_no", label: "Contract number" },
   { name: "customer_po_no", label: "Customer PO number" },
   { name: "customer_po_date", label: "Customer PO date", type: "date" },
@@ -51,12 +53,20 @@ const projectFields: FieldDefinition[] = [
   },
   { name: "project_location", label: "Project location" },
   { name: "site_address", label: "Site address" },
-  { name: "project_manager_id", label: "Project manager ID", type: "number" },
-  { name: "project_engineer_id", label: "Project engineer ID", type: "number" },
+  {
+    name: "project_manager_id",
+    label: "Project manager",
+    type: "reference",
+  },
+  {
+    name: "project_engineer_id",
+    label: "Project engineer",
+    type: "reference",
+  },
   { name: "start_date", label: "Start date", type: "date" },
   { name: "planned_end_date", label: "Planned end date", type: "date" },
   { name: "actual_end_date", label: "Actual end date", type: "date" },
-  { name: "currency_id", label: "Currency ID", type: "number" },
+  { name: "currency_id", label: "Currency", type: "reference" },
   { name: "contract_value", label: "Contract value", type: "number" },
   { name: "estimated_cost", label: "Estimated cost", type: "number" },
   { name: "actual_cost", label: "Actual cost", type: "number" },
@@ -75,10 +85,35 @@ const projectFields: FieldDefinition[] = [
   { name: "notes", label: "Notes", type: "textarea" },
   {
     name: "boqItems",
-    label: "Initial BOQ items (JSON array)",
-    type: "json",
-    placeholder:
-      '[{"boq_type":"material","item_id":2,"description":"Steel","quantity":10,"unit_id":1,"unit_rate":85}]',
+    label: "Initial bill of quantities",
+    type: "collection",
+    itemFields: [
+      {
+        name: "boq_type",
+        label: "Type",
+        type: "select",
+        required: true,
+        options: ["material", "service", "labour"].map((value) => ({
+          value,
+          label: value[0].toUpperCase() + value.slice(1),
+        })),
+      },
+      {
+        name: "item_id",
+        label: "Item",
+        type: "reference",
+        nullable: true,
+      },
+      { name: "description", label: "Description", required: true },
+      { name: "quantity", label: "Quantity", type: "number", required: true },
+      { name: "unit_id", label: "Unit", type: "reference" },
+      {
+        name: "unit_rate",
+        label: "Rate per unit",
+        type: "number",
+        required: true,
+      },
+    ],
   },
   {
     name: "costBudget",
@@ -99,8 +134,8 @@ const projectFields: FieldDefinition[] = [
 const fromOrderFields: FieldDefinition[] = [
   {
     name: "sales_order_id",
-    label: "Sales order ID",
-    type: "number",
+    label: "Sales order",
+    type: "reference",
     required: true,
   },
   ...projectFields.filter(
@@ -137,6 +172,10 @@ export function ProjectList() {
     ...(partyId.trim() ? { partyId: partyId.trim() } : {}),
   };
   const projectsQuery = projectApi.useList(filters);
+  const lookups = useProjectHeaderLookups(
+    dialog !== null,
+    dialog === "from-order",
+  );
   const projects = useMemo(
     () => extractRecords<Project>(projectsQuery.data),
     [projectsQuery.data],
@@ -210,6 +249,7 @@ export function ProjectList() {
       </div>
 
       <MutationError error={mutationError} />
+      {!dialog && <MutationError error={lookups.error} />}
       <section className="altrex-card" style={{ marginBottom: 16 }}>
         <div
           style={{
@@ -234,21 +274,26 @@ export function ProjectList() {
               ))}
             </select>
           </label>
-          <label className="altrex-field" style={{ maxWidth: 280 }}>
-            <span>Filter by party ID</span>
-            <input
-              className="altrex-input"
-              type="number"
-              min="1"
+          <div className="altrex-field" style={{ maxWidth: 320 }}>
+            <label htmlFor="project-customer-filter">Filter by customer</label>
+            <SearchableReferencePicker
+              id="project-customer-filter"
+              label="customer"
               value={partyId}
-              onChange={(event) => setPartyId(event.target.value)}
+              options={lookups.options.party_id}
+              onChange={setPartyId}
             />
-          </label>
+            {lookups.isCustomersLoading && (
+              <output style={{ color: "var(--altrex-muted)" }}>
+                Loading customers...
+              </output>
+            )}
+          </div>
         </div>
       </section>
 
       {projectsQuery.isLoading ? (
-        <div className="altrex-table-state">Loading projects...</div>
+        <TableSkeleton columns={7} message="Loading projects..." />
       ) : projectsQuery.error ? (
         <MutationError error={projectsQuery.error} />
       ) : (
@@ -392,6 +437,9 @@ export function ProjectList() {
               ? (selected as unknown as Record<string, unknown>)
               : undefined
           }
+          fieldOptions={lookups.options}
+          lookupLoading={lookups.isLoading}
+          lookupError={lookups.error}
           isPending={busy}
           submitEmptyValues={dialog === "edit"}
           onClose={closeDialog}

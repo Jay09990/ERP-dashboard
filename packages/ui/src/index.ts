@@ -17,6 +17,7 @@ export {
   FilterBar,
   StatCard,
 } from "./components";
+export { LoadingState, TableSkeleton } from "./components/loading";
 
 // cn utility (re-exported so consumers can use it without a separate import)
 export { cn } from "./lib/utils";

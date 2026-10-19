@@ -1,15 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { companiesQueryKey, fetchCompanies } from "@/features/companies/api";
+import type { Company } from "@/features/companies/types";
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { setToken } from "@/lib/auth/token";
+import { clearToken, setToken } from "@/lib/auth/token";
 import { type SessionSnapshot, useSessionStore } from "@/stores/session-store";
 import { AuthCard, Button, Input } from "@altrex/ui";
 import { type AdminLoginValues, adminLoginSchema } from "../schema";
@@ -43,7 +46,7 @@ function isSafeRedirect(path: string): boolean {
     !decoded.startsWith("/") ||
     decoded.startsWith("//") ||
     decoded.includes("\\") ||
-    /[\0-\x1f]/.test(decoded)
+    /\p{Control}/u.test(decoded)
   ) {
     return false;
   }
@@ -58,6 +61,7 @@ function isSafeRedirect(path: string): boolean {
 
 export function AdminLoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -82,30 +86,45 @@ export function AdminLoginForm() {
       const user =
         response.user ?? response.data?.user ?? response.data ?? response;
       if (!token) throw new Error("Login response did not include a token");
+
+      // Clear data from a prior account before checking this admin's companies.
+      queryClient.clear();
       setToken(token);
+      let companies: Company[];
+      try {
+        companies = await queryClient.fetchQuery({
+          queryKey: companiesQueryKey(),
+          queryFn: () => fetchCompanies(),
+        });
+      } catch {
+        clearToken();
+        setSession(null);
+        setServerError(
+          "Signed in, but company setup could not be checked. Please try again.",
+        );
+        return;
+      }
       // Normalize user object — the backend may return different shapes.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const u = user as any;
+      // biome-ignore lint/suspicious/noExplicitAny: Backend user object shape varies
+      const u = user as Record<string, any>;
       const session: SessionSnapshot = {
         user: {
           id: String(u.userId ?? u.user_id ?? u.id ?? ""),
-          name: u.fullName ?? u.full_name ?? u.name ?? u.email ?? "",
-          email: u.email ?? "",
-          phone: u.phone ?? "",
+          name: String(u.fullName ?? u.full_name ?? u.name ?? u.email ?? ""),
+          email: String(u.email ?? ""),
+          phone: String(u.phone ?? ""),
         },
         permissions: (u.permissions ?? []) as SessionSnapshot["permissions"],
       };
       setSession(session);
 
-      const next = new URLSearchParams(window.location.search).get("next");
-
-      // Redirect logic:
-      // 1. If next parameter exists, use it
-      // 2. Otherwise, go to company-register (which will check if companies exist)
-      if (next && isSafeRedirect(next)) {
-        router.push(next);
-      } else {
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      if (companies.length === 0) {
         router.push("/company-register");
+      } else if (nextParam && isSafeRedirect(nextParam)) {
+        router.push(nextParam);
+      } else {
+        router.push("/");
       }
     } catch (error) {
       setServerError(
@@ -164,7 +183,14 @@ export function AdminLoginForm() {
           </div>
         ) : null}
         <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          Sign in
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Signing in and checking companies…
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
         <Link
           href="/register"

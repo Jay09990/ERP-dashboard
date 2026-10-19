@@ -150,7 +150,84 @@ export const projectDetailSeed = {
   documents: [
     { document_id: 1601, site_id: demoSiteId, document_name: "Approved equipment layout", document_type: "Drawing", file_url: "/demo/project-files/approved-equipment-layout.pdf", description: "Customer approved layout, revision B.", uploaded_at: "2026-09-28T10:30:00+05:30" },
   ] satisfies ProjectDocument[],
+  manpowerLogs: [
+    {
+      manpower_log_id: 1801,
+      project_id: demoProjectId,
+      site_id: demoSiteId,
+      log_date: "2026-10-07",
+      trade_id: 1,
+      trade_name: "Electrician",
+      headcount: 5,
+      regular_hours: 8,
+      overtime_hours: 2,
+      rate_per_hour: 300,
+      ot_rate_per_hour: 450,
+      subcontractor_id: 201,
+      remarks: "Electrical installation work",
+    },
+  ],
+  equipmentLogs: [
+    {
+      equipment_log_id: 1901,
+      project_id: demoProjectId,
+      equipment_id: 1,
+      equipment_name: "Diesel Forklift",
+      site_id: demoSiteId,
+      log_date: "2026-10-07",
+      hours_used: 8,
+      rate_per_hour: 1200,
+      fuel_cost: 1500,
+      operator_name: "Ramesh Patel",
+      remarks: "Material handling and offloading",
+    },
+  ],
 };
+
+export const labourTradesSeed = [
+  { trade_id: 1, trade_name: "Electrician" },
+  { trade_id: 2, trade_name: "Fitter / Fabricator" },
+  { trade_id: 3, trade_name: "Welder" },
+  { trade_id: 4, trade_name: "Rigger" },
+  { trade_id: 5, trade_name: "General Helper" },
+];
+
+export const equipmentSeed = [
+  {
+    equipment_id: 1,
+    equipment_name: "Diesel Forklift",
+    equipment_type: "forklift",
+    ownership: "rented",
+    vendor_id: 201,
+    rate_per_hour: 1200,
+    rate_per_day: 8500,
+    status: "active",
+    notes: "Material handling",
+  },
+  {
+    equipment_id: 2,
+    equipment_name: "Tower Crane 5T",
+    equipment_type: "crane",
+    ownership: "rented",
+    vendor_id: 201,
+    rate_per_hour: 2500,
+    rate_per_day: 18000,
+    status: "active",
+    notes: "Structural lifting",
+  },
+  {
+    equipment_id: 3,
+    equipment_name: "Diesel Generator 125kVA",
+    equipment_type: "generator",
+    ownership: "owned",
+    vendor_id: null,
+    rate_per_hour: 800,
+    rate_per_day: 6000,
+    status: "active",
+    notes: "Site power backup",
+  },
+];
+
 
 export const projectFinancialsSeed: ProjectFinancials[] = [
   { project_id: demoProjectId, project_code: "PRJ-2026-001", contract_value: 2500000, estimated_cost: 1850000, actual_cost: 620000, cost_variance: -1230000, billed_amount: 500000, received_amount: 250000, outstanding_amount: 250000, expected_profit: 650000, current_profit: -120000, progress_percent: 32 },

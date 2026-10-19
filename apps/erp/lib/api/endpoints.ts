@@ -138,6 +138,20 @@ export const endpoints = {
     document: (id: string | number, documentId: string | number) =>
       `/api/projects/${id}/documents/${documentId}`,
   },
+  manpower: {
+    trades: "/api/manpower/trades",
+    logs: (projectId: string | number) => `/api/manpower/${projectId}/logs`,
+    log: (projectId: string | number, logId: string | number) =>
+      `/api/manpower/${projectId}/logs/${logId}`,
+  },
+  equipment: {
+    list: "/api/equipment",
+    detail: (id: string | number) => `/api/equipment/${id}`,
+    projectLogs: (projectId: string | number) =>
+      `/api/equipment/project/${projectId}/logs`,
+    projectLog: (projectId: string | number, logId: string | number) =>
+      `/api/equipment/project/${projectId}/logs/${logId}`,
+  },
   procurement: {
     requisitions: "/api/procurement/requisition",
     requisition: (id: string | number) => `/api/procurement/requisition/${id}`,
@@ -152,4 +166,66 @@ export const endpoints = {
     siteIssueStatus: (id: string | number, status: string) =>
       `/api/procurement/site-issue/${id}/${status}`,
   },
+  crm: {
+    leads: "/api/lead",
+    lead: (id: string | number) => `/api/lead/${id}`,
+    leadStatus: (id: string | number, status: string) =>
+      `/api/lead/${id}/status/${status}`,
+    leadConvert: (id: string | number) => `/api/lead/${id}/convert`,
+    leadActivities: (id: string | number) => `/api/lead/${id}/activities`,
+    leadSources: "/api/crm/lead_sources",
+    industries: "/api/crm/industries",
+    followUps: "/api/crm/follow-ups",
+    enquiries: "/api/enquiry",
+    enquiry: (id: string | number) => `/api/enquiry/${id}`,
+    enquiryStatus: (id: string | number, status: string) =>
+      `/api/enquiry/${id}/status/${status}`,
+    enquiryLinkQuotation: (
+      id: string | number,
+      quotationId: string | number,
+    ) => `/api/enquiry/${id}/link-quotation/${quotationId}`,
+    enquiryActivities: (id: string | number) =>
+      `/api/enquiry/${id}/activities`,
+    enquiryDocuments: (id: string | number) =>
+      `/api/enquiry/${id}/documents`,
+    enquiryDocument: (id: string | number, docId: string | number) =>
+      `/api/enquiry/${id}/documents/${docId}`,
+  },
+  hrms: {
+    employees: "/api/hrms/employees",
+    employee: (id: string | number) => `/api/hrms/employees/${id}`,
+    attendance: "/api/hrms/attendance",
+    attendanceAlerts: "/api/hrms/attendance/alerts",
+    leaveBalances: "/api/hrms/leave-balances",
+    leaveBalance: (employeeId: string | number) =>
+      `/api/hrms/leave-balances/${employeeId}`,
+    leaveRequests: "/api/hrms/leave-requests",
+    leaveRequest: (id: string | number) => `/api/hrms/leave-requests/${id}`,
+    overtimeRequests: "/api/hrms/overtime-requests",
+    overtimeRequestReview: (id: string | number) =>
+      `/api/hrms/overtime-requests/${id}/review`,
+    deductionRules: "/api/hrms/deduction-rules",
+    deductionRule: (id: string | number) => `/api/hrms/deduction-rules/${id}`,
+    payroll: "/api/hrms/payroll",
+    payrollApprove: (id: string | number) =>
+      `/api/hrms/payroll/${id}/approve`,
+    payslip: (payrollId: string | number, employeeId: string | number) =>
+      `/api/hrms/payroll/${payrollId}/payslips/${employeeId}`,
+    employeeDocuments: (employeeId: string | number) =>
+      `/api/hrms/employees/${employeeId}/documents`,
+    document: (documentId: string | number) =>
+      `/api/hrms/documents/${documentId}`,
+    onboardingTasks: "/api/hrms/onboarding-tasks",
+    onboardingTask: (id: string | number) =>
+      `/api/hrms/onboarding-tasks/${id}`,
+    rosters: "/api/hrms/rosters",
+    projectAssignments: "/api/hrms/project-assignments",
+    projectAssignmentClose: (id: string | number) =>
+      `/api/hrms/project-assignments/${id}/close`,
+    projectTimesheets: "/api/hrms/project-timesheets",
+    projectTimesheetReview: (id: string | number) =>
+      `/api/hrms/project-timesheets/${id}/review`,
+    analytics: "/api/hrms/analytics",
+  },
 } as const;
+

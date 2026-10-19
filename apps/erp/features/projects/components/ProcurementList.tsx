@@ -1,12 +1,16 @@
 "use client";
 
-import { procurementApi } from "@/features/projects/api";
+import { procurementApi, projectApi } from "@/features/projects/api";
+import {
+  type ReferenceOption,
+  useProcurementLookups,
+} from "@/features/projects/lookups";
 import type {
   GoodsReceipt,
   PurchaseRequisition,
   SiteIssue,
 } from "@/features/projects/schema";
-import { Button } from "@altrex/ui";
+import { Button, LoadingState } from "@altrex/ui";
 import { Eye, Plus, RefreshCw, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -40,8 +44,8 @@ const configurations: Record<
     createFields: [
       {
         name: "project_id",
-        label: "Project ID",
-        type: "number",
+        label: "Project",
+        type: "reference",
         required: true,
       },
       {
@@ -57,8 +61,23 @@ const configurations: Record<
         label: "Items (JSON array)",
         type: "json",
         required: true,
-        placeholder:
-          '[{"item_id":2,"description":"Cement OPC 53 Grade","quantity":100,"unit_id":1,"notes":"For foundation"}]',
+        itemFields: [
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
+          { name: "description", label: "Item description" },
+          {
+            name: "quantity",
+            label: "Quantity",
+            type: "number",
+            required: true,
+          },
+          { name: "unit_id", label: "Unit", type: "reference" },
+          { name: "notes", label: "Notes" },
+        ],
       },
     ],
   },
@@ -71,14 +90,14 @@ const configurations: Record<
     createFields: [
       {
         name: "purchase_order_id",
-        label: "Purchase order ID",
-        type: "number",
+        label: "Purchase order",
+        type: "reference",
         required: true,
       },
       {
         name: "warehouse_id",
-        label: "Warehouse ID",
-        type: "number",
+        label: "Warehouse",
+        type: "reference",
         required: true,
       },
       { name: "grn_date", label: "Receipt date", type: "date", required: true },
@@ -88,8 +107,28 @@ const configurations: Record<
         label: "Received items (JSON array)",
         type: "json",
         required: true,
-        placeholder:
-          '[{"purchase_order_item_id":1,"item_id":2,"batch_id":null,"quantity":50,"unit_id":1,"rate":350}]',
+        itemFields: [
+          {
+            name: "purchase_order_item_id",
+            label: "Purchase order line ID",
+            type: "number",
+          },
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
+          { name: "batch_id", label: "Batch", type: "reference" },
+          {
+            name: "quantity",
+            label: "Received quantity",
+            type: "number",
+            required: true,
+          },
+          { name: "unit_id", label: "Unit", type: "reference" },
+          { name: "rate", label: "Rate per unit", type: "number" },
+        ],
       },
     ],
   },
@@ -102,20 +141,21 @@ const configurations: Record<
     createFields: [
       {
         name: "project_id",
-        label: "Project ID",
-        type: "number",
+        label: "Project",
+        type: "reference",
         required: true,
       },
       {
         name: "site_id",
-        label: "Project site ID",
-        type: "number",
+        label: "Project site",
+        type: "reference",
+        referenceSource: "project-sites",
         required: true,
       },
       {
         name: "warehouse_id",
-        label: "Warehouse ID",
-        type: "number",
+        label: "Warehouse",
+        type: "reference",
         required: true,
       },
       { name: "issue_date", label: "Issue date", type: "date", required: true },
@@ -125,24 +165,171 @@ const configurations: Record<
         label: "Issued items (JSON array)",
         type: "json",
         required: true,
-        placeholder:
-          '[{"item_id":2,"batch_id":null,"quantity":20,"unit_id":1,"boq_item_id":4}]',
+        itemFields: [
+          {
+            name: "item_id",
+            label: "Item",
+            type: "reference",
+            required: true,
+          },
+          { name: "batch_id", label: "Batch", type: "reference" },
+          {
+            name: "quantity",
+            label: "Quantity",
+            type: "number",
+            required: true,
+          },
+          { name: "unit_id", label: "Unit", type: "reference" },
+          {
+            name: "boq_item_id",
+            label: "Project BOQ item",
+            type: "reference",
+            referenceSource: "project-boq",
+          },
+        ],
       },
     ],
   },
 };
 
 function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
+  return value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+const detailLabels: Record<string, string> = {
+  project_id: "Project reference",
+  site_id: "Project site reference",
+  warehouse_id: "Warehouse reference",
+  purchase_order_id: "Purchase order reference",
+  requisition_date: "Request date",
+  required_by: "Needed by",
+  grn_date: "Receipt date",
+  issue_date: "Issue date",
+  itemsDetails: "Items",
+};
+
+function displayValue(key: string, value: unknown): string {
+  if (value == null || value === "") return "Not provided";
+  if (key.endsWith("_date") && typeof value === "string") {
+    const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+    return Number.isNaN(date.getTime())
+      ? value
+      : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+  }
+  if (key === "status" && typeof value === "string") return formatLabel(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+function dateLabel(value: unknown) {
+  if (typeof value !== "string" || !value) return "—";
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+}
+
+function itemLabel(key: string) {
+  const labels: Record<string, string> = {
+    item_id: "Item reference",
+    quantity: "Quantity",
+    rate: "Rate per unit",
+  };
+  return labels[key] ?? formatLabel(key);
+}
+
+function projectReferenceOptions(
+  project: Record<string, unknown> | null,
+  collectionKeys: string[],
+  idKeys: string[],
+  labelKeys: string[],
+): ReferenceOption[] {
+  const collection = collectionKeys
+    .map((key) => project?.[key])
+    .find(Array.isArray);
+  return extractRecords<Record<string, unknown>>(collection).flatMap((row) => {
+    const id = recordId(row, idKeys);
+    if (id == null) return [];
+    const label =
+      labelKeys
+        .map((key) => row[key])
+        .find(
+          (value) => typeof value === "string" || typeof value === "number",
+        ) ?? "Record";
+    return [{ value: String(id), label: `${String(label)} (#${id})` }];
+  });
+}
+
+function DetailItems({ items }: { items: unknown[] }) {
+  const rows = items.filter((item): item is Record<string, unknown> =>
+    Boolean(item && typeof item === "object" && !Array.isArray(item)),
+  );
+  if (!rows.length) return <p>No item details are available.</p>;
+  const columns = Object.keys(rows[0]).filter(
+    (key) =>
+      ![
+        "purchase_order_item_id",
+        "batch_id",
+        "unit_id",
+        "boq_item_id",
+      ].includes(key),
+  );
+  return (
+    <div className="altrex-table-wrap">
+      <table className="altrex-table">
+        <thead>
+          <tr>
+            {columns.map((key) => (
+              <th key={key}>{itemLabel(key)}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={String(row.item_id ?? index)}>
+              {columns.map((key) => (
+                <td key={key}>{displayValue(key, row[key])}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export function ProcurementList({ kind }: { kind: ProcurementKind }) {
   const config = configurations[kind];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | number | null>(null);
-  const requisitionsQuery = procurementApi.useRequisitions();
-  const grnsQuery = procurementApi.useGrns();
-  const siteIssuesQuery = procurementApi.useSiteIssues();
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const selectedProjectQuery = projectApi.useDetail(selectedProjectId || null);
+  const requisitionsQuery = procurementApi.useRequisitions(
+    kind === "requisition",
+  );
+  const grnsQuery = procurementApi.useGrns(kind === "grn");
+  const siteIssuesQuery = procurementApi.useSiteIssues(kind === "site-issue");
+  const lookups = useProcurementLookups(dialogOpen, kind);
+  const selectedProject = extractRecord<Record<string, unknown>>(
+    selectedProjectQuery.data,
+  );
+  const fieldOptions = {
+    ...lookups.options,
+    site_id: projectReferenceOptions(
+      selectedProject,
+      ["sites", "project_sites", "tbl_project_sites"],
+      ["site_id", "project_site_id", "id"],
+      ["site_name", "address_line1"],
+    ),
+    boq_item_id: projectReferenceOptions(
+      selectedProject,
+      ["boqItems", "boq_items", "project_boq_items"],
+      ["boq_item_id", "project_boq_item_id", "boq_id", "id"],
+      ["description", "item_name"],
+    ),
+  };
   const requisitionDetail = procurementApi.useRequisition(
     kind === "requisition" ? detailId : null,
   );
@@ -236,7 +423,12 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
           <Button variant="outline" onClick={() => activeQuery.refetch()}>
             <RefreshCw size={15} /> Refresh
           </Button>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button
+            onClick={() => {
+              setSelectedProjectId("");
+              setDialogOpen(true);
+            }}
+          >
             <Plus size={15} /> New {config.collectionLabel}
           </Button>
         </div>
@@ -255,7 +447,9 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
       <MutationError error={workflowError} />
 
       {activeQuery.isLoading ? (
-        <div className="altrex-table-state">Loading records...</div>
+        <LoadingState
+          message={`Loading ${config.collectionLabel.toLowerCase()} records...`}
+        />
       ) : (
         <section className="altrex-card altrex-table-wrap">
           <table className="altrex-table">
@@ -362,6 +556,14 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
         <EntityFormDialog
           title={`Create ${config.collectionLabel}`}
           fields={config.createFields}
+          fieldOptions={fieldOptions}
+          lookupLoading={lookups.isLoading || selectedProjectQuery.isLoading}
+          lookupError={lookups.error ?? selectedProjectQuery.error}
+          onFieldChange={(name, value) => {
+            if (kind === "site-issue" && name === "project_id") {
+              setSelectedProjectId(value);
+            }
+          }}
           isPending={createPending}
           onClose={() => setDialogOpen(false)}
           onSubmit={submit}
@@ -396,7 +598,9 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
             </header>
             <div className="altrex-dialog-body">
               {detailQuery.isLoading ? (
-                <div className="altrex-table-state">Loading details...</div>
+                <LoadingState
+                  message={`Loading ${config.collectionLabel.toLowerCase()} details...`}
+                />
               ) : detailQuery.error ? (
                 <MutationError error={detailQuery.error} />
               ) : (

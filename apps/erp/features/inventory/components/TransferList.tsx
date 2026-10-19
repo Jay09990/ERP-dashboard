@@ -1,7 +1,7 @@
 "use client";
 
 import { exportToCSV } from "@/lib/export-csv";
-import { Button, DataTable } from "@altrex/ui";
+import { Button, DataTable, TableSkeleton } from "@altrex/ui";
 import {
   ArrowRightLeft,
   CheckCircle2,
@@ -506,13 +506,10 @@ export function TransferList() {
       </div>
 
       {isLoading ? (
-        <div
-          className="altrex-table-state"
-          style={{ color: "var(--altrex-muted, #64748b)" }}
-        >
-          <span className="altrex-spinner" />
-          <span>Loading transfer records...</span>
-        </div>
+        <TableSkeleton
+          columns={columns.length}
+          message="Loading stock transfer records..."
+        />
       ) : error ? (
         <div className="altrex-table-state altrex-table-state-error">
           Failed to load stock transfer data from backend server.

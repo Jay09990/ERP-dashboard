@@ -1,4 +1,50 @@
 export const permissions = {
   dashboardRead: "dashboard:read",
   customersRead: "customers:read",
+  leadsRead: "lead:view",
+  leadsCreate: "lead:create",
+  leadsUpdate: "lead:update",
+  leadsDelete: "lead:delete",
+  leadsStatusUpdate: "lead:status:update",
+  leadsConvert: "lead:convert",
+  leadActivitiesRead: "lead_activity:view",
+  leadActivitiesCreate: "lead_activity:create",
+  leadSourcesRead: "lead_source:view",
+  leadSourcesCreate: "lead_source:create",
+  industriesRead: "industry:view",
+  industriesCreate: "industry:create",
+  followUpsRead: "follow_up:view",
 } as const;
+
+export const legacyPermissionAliases: Record<string, string> = {
+  "leads:read": permissions.leadsRead,
+  "leads:create": permissions.leadsCreate,
+  "leads:update": permissions.leadsUpdate,
+  "leads:delete": permissions.leadsDelete,
+  "leads:status:update": permissions.leadsStatusUpdate,
+  "leads:convert": permissions.leadsConvert,
+  "leads:activities:read": permissions.leadActivitiesRead,
+  "leads:activities:create": permissions.leadActivitiesCreate,
+  "lead-sources:read": permissions.leadSourcesRead,
+  "lead-sources:create": permissions.leadSourcesCreate,
+  "industries:read": permissions.industriesRead,
+  "industries:create": permissions.industriesCreate,
+  "follow-ups:read": permissions.followUpsRead,
+};
+
+/** Frontend permission entries missing from older backend permission catalogs. */
+export const additionalPermissionCatalog = [
+  { permission_name: permissions.leadsRead, module_name: "CRM" },
+  { permission_name: permissions.leadsCreate, module_name: "CRM" },
+  { permission_name: permissions.leadsUpdate, module_name: "CRM" },
+  { permission_name: permissions.leadsDelete, module_name: "CRM" },
+  { permission_name: permissions.leadsStatusUpdate, module_name: "CRM" },
+  { permission_name: permissions.leadsConvert, module_name: "CRM" },
+  { permission_name: permissions.leadActivitiesRead, module_name: "CRM" },
+  { permission_name: permissions.leadActivitiesCreate, module_name: "CRM" },
+  { permission_name: permissions.leadSourcesRead, module_name: "CRM" },
+  { permission_name: permissions.leadSourcesCreate, module_name: "CRM" },
+  { permission_name: permissions.industriesRead, module_name: "CRM" },
+  { permission_name: permissions.industriesCreate, module_name: "CRM" },
+  { permission_name: permissions.followUpsRead, module_name: "CRM" },
+] as const;

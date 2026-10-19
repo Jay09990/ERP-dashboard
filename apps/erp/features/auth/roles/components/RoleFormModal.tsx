@@ -48,15 +48,26 @@ export function RoleFormModal({ role, onClose }: Props) {
 
   const isPending = isCreating || isUpdating;
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   return (
     <div
       className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
       onClick={onClose}
     >
       <div
         className="altrex-dialog altrex-dialog-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-dialog-title"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="altrex-dialog-header">
@@ -77,7 +88,7 @@ export function RoleFormModal({ role, onClose }: Props) {
               <Shield size={20} />
             </div>
             <div>
-              <h3 className="altrex-dialog-title">
+              <h3 id="role-dialog-title" className="altrex-dialog-title">
                 {isEdit ? "Edit Role" : "Create New Role"}
               </h3>
               <p className="altrex-dialog-subtitle">
