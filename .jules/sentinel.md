@@ -27,3 +27,8 @@
 **Vulnerability:** Document print generation injected raw user-controlled `company.logo` and `company.authorized_signature` strings into HTML template literals (`<img src="${company.logo}">`) passed to `popup.document.write()`, allowing attribute breaking and execution of arbitrary scripts in the printed popup window.
 **Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
 **Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.
+
+## 2025-05-26 - Unsanitized Client-Side API Request URLs
+**Vulnerability:** HTTP client requests (`axios` and `fetch`) accepting unvalidated path strings allowed protocol-relative URLs (`//evil.com`), backslashes (`\`), or control characters to bypass same-origin relative base URLs and trigger external requests or header injection.
+**Learning:** `axios.create({ baseURL: "/" })` overrides `baseURL` if `config.url` starts with `//` or a full protocol, causing client requests to target external hosts and potentially forward authorization bearer tokens.
+**Prevention:** Validate all client API request paths in request interceptors/wrappers to ensure they strictly start with `/`, reject `//`, `\`, Unicode control characters (`\p{Control}`), and external scheme patterns.

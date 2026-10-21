@@ -15,6 +15,16 @@ export const http = axios.create({
 });
 
 http.interceptors.request.use((config) => {
+  if (
+    config.url &&
+    (!config.url.startsWith("/") ||
+      config.url.startsWith("//") ||
+      config.url.includes("\\") ||
+      /\p{Control}/u.test(config.url) ||
+      /^(https?|javascript|data|file|blob|about):/i.test(config.url))
+  ) {
+    throw new Error("Invalid or unsafe API request URL");
+  }
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
