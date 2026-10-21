@@ -219,17 +219,36 @@ function FormDialog({
   );
 }
 
+// Module-scoped Intl formatters cached to avoid V8 ICU locale initialization and GC churn on every render
+const dateMediumFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+});
+const dateTimeShortFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+const inrCurrencyZeroDecimalFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+// Module-scoped status transition map to prevent O(N) object allocations per lead row during render
+const NEXT_ALLOWED_STATUSES: Record<string, string[]> = {
+  new: ["contacted", "qualified", "lost"],
+  contacted: ["qualified", "lost"],
+  qualified: ["contacted", "lost"],
+  lost: ["new"],
+  converted: [],
+};
+
 function friendlyDate(value: unknown) {
   if (typeof value !== "string" || !value) return "—";
   const date = new Date(value.length <= 10 ? `${value}T00:00:00` : value);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat(
-        "en-IN",
-        value.includes("T")
-          ? { dateStyle: "medium", timeStyle: "short" }
-          : { dateStyle: "medium" },
-      ).format(date);
+  if (Number.isNaN(date.getTime())) return value;
+  return value.includes("T")
+    ? dateTimeShortFormatter.format(date)
+    : dateMediumFormatter.format(date);
 }
 
 function titleCase(value: string | undefined) {
@@ -292,9 +311,22 @@ export function LeadWorkspace() {
     () => records<Lead>(leadsQuery.data),
     [leadsQuery.data],
   );
-  const activities = records<LeadActivity>(activitiesQuery.data);
-  const sources = records<NamedCrmRecord>(sourcesQuery.data);
-  const industries = records<NamedCrmRecord>(industriesQuery.data);
+  const activities = useMemo(
+    () => records<LeadActivity>(activitiesQuery.data),
+    [activitiesQuery.data],
+  );
+  const sources = useMemo(
+    () => records<NamedCrmRecord>(sourcesQuery.data),
+    [sourcesQuery.data],
+  );
+  const industries = useMemo(
+    () => records<NamedCrmRecord>(industriesQuery.data),
+    [industriesQuery.data],
+  );
+  const followUps = useMemo(
+    () => records<Lead>(followUpsQuery.data),
+    [followUpsQuery.data],
+  );
   const close = () => {
     setDialog(null);
     setEditing(null);
@@ -357,7 +389,7 @@ export function LeadWorkspace() {
     tab === "leads"
       ? leads
       : tab === "follow-ups"
-        ? records<Lead>(followUpsQuery.data)
+        ? followUps
         : tab === "sources"
           ? sources
           : industries;
@@ -484,13 +516,6 @@ export function LeadWorkspace() {
             {tab === "leads" &&
               leads.map((lead, index) => {
                 const id = lead.lead_id ?? index;
-                const next: Record<string, string[]> = {
-                  new: ["contacted", "qualified", "lost"],
-                  contacted: ["qualified", "lost"],
-                  qualified: ["contacted", "lost"],
-                  lost: ["new"],
-                  converted: [],
-                };
                 return (
                   <tr key={id}>
                     <td>
@@ -519,11 +544,9 @@ export function LeadWorkspace() {
                     <td>
                       {lead.estimated_value == null
                         ? "—"
-                        : new Intl.NumberFormat("en-IN", {
-                            style: "currency",
-                            currency: "INR",
-                            maximumFractionDigits: 0,
-                          }).format(lead.estimated_value)}
+                        : inrCurrencyZeroDecimalFormatter.format(
+                            lead.estimated_value,
+                          )}
                     </td>
                     <td>{titleCase(lead.status)}</td>
                     <td>
@@ -578,11 +601,13 @@ export function LeadWorkspace() {
                             }}
                           >
                             <option value="">Change status</option>
-                            {(next[lead.status] ?? []).map((status) => (
-                              <option key={status} value={status}>
-                                {titleCase(status)}
-                              </option>
-                            ))}
+                            {(NEXT_ALLOWED_STATUSES[lead.status] ?? []).map(
+                              (status) => (
+                                <option key={status} value={status}>
+                                  {titleCase(status)}
+                                </option>
+                              ),
+                            )}
                           </select>
                         )}
                         {lead.status === "qualified" &&
@@ -621,7 +646,7 @@ export function LeadWorkspace() {
                 );
               })}
             {tab === "follow-ups" &&
-              records<Lead>(followUpsQuery.data).map((lead, index) => (
+              followUps.map((lead, index) => (
                 <tr key={lead.lead_id ?? index}>
                   <td>{lead.company_name}</td>
                   <td>{lead.contact_name}</td>
