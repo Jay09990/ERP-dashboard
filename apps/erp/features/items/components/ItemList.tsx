@@ -58,16 +58,27 @@ export function ItemList() {
 
   const getItemId = (i: Item) => i.item_id ?? (i as any).id;
 
+  // Optimized filtering: hoist query lowercasing outside callback to avoid redundant $O(N)$ string operations,
+  // evaluate status filter first to short-circuit, and fast-path empty query + default filter with $O(1)$ return.
   const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchSearch =
-        !search.trim() ||
-        i.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.item_code?.toLowerCase().includes(search.toLowerCase()) ||
-        i.hsn_code?.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
 
-      const matchStatus = statusFilter === "all" || i.status === statusFilter;
-      return matchSearch && matchStatus;
+    if (!q && statusFilter === "all") {
+      return items;
+    }
+
+    return items.filter((i) => {
+      if (statusFilter !== "all" && i.status !== statusFilter) {
+        return false;
+      }
+
+      if (!q) return true;
+
+      return (
+        i.item_name?.toLowerCase().includes(q) ||
+        i.item_code?.toLowerCase().includes(q) ||
+        i.hsn_code?.toLowerCase().includes(q)
+      );
     });
   }, [items, search, statusFilter]);
 
