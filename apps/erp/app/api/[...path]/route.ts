@@ -42,7 +42,10 @@ async function proxy(request: NextRequest, path: string[]) {
 
   const pathStr = path.join("/");
   const baseUrl = backendUrl.replace(/\/+$/, "");
-  const targetUrl = new URL(`${baseUrl}/api/${pathStr}${request.nextUrl.search}`);
+  const rawSearch = request.nextUrl.search ?? "";
+  // Strip control characters (CRLF/null bytes) from search parameters to prevent query injection
+  const cleanSearch = rawSearch.replace(/[\r\n\0]/g, "");
+  const targetUrl = new URL(`${baseUrl}/api/${pathStr}${cleanSearch}`);
 
   if (!targetUrl.pathname.startsWith("/api/")) {
     return NextResponse.json({ message: "Invalid API path" }, { status: 400 });
