@@ -50,7 +50,11 @@ function isSafeRedirect(path: string): boolean {
   try {
     const dummyOrigin = "http://localhost";
     const parsed = new URL(decoded, dummyOrigin);
-    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
+    return (
+      parsed.origin === dummyOrigin &&
+      parsed.pathname.startsWith("/") &&
+      !parsed.pathname.startsWith("//")
+    );
   } catch {
     return false;
   }
