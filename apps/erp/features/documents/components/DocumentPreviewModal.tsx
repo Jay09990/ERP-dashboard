@@ -5,7 +5,11 @@ import { endpoints } from "@/lib/api/endpoints";
 import { Edit, FileText, Printer, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DocumentType } from "./DocumentForm";
-import { DOCUMENT_PRINT_CONFIG, numberToWordsIndian } from "./DocumentList";
+import {
+  DOCUMENT_PRINT_CONFIG,
+  numberToWordsIndian,
+  toSafeImageUrl,
+} from "./DocumentList";
 
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
@@ -509,6 +513,8 @@ export function DocumentPreviewModal({
     (detail.status || "draft") === "approved" ||
     (detail.status || "draft") === "sent";
 
+  const safeLogo = toSafeImageUrl(company.logo);
+
   const renderPaperCard = () => (
     <div
       style={{
@@ -574,9 +580,9 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ maxWidth: "56%" }}>
-          {company.logo && (
+          {safeLogo && (
             <img
-              src={company.logo}
+              src={safeLogo}
               alt="Company Logo"
               style={{
                 maxHeight: "55px",
