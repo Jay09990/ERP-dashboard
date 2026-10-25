@@ -58,16 +58,27 @@ export function ItemList() {
 
   const getItemId = (i: Item) => i.item_id ?? (i as any).id;
 
+  // Optimized filtering:
+  // 1. Fast-path return all items if search query is empty and status filter is "all" (O(1) avoid traversal).
+  // 2. Hoist normalized search query lowercasing outside .filter() callback to prevent O(N) string transformations per render.
   const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchSearch =
-        !search.trim() ||
-        i.item_name?.toLowerCase().includes(search.toLowerCase()) ||
-        i.item_code?.toLowerCase().includes(search.toLowerCase()) ||
-        i.hsn_code?.toLowerCase().includes(search.toLowerCase());
+    const trimmedQuery = search.trim().toLowerCase();
+    const isAllStatus = statusFilter === "all";
 
-      const matchStatus = statusFilter === "all" || i.status === statusFilter;
-      return matchSearch && matchStatus;
+    if (!trimmedQuery && isAllStatus) {
+      return items;
+    }
+
+    return items.filter((i) => {
+      const matchStatus = isAllStatus || i.status === statusFilter;
+      if (!matchStatus) return false;
+      if (!trimmedQuery) return true;
+
+      return (
+        (i.item_name && i.item_name.toLowerCase().includes(trimmedQuery)) ||
+        (i.item_code && i.item_code.toLowerCase().includes(trimmedQuery)) ||
+        (i.hsn_code && i.hsn_code.toLowerCase().includes(trimmedQuery))
+      );
     });
   }, [items, search, statusFilter]);
 
