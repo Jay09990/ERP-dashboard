@@ -62,6 +62,18 @@ export function UserFormDrawer({ user, onClose }: Props) {
     },
   });
 
+  const isPending = isCreating || isUpdating;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   useEffect(() => {
     if (user) {
       const fn = user.firstName ?? user.first_name ?? "";
@@ -111,18 +123,20 @@ export function UserFormDrawer({ user, onClose }: Props) {
     );
   };
 
-  const isPending = isCreating || isUpdating;
-
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isPending && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-md"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-md relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-dialog-title"
       >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -144,7 +158,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
               {isEdit ? <UserCog size={20} /> : <UserPlus size={20} />}
             </div>
             <div>
-              <h3 className="altrex-dialog-title">
+              <h3 id="user-dialog-title" className="altrex-dialog-title">
                 {isEdit ? "Edit User" : "Create New User"}
               </h3>
               <p className="altrex-dialog-subtitle">
@@ -159,6 +173,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
             className="altrex-icon-button"
             onClick={onClose}
             aria-label="Close"
+            disabled={isPending}
           >
             <X size={18} />
           </button>
@@ -178,9 +193,10 @@ export function UserFormDrawer({ user, onClose }: Props) {
                   gap: "16px",
                 }}
               >
-                <label className="altrex-field">
-                  <span>First Name</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-edit-first-name">First Name</label>
                   <input
+                    id="user-edit-first-name"
                     className="altrex-input"
                     placeholder="e.g. Rahul"
                     {...editForm.register("firstName")}
@@ -190,16 +206,17 @@ export function UserFormDrawer({ user, onClose }: Props) {
                       {editForm.formState.errors.firstName.message}
                     </span>
                   )}
-                </label>
+                </div>
 
-                <label className="altrex-field">
-                  <span>Last Name</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-edit-last-name">Last Name</label>
                   <input
+                    id="user-edit-last-name"
                     className="altrex-input"
                     placeholder="e.g. Patel"
                     {...editForm.register("lastName")}
                   />
-                </label>
+                </div>
               </div>
 
               <div
@@ -209,30 +226,33 @@ export function UserFormDrawer({ user, onClose }: Props) {
                   gap: "16px",
                 }}
               >
-                <label className="altrex-field">
-                  <span>Phone Number</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-edit-phone">Phone Number</label>
                   <input
+                    id="user-edit-phone"
                     className="altrex-input"
                     placeholder="e.g. 9876543210"
                     {...editForm.register("phone")}
                   />
-                </label>
+                </div>
 
-                <label className="altrex-field">
-                  <span>Account Status</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-edit-status">Account Status</label>
                   <select
+                    id="user-edit-status"
                     className="altrex-input altrex-select"
                     {...editForm.register("status")}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                </label>
+                </div>
               </div>
 
-              <label className="altrex-field">
-                <span>Enterprise Role</span>
+              <div className="altrex-field">
+                <label htmlFor="user-edit-role">Enterprise Role</label>
                 <select
+                  id="user-edit-role"
                   className="altrex-input altrex-select"
                   {...editForm.register("roleId")}
                   disabled={loadingRoles}
@@ -252,7 +272,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
                     {editForm.formState.errors.roleId.message}
                   </span>
                 )}
-              </label>
+              </div>
             </form>
           ) : (
             <form
@@ -267,9 +287,10 @@ export function UserFormDrawer({ user, onClose }: Props) {
                   gap: "16px",
                 }}
               >
-                <label className="altrex-field">
-                  <span>First Name *</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-create-first-name">First Name *</label>
                   <input
+                    id="user-create-first-name"
                     className="altrex-input"
                     placeholder="e.g. Rahul"
                     {...createForm.register("firstName")}
@@ -279,21 +300,23 @@ export function UserFormDrawer({ user, onClose }: Props) {
                       {createForm.formState.errors.firstName.message}
                     </span>
                   )}
-                </label>
+                </div>
 
-                <label className="altrex-field">
-                  <span>Last Name</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-create-last-name">Last Name</label>
                   <input
+                    id="user-create-last-name"
                     className="altrex-input"
                     placeholder="e.g. Patel"
                     {...createForm.register("lastName")}
                   />
-                </label>
+                </div>
               </div>
 
-              <label className="altrex-field">
-                <span>Email Address *</span>
+              <div className="altrex-field">
+                <label htmlFor="user-create-email">Email Address *</label>
                 <input
+                  id="user-create-email"
                   className="altrex-input"
                   type="email"
                   placeholder="e.g. user@company.com"
@@ -304,11 +327,12 @@ export function UserFormDrawer({ user, onClose }: Props) {
                     {createForm.formState.errors.email.message}
                   </span>
                 )}
-              </label>
+              </div>
 
-              <label className="altrex-field">
-                <span>Password *</span>
+              <div className="altrex-field">
+                <label htmlFor="user-create-password">Password *</label>
                 <input
+                  id="user-create-password"
                   className="altrex-input"
                   type="password"
                   placeholder="Min 6 characters"
@@ -319,7 +343,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
                     {createForm.formState.errors.password.message}
                   </span>
                 )}
-              </label>
+              </div>
 
               <div
                 style={{
@@ -328,18 +352,20 @@ export function UserFormDrawer({ user, onClose }: Props) {
                   gap: "16px",
                 }}
               >
-                <label className="altrex-field">
-                  <span>Phone Number</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-create-phone">Phone Number</label>
                   <input
+                    id="user-create-phone"
                     className="altrex-input"
                     placeholder="e.g. 9876543210"
                     {...createForm.register("phone")}
                   />
-                </label>
+                </div>
 
-                <label className="altrex-field">
-                  <span>Enterprise Role *</span>
+                <div className="altrex-field">
+                  <label htmlFor="user-create-role">Enterprise Role *</label>
                   <select
+                    id="user-create-role"
                     className="altrex-input altrex-select"
                     {...createForm.register("roleId")}
                     disabled={loadingRoles}
@@ -359,7 +385,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
                       {createForm.formState.errors.roleId.message}
                     </span>
                   )}
-                </label>
+                </div>
               </div>
             </form>
           )}
@@ -369,7 +395,12 @@ export function UserFormDrawer({ user, onClose }: Props) {
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" form="user-form" disabled={isPending}>
+          <Button
+            type="submit"
+            form="user-form"
+            disabled={isPending}
+            aria-busy={isPending}
+          >
             {isPending ? "Saving..." : isEdit ? "Update User" : "Create User"}
           </Button>
         </div>
