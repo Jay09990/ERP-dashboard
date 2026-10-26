@@ -5,7 +5,11 @@ import { endpoints } from "@/lib/api/endpoints";
 import { Edit, FileText, Printer, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DocumentType } from "./DocumentForm";
-import { DOCUMENT_PRINT_CONFIG, numberToWordsIndian } from "./DocumentList";
+import {
+  DOCUMENT_PRINT_CONFIG,
+  numberToWordsIndian,
+  toSafeImageUrl,
+} from "./DocumentList";
 
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
@@ -574,9 +578,10 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ maxWidth: "56%" }}>
-          {company.logo && (
+          {/* Sanitize image URL to prevent XSS / malicious protocol execution (e.g. javascript:, data:text/html) */}
+          {toSafeImageUrl(company.logo) && (
             <img
-              src={company.logo}
+              src={toSafeImageUrl(company.logo)!}
               alt="Company Logo"
               style={{
                 maxHeight: "55px",
