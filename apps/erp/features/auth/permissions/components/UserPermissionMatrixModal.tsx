@@ -18,6 +18,14 @@ interface Props {
   onClose: () => void;
 }
 
+const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
+  view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
+  create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
+  update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
+  delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
+};
+const DEFAULT_CHIP = { bg: "rgba(139,92,246,0.1)", color: "#8b5cf6" };
+
 export function UserPermissionMatrixModal({
   userId,
   userName,
@@ -121,39 +129,64 @@ export function UserPermissionMatrixModal({
   };
 
   const totalCount = permissions.length;
-  const grantedCount = permissions.filter((p) => p.is_allowed).length;
-  const inheritedCount = permissions.filter(
-    (p) => p.is_allowed && p.inherited,
-  ).length;
 
-  // Cache grouped permissions by module to avoid repeated O(N) array filter scans during module rendering and search filter
-  const permissionsByModule = useMemo(() => {
-    const map = new Map<string, PermissionItem[]>();
+  // Single-pass O(N) calculation for totals and module grouping
+  // Consolidates total granted, total inherited, and module-level permission grouping/counts
+  // to prevent multiple array allocations and O(N) traversals on every render or search keystroke.
+  const { permissionsByModule, grantedCount, inheritedCount } = useMemo(() => {
+    const map = new Map<
+      string,
+      { items: PermissionItem[]; grantedCount: number }
+    >();
+    let granted = 0;
+    let inherited = 0;
+
     for (const p of permissions) {
-      const mod = p.module_name || "General";
-      let list = map.get(mod);
-      if (!list) {
-        list = [];
-        map.set(mod, list);
+      if (p.is_allowed) {
+        granted++;
+        if (p.inherited) inherited++;
       }
-      list.push(p);
+      const mod = p.module_name || "General";
+      let entry = map.get(mod);
+      if (!entry) {
+        entry = { items: [], grantedCount: 0 };
+        map.set(mod, entry);
+      }
+      entry.items.push(p);
+      if (p.is_allowed) {
+        entry.grantedCount++;
+      }
     }
-    return map;
+
+    return {
+      permissionsByModule: map,
+      grantedCount: granted,
+      inheritedCount: inherited,
+    };
   }, [permissions]);
 
-  const activeModuleItems = useMemo(() => {
-    const items = permissionsByModule.get(activeModule) || [];
-    if (!permSearch.trim()) return items;
-    const lowerSearch = permSearch.toLowerCase();
-    return items.filter((p) =>
-      p.permission_name.toLowerCase().includes(lowerSearch),
-    );
-  }, [permissionsByModule, activeModule, permSearch]);
+  // Compute filtered items, granted count, and allowed state for the active module in a single pass
+  const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
+    useMemo(() => {
+      const modData = permissionsByModule.get(activeModule);
+      const items = modData?.items || [];
+      const query = permSearch.trim().toLowerCase();
 
-  const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
-  const activeModuleGranted = activeModuleItems.filter(
-    (p) => p.is_allowed,
-  ).length;
+      const filtered = query
+        ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
+        : items;
+
+      let granted = 0;
+      for (const p of filtered) {
+        if (p.is_allowed) granted++;
+      }
+
+      return {
+        activeModuleItems: filtered,
+        activeModuleAllowed: filtered.length > 0 && granted === filtered.length,
+        activeModuleGranted: granted,
+      };
+    }, [permissionsByModule, activeModule, permSearch]);
 
   if (isLoadingAll || isLoadingUser || (roleId && isLoadingRole)) {
     return (
@@ -291,8 +324,9 @@ export function UserPermissionMatrixModal({
             }}
           >
             {modules.map((mod) => {
-              const modItems = permissionsByModule.get(mod) || [];
-              const modGranted = modItems.filter((p) => p.is_allowed).length;
+              const modData = permissionsByModule.get(mod);
+              const modItems = modData?.items || [];
+              const modGranted = modData?.grantedCount || 0;
               const isActive = mod === activeModule;
               return (
                 <button
@@ -450,19 +484,7 @@ export function UserPermissionMatrixModal({
                   {activeModuleItems.map((item) => {
                     const actionParts = item.permission_name.split(":");
                     const action = actionParts[actionParts.length - 1];
-                    const actionColors: Record<
-                      string,
-                      { bg: string; color: string }
-                    > = {
-                      view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
-                      create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
-                      update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
-                      delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
-                    };
-                    const chip = actionColors[action] || {
-                      bg: "rgba(139,92,246,0.1)",
-                      color: "#8b5cf6",
-                    };
+                    const chip = ACTION_COLORS[action] || DEFAULT_CHIP;
 
                     return (
                       <label

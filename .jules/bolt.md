@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-26 - Pre-calculating Module Counts in Grouping Passes to Avoid Render-Loop Filter Allocations
+**Learning:** Performing `.filter((item) => item.condition)` inside JSX `.map()` render loops (e.g. calculating counts for category/module navigation tabs) creates $M$ new temporary array allocations and iterates all module items on EVERY render (such as typing into search inputs). Storing pre-calculated counts alongside grouped array items (e.g. `{ items, grantedCount }`) during the initial `useMemo` grouping pass reduces sidebar render overhead to $O(1)$ dictionary lookups without garbage collection thrashing.
+**Action:** Always compute tab/category counts alongside grouped array data inside `useMemo` rather than calling `.filter()` inside JSX render loops.
+
 ## 2025-05-25 - Hoisting Search Lowercasing and Fast-Pathing Empty Queries in Array Filter Hooks
 **Learning:** Re-evaluating `search.toLowerCase()` inside array `.filter()` callbacks causes $O(N)$ string lowercasing operations per render. Moreover, filtering over large arrays when search is empty or whitespace-only executes redundant string lowercasing and `.includes("")` comparisons across all elements. Hoisting query normalization outside the loop and returning the array directly when empty provides an $O(1)$ fast-path and eliminates $O(N)$ redundant string allocations.
 **Action:** Always compute normalized search queries outside `.filter()` callbacks and return early if the search string is empty.
