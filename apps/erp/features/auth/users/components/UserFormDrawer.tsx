@@ -113,16 +113,30 @@ export function UserFormDrawer({ user, onClose }: Props) {
 
   const isPending = isCreating || isUpdating;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
+    <>
+      <button
+        type="button"
+        className="altrex-dialog-backdrop"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={onClose}
+      />
       <div
-        className="altrex-dialog altrex-dialog-md"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-md relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-drawer-title"
       >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -144,7 +158,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
               {isEdit ? <UserCog size={20} /> : <UserPlus size={20} />}
             </div>
             <div>
-              <h3 className="altrex-dialog-title">
+              <h3 id="user-drawer-title" className="altrex-dialog-title">
                 {isEdit ? "Edit User" : "Create New User"}
               </h3>
               <p className="altrex-dialog-subtitle">
@@ -374,6 +388,6 @@ export function UserFormDrawer({ user, onClose }: Props) {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
