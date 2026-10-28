@@ -27,3 +27,8 @@
 **Vulnerability:** Document print generation injected raw user-controlled `company.logo` and `company.authorized_signature` strings into HTML template literals (`<img src="${company.logo}">`) passed to `popup.document.write()`, allowing attribute breaking and execution of arbitrary scripts in the printed popup window.
 **Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
 **Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.
+
+## 2025-05-26 - Control Character Injection and CRLF Bypass in BFF Proxy Route Validation
+**Vulnerability:** `isUnsafeSegment` in BFF catch-all proxy routes only checked for null bytes (`\0`) and path traversal tokens (`..`, `/`, `\`), allowing URL-encoded control characters (such as CRLF sequences `%0d%0a` or `%09`) to bypass path validation and reach downstream fetch requests.
+**Learning:** Path segment validation that only checks for null bytes (`\0`) permits other ASCII control characters (`\r`, `\n`, `\t`, `\x1f`) to be passed into URL parsers and HTTP fetch clients, risking CRLF injection or request header/line splitting.
+**Prevention:** Validate decoded path segments against all ASCII control characters using `/[\0-\x1f\x7f]/u.test(decoded)` during multi-pass URL decoding in proxy handlers.
