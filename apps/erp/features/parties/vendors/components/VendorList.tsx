@@ -56,19 +56,42 @@ export function VendorList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
-  // Performance optimization: Hoist query normalization and fast-path empty searches to avoid
-  // redundant O(N) string operations and filter passes.
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .reduce) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, gstCount, locationCount } = useMemo(() => {
+    let active = 0;
+    let gst = 0;
+    let locations = 0;
+    for (const v of vendors as PartyRecord[]) {
+      if (v.status !== "inactive") active++;
+      if (v.gst_no) gst++;
+      locations += v.addresses?.length || v.tbl_party_addresses?.length || 0;
+    }
+    return {
+      activeCount: active,
+      gstCount: gst,
+      locationCount: locations,
+    };
+  }, [vendors]);
+
   const filteredVendors = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return vendors;
-    return vendors.filter(
-      (v: PartyRecord) =>
-        v.party_name?.toLowerCase().includes(q) ||
-        v.phone?.toLowerCase().includes(q) ||
-        v.email?.toLowerCase().includes(q) ||
-        v.gst_no?.toLowerCase().includes(q) ||
-        v.contact_name?.toLowerCase().includes(q),
-    );
+    return vendors.filter((v: PartyRecord) => {
+      const name = v.party_name?.toLowerCase();
+      const phone = v.phone?.toLowerCase();
+      const email = v.email?.toLowerCase();
+      const gst = v.gst_no?.toLowerCase();
+      const contact = v.contact_name?.toLowerCase();
+      return (
+        name?.includes(q) ||
+        phone?.includes(q) ||
+        email?.includes(q) ||
+        gst?.includes(q) ||
+        contact?.includes(q)
+      );
+    });
   }, [vendors, searchQuery]);
 
   // Performance optimization: Consolidate directory metrics into a single O(N) pass.
@@ -208,7 +231,7 @@ export function VendorList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.activeCount}</div>
+          <div className="altrex-stat-value">{activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for purchase orders
           </span>
@@ -244,7 +267,7 @@ export function VendorList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.gstinCount}</div>
+          <div className="altrex-stat-value">{gstCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -278,7 +301,7 @@ export function VendorList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.totalLocations}</div>
+          <div className="altrex-stat-value">{locationCount}</div>
           <span className="altrex-stat-helper">Delivery & billing points</span>
         </div>
       </div>

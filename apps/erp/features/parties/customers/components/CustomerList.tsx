@@ -57,19 +57,43 @@ export function CustomerList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
-  // Performance optimization: Hoist query normalization and fast-path empty searches to avoid
-  // redundant O(N) string operations and filter passes.
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .reduce) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, gstCount, locationCount } = useMemo(() => {
+    let active = 0;
+    let gst = 0;
+    let locations = 0;
+    for (const c of customers as PartyRecord[]) {
+      if (c.status !== "inactive") active++;
+      if (c.gst_no) gst++;
+      locations += c.addresses?.length || c.tbl_party_addresses?.length || 0;
+    }
+    return {
+      activeCount: active,
+      gstCount: gst,
+      locationCount: locations,
+    };
+  }, [customers]);
+
+  // Filtered customer list
   const filteredCustomers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return customers;
-    return customers.filter(
-      (c: PartyRecord) =>
-        c.party_name?.toLowerCase().includes(q) ||
-        c.phone?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.gst_no?.toLowerCase().includes(q) ||
-        c.contact_name?.toLowerCase().includes(q),
-    );
+    return customers.filter((c: PartyRecord) => {
+      const name = c.party_name?.toLowerCase();
+      const phone = c.phone?.toLowerCase();
+      const email = c.email?.toLowerCase();
+      const gst = c.gst_no?.toLowerCase();
+      const contact = c.contact_name?.toLowerCase();
+      return (
+        name?.includes(q) ||
+        phone?.includes(q) ||
+        email?.includes(q) ||
+        gst?.includes(q) ||
+        contact?.includes(q)
+      );
+    });
   }, [customers, searchQuery]);
 
   // Performance optimization: Consolidate directory metrics into a single O(N) pass.
@@ -221,7 +245,7 @@ export function CustomerList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.activeCount}</div>
+          <div className="altrex-stat-value">{activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for quotation & sales
           </span>
@@ -257,7 +281,7 @@ export function CustomerList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.gstinCount}</div>
+          <div className="altrex-stat-value">{gstCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -291,7 +315,7 @@ export function CustomerList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{stats.totalLocations}</div>
+          <div className="altrex-stat-value">{locationCount}</div>
           <span className="altrex-stat-helper">Billing & shipping points</span>
         </div>
       </div>
