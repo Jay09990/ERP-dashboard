@@ -76,7 +76,7 @@ export function VendorList() {
   }, [vendors]);
 
   const filteredVendors = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return vendors;
     return vendors.filter((v: PartyRecord) => {
       const name = v.party_name?.toLowerCase();
@@ -93,6 +93,29 @@ export function VendorList() {
       );
     });
   }, [vendors, searchQuery]);
+
+  // Performance optimization: Consolidate directory metrics into a single O(N) pass.
+  // Prevents multiple array iterations and temporary filter allocations on every render.
+  const stats = useMemo(() => {
+    let activeCount = 0;
+    let gstinCount = 0;
+    let totalLocations = 0;
+
+    for (let i = 0; i < vendors.length; i++) {
+      const v = vendors[i];
+      if (v.status !== "inactive") {
+        activeCount++;
+      }
+      if (v.gst_no) {
+        gstinCount++;
+      }
+      const addrCount =
+        v.addresses?.length || v.tbl_party_addresses?.length || 0;
+      totalLocations += addrCount;
+    }
+
+    return { activeCount, gstinCount, totalLocations };
+  }, [vendors]);
 
   const handleFormSubmit = async (values: PartyFormValues) => {
     try {

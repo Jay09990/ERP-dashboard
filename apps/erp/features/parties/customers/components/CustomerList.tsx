@@ -78,7 +78,7 @@ export function CustomerList() {
 
   // Filtered customer list
   const filteredCustomers = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchQuery.trim().toLowerCase();
     if (!q) return customers;
     return customers.filter((c: PartyRecord) => {
       const name = c.party_name?.toLowerCase();
@@ -95,6 +95,29 @@ export function CustomerList() {
       );
     });
   }, [customers, searchQuery]);
+
+  // Performance optimization: Consolidate directory metrics into a single O(N) pass.
+  // Prevents multiple array iterations and temporary filter allocations on every render.
+  const stats = useMemo(() => {
+    let activeCount = 0;
+    let gstinCount = 0;
+    let totalLocations = 0;
+
+    for (let i = 0; i < customers.length; i++) {
+      const c = customers[i];
+      if (c.status !== "inactive") {
+        activeCount++;
+      }
+      if (c.gst_no) {
+        gstinCount++;
+      }
+      const addrCount =
+        c.addresses?.length || c.tbl_party_addresses?.length || 0;
+      totalLocations += addrCount;
+    }
+
+    return { activeCount, gstinCount, totalLocations };
+  }, [customers]);
 
   const handleOpenCreate = () => {
     setSelectedCustomer(null);
