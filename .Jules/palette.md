@@ -10,3 +10,7 @@
 ## 2025-05-20 - Modal Dialog Accessibility and Keyboard Controls
 **Learning:** Modal dialogs, especially matrix or detail modals, should feature `Escape` key listeners for dismissal (guarded when submit/save operations are pending), explicit non-focusable backdrop buttons (`tabIndex={-1}`, `aria-hidden="true"`), and complete WAI-ARIA modal attributes (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`).
 **Action:** Wrap modal popups with keyboard handlers and standard ARIA dialog attributes, preventing dismissal during pending operations.
+
+## 2025-05-21 - Global Keyboard Navigation Shortcut for Navigation Search
+**Learning:** In AppShell navigation layouts, global keyboard shortcuts (e.g. `⌘K`/`Ctrl+K`) for menu search must guard against focus in existing text fields (`INPUT`, `TEXTAREA`, `SELECT`, `isContentEditable`) to prevent stealing keystrokes during text entry, while expanding collapsed sidebars asynchronously before focusing the search input.
+**Action:** When binding global search shortcuts, check `event.target` for editable inputs before intercepting, and handle collapsed container expansion before setting focus.

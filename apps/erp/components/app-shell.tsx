@@ -17,6 +17,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -48,6 +49,41 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFlyout, setActiveFlyout] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus menu search input on Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        const target = event.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.tagName === "SELECT" ||
+            target.isContentEditable)
+        ) {
+          if (target === searchInputRef.current) {
+            event.preventDefault();
+            searchInputRef.current?.select();
+          }
+          return;
+        }
+
+        event.preventDefault();
+        if (collapsed) {
+          toggleSidebar();
+        }
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        }, 0);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [collapsed, toggleSidebar]);
 
   // Close flyout on Escape key press
   useEffect(() => {
@@ -213,18 +249,24 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="altrex-nav-search-wrap">
               <Search className="altrex-nav-search-icon" size={14} />
               <input
+                ref={searchInputRef}
                 type="text"
                 className="altrex-nav-search-input"
                 placeholder="Search menu..."
-                aria-label="Search navigation menu"
+                aria-label="Search navigation menu (Press ⌘K or Ctrl+K)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Escape" && searchQuery) {
-                    setSearchQuery("");
+                  if (e.key === "Escape") {
+                    if (searchQuery) {
+                      setSearchQuery("");
+                    } else {
+                      e.currentTarget.blur();
+                    }
                   }
                 }}
               />
+              {!searchQuery && <kbd className="altrex-nav-search-kbd">⌘K</kbd>}
               {searchQuery && (
                 <button
                   type="button"
