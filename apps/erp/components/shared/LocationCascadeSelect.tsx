@@ -1,7 +1,7 @@
 "use client";
 
 import { cityApi, countryApi, stateApi } from "@/features/masters/api";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
 type LocationSelectProps = {
   countryId?: string | number | null;
@@ -31,8 +31,12 @@ function toId(value: unknown) {
   return value == null ? "" : String(value);
 }
 
-/** Renders API-backed country, state, and city selectors for address forms. */
-export function LocationCascadeSelect({
+/**
+ * Renders API-backed country, state, and city selectors for address forms.
+ * Wrapped in React.memo to prevent re-rendering and redundant recursive object graph extractions
+ * when parent address form inputs update without location ID changes.
+ */
+export const LocationCascadeSelect = React.memo(function LocationCascadeSelect({
   countryId,
   stateId,
   cityId,
@@ -152,4 +156,4 @@ export function LocationCascadeSelect({
       </label>
     </>
   );
-}
+});
