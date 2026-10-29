@@ -80,14 +80,20 @@ export function CustomerList() {
   const filteredCustomers = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return customers;
-    return customers.filter(
-      (c: PartyRecord) =>
-        c.party_name?.toLowerCase().includes(q) ||
-        c.phone?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.gst_no?.toLowerCase().includes(q) ||
-        c.contact_name?.toLowerCase().includes(q),
-    );
+    return customers.filter((c: PartyRecord) => {
+      const name = c.party_name?.toLowerCase();
+      const phone = c.phone?.toLowerCase();
+      const email = c.email?.toLowerCase();
+      const gst = c.gst_no?.toLowerCase();
+      const contact = c.contact_name?.toLowerCase();
+      return (
+        name?.includes(q) ||
+        phone?.includes(q) ||
+        email?.includes(q) ||
+        gst?.includes(q) ||
+        contact?.includes(q)
+      );
+    });
   }, [customers, searchQuery]);
 
   const handleOpenCreate = () => {

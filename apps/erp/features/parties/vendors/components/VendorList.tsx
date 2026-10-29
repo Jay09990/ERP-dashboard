@@ -78,14 +78,20 @@ export function VendorList() {
   const filteredVendors = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return vendors;
-    return vendors.filter(
-      (v: PartyRecord) =>
-        v.party_name?.toLowerCase().includes(q) ||
-        v.phone?.toLowerCase().includes(q) ||
-        v.email?.toLowerCase().includes(q) ||
-        v.gst_no?.toLowerCase().includes(q) ||
-        v.contact_name?.toLowerCase().includes(q),
-    );
+    return vendors.filter((v: PartyRecord) => {
+      const name = v.party_name?.toLowerCase();
+      const phone = v.phone?.toLowerCase();
+      const email = v.email?.toLowerCase();
+      const gst = v.gst_no?.toLowerCase();
+      const contact = v.contact_name?.toLowerCase();
+      return (
+        name?.includes(q) ||
+        phone?.includes(q) ||
+        email?.includes(q) ||
+        gst?.includes(q) ||
+        contact?.includes(q)
+      );
+    });
   }, [vendors, searchQuery]);
 
   const handleFormSubmit = async (values: PartyFormValues) => {
