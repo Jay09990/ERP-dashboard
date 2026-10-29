@@ -384,7 +384,12 @@ export function UserFormDrawer({ user, onClose }: Props) {
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" form="user-form" disabled={isPending}>
+          <Button
+            type="submit"
+            form="user-form"
+            disabled={isPending}
+            aria-busy={isPending}
+          >
             {isPending ? "Saving..." : isEdit ? "Update User" : "Create User"}
           </Button>
         </div>
