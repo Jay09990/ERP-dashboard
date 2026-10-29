@@ -92,6 +92,7 @@ export function HardDeleteDialog({ company, onClose }: Props) {
             className="altrex-icon-button"
             onClick={onClose}
             aria-label="Close"
+            title="Close"
             disabled={isPending}
           >
             <X size={18} />
