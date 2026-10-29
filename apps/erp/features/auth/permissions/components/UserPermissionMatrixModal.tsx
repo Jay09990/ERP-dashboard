@@ -121,15 +121,18 @@ export function UserPermissionMatrixModal({
   };
 
   const totalCount = permissions.length;
-  const grantedCount = permissions.filter((p) => p.is_allowed).length;
-  const inheritedCount = permissions.filter(
-    (p) => p.is_allowed && p.inherited,
-  ).length;
 
-  // Cache grouped permissions by module to avoid repeated O(N) array filter scans during module rendering and search filter
-  const permissionsByModule = useMemo(() => {
+  // Cache grouped permissions and statistics in a single O(N) pass to avoid redundant traversals and array allocations
+  const { permissionsByModule, grantedCount, inheritedCount } = useMemo(() => {
     const map = new Map<string, PermissionItem[]>();
+    let granted = 0;
+    let inherited = 0;
+
     for (const p of permissions) {
+      if (p.is_allowed) {
+        granted++;
+        if (p.inherited) inherited++;
+      }
       const mod = p.module_name || "General";
       let list = map.get(mod);
       if (!list) {
@@ -138,22 +141,34 @@ export function UserPermissionMatrixModal({
       }
       list.push(p);
     }
-    return map;
+
+    return {
+      permissionsByModule: map,
+      grantedCount: granted,
+      inheritedCount: inherited,
+    };
   }, [permissions]);
 
-  const activeModuleItems = useMemo(() => {
-    const items = permissionsByModule.get(activeModule) || [];
-    if (!permSearch.trim()) return items;
-    const lowerSearch = permSearch.toLowerCase();
-    return items.filter((p) =>
-      p.permission_name.toLowerCase().includes(lowerSearch),
-    );
-  }, [permissionsByModule, activeModule, permSearch]);
+  // Compute filtered items and active module granted count in a single pass
+  const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
+    useMemo(() => {
+      const items = permissionsByModule.get(activeModule) || [];
+      const query = permSearch.trim().toLowerCase();
+      const filtered = query
+        ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
+        : items;
 
-  const activeModuleAllowed = activeModuleItems.every((p) => p.is_allowed);
-  const activeModuleGranted = activeModuleItems.filter(
-    (p) => p.is_allowed,
-  ).length;
+      let granted = 0;
+      for (const p of filtered) {
+        if (p.is_allowed) granted++;
+      }
+
+      return {
+        activeModuleItems: filtered,
+        activeModuleAllowed: filtered.length > 0 && granted === filtered.length,
+        activeModuleGranted: granted,
+      };
+    }, [permissionsByModule, activeModule, permSearch]);
 
   if (isLoadingAll || isLoadingUser || (roleId && isLoadingRole)) {
     return (

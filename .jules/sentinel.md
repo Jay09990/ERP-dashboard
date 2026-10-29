@@ -28,7 +28,7 @@
 **Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
 **Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.
 
-## 2025-05-26 - Unsanitized Client-Side API Request URLs
-**Vulnerability:** HTTP client requests (`axios` and `fetch`) accepting unvalidated path strings allowed protocol-relative URLs (`//evil.com`), backslashes (`\`), or control characters to bypass same-origin relative base URLs and trigger external requests or header injection.
-**Learning:** `axios.create({ baseURL: "/" })` overrides `baseURL` if `config.url` starts with `//` or a full protocol, causing client requests to target external hosts and potentially forward authorization bearer tokens.
-**Prevention:** Validate all client API request paths in request interceptors/wrappers to ensure they strictly start with `/`, reject `//`, `\`, Unicode control characters (`\p{Control}`), and external scheme patterns.
+## 2025-05-26 - Whitespace Obfuscated Open Redirect in Login Next Parameter
+**Vulnerability:** `isSafeRedirect` allowed relative paths with spaces or URL-encoded whitespace after the leading slash (such as `/%20//evil.com` or `/ //evil.com`), bypassing `startsWith("//")` checks while `new URL()` treated `/ //evil.com` as relative origin `http://localhost/%20//evil.com`, but browser/router navigation strips leading whitespace to resolve to protocol-relative `//evil.com`.
+**Learning:** `new URL(path, dummyOrigin)` normalizes leading spaces into `%20`, preserving the origin during URL object construction, but client-side navigation frameworks and browsers collapse leading whitespace (`/\s+/`) when resolving target locations.
+**Prevention:** Strip/collapse leading whitespace after the initial slash (`replace(/^\/\s+/, "/")`) and verify that the resulting collapsed string does not start with `//` or contain `\`.
