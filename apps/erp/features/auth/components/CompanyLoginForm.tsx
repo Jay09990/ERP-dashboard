@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -163,8 +163,20 @@ export function CompanyLoginForm() {
             <span>{serverError}</span>
           </div>
         ) : null}
-        <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          Sign in
+        <Button
+          type="submit"
+          size="lg"
+          disabled={form.formState.isSubmitting}
+          aria-busy={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Signing in…
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
       </form>
     </AuthCard>
