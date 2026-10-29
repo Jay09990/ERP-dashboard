@@ -1324,6 +1324,19 @@ export function DocumentPreviewModal({
           </div>
         )}
         <div style={{ textAlign: "right", width: "200px" }}>
+          {toSafeImageUrl(company.authorized_signature) && (
+            <img
+              src={toSafeImageUrl(company.authorized_signature)!}
+              alt="Authorized Signature"
+              style={{
+                maxHeight: "45px",
+                objectFit: "contain",
+                marginBottom: "4px",
+                display: "block",
+                marginLeft: "auto",
+              }}
+            />
+          )}
           <div
             style={{
               borderTop: "1px solid #cbd5e1",
