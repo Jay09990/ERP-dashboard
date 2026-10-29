@@ -57,20 +57,22 @@ export function CustomerList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
-  // Single-pass memoized statistics calculation to prevent 3x redundant array traversals per render
-  const { activeCount, gstinCount, locationsCount } = useMemo(() => {
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .reduce) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, gstCount, locationCount } = useMemo(() => {
     let active = 0;
-    let gstin = 0;
+    let gst = 0;
     let locations = 0;
-    for (const c of customers) {
+    for (const c of customers as PartyRecord[]) {
       if (c.status !== "inactive") active++;
-      if (c.gst_no) gstin++;
+      if (c.gst_no) gst++;
       locations += c.addresses?.length || c.tbl_party_addresses?.length || 0;
     }
     return {
       activeCount: active,
-      gstinCount: gstin,
-      locationsCount: locations,
+      gstCount: gst,
+      locationCount: locations,
     };
   }, [customers]);
 
@@ -256,7 +258,7 @@ export function CustomerList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{gstinCount}</div>
+          <div className="altrex-stat-value">{gstCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -290,7 +292,7 @@ export function CustomerList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">{locationsCount}</div>
+          <div className="altrex-stat-value">{locationCount}</div>
           <span className="altrex-stat-helper">Billing & shipping points</span>
         </div>
       </div>
