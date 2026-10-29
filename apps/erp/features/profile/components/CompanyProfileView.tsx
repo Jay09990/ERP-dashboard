@@ -1,5 +1,6 @@
 "use client";
 
+import { toSafeImageUrl } from "@/features/documents/components/DocumentList";
 import { bankApi, cityApi, countryApi, stateApi } from "@/features/masters/api";
 import { Button, LoadingState } from "@altrex/ui";
 import {
@@ -162,8 +163,8 @@ export function CompanyProfileView() {
 
   const companyName = profile.company_name || "Company Name Not Set";
   const tradeName = profile.trade_name;
-  const logo = profile.logo;
-  const signature = profile.authorized_signature;
+  const logo = toSafeImageUrl(profile.logo);
+  const signature = toSafeImageUrl(profile.authorized_signature);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
