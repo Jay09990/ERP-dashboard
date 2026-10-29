@@ -9,6 +9,11 @@ import type { User } from "../schema";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { UserFormDrawer } from "./UserFormDrawer";
 
+const getFirstName = (u: User) => u.firstName ?? u.first_name ?? "";
+const getLastName = (u: User) => u.lastName ?? u.last_name ?? "";
+const getRoleId = (u: User) => u.roleId ?? u.role_id;
+const getUserId = (u: User) => u.user_id ?? u.id;
+
 export function UserList() {
   const [search, setSearch] = useState("");
   const [activeUser, setActiveUser] = useState<User | null>(null);
@@ -27,11 +32,6 @@ export function UserList() {
   // Filter status state
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const getFirstName = (u: User) => u.firstName ?? u.first_name ?? "";
-  const getLastName = (u: User) => u.lastName ?? u.last_name ?? "";
-  const getRoleId = (u: User) => u.roleId ?? u.role_id;
-  const getUserId = (u: User) => u.user_id ?? u.id;
-
   const filtered = useMemo(() => {
     return users.filter((u) => {
       const fn = getFirstName(u);
@@ -49,11 +49,25 @@ export function UserList() {
     });
   }, [users, search, statusFilter]);
 
-  const activeCount = users.filter((u) => u.status === "active").length;
-  const inactiveCount = users.filter((u) => u.status === "inactive").length;
-  const uniqueRolesCount = new Set(
-    users.map((u) => getRoleId(u)).filter(Boolean),
-  ).size;
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .map+.filter) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, inactiveCount, uniqueRolesCount } = useMemo(() => {
+    let active = 0;
+    let inactive = 0;
+    const rolesSet = new Set<unknown>();
+    for (const u of users) {
+      if (u.status === "active") active++;
+      if (u.status === "inactive") inactive++;
+      const roleId = getRoleId(u);
+      if (roleId) rolesSet.add(roleId);
+    }
+    return {
+      activeCount: active,
+      inactiveCount: inactive,
+      uniqueRolesCount: rolesSet.size,
+    };
+  }, [users]);
 
   const getInitials = (firstName: string, lastName?: string) => {
     const f = firstName?.[0] || "";

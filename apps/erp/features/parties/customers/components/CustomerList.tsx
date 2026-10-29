@@ -57,6 +57,25 @@ export function CustomerList() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deleteId, isDeleting]);
 
+  // Single-pass statistics calculation inside useMemo
+  // Replaces 3 separate inline passes (.filter, .filter, .reduce) in render body,
+  // preventing redundant $O(N)$ traversals and array allocations on every keystroke or state update.
+  const { activeCount, gstCount, locationCount } = useMemo(() => {
+    let active = 0;
+    let gst = 0;
+    let locations = 0;
+    for (const c of customers as PartyRecord[]) {
+      if (c.status !== "inactive") active++;
+      if (c.gst_no) gst++;
+      locations += c.addresses?.length || c.tbl_party_addresses?.length || 0;
+    }
+    return {
+      activeCount: active,
+      gstCount: gst,
+      locationCount: locations,
+    };
+  }, [customers]);
+
   // Filtered customer list
   const filteredCustomers = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -197,12 +216,7 @@ export function CustomerList() {
               <UserCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {
-              customers.filter((c: PartyRecord) => c.status !== "inactive")
-                .length
-            }
-          </div>
+          <div className="altrex-stat-value">{activeCount}</div>
           <span className="altrex-stat-helper">
             Eligible for quotation & sales
           </span>
@@ -238,9 +252,7 @@ export function CustomerList() {
               <ShieldCheck size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {customers.filter((c: PartyRecord) => Boolean(c.gst_no)).length}
-          </div>
+          <div className="altrex-stat-value">{gstCount}</div>
           <span className="altrex-stat-helper">Tax compliant entities</span>
         </div>
 
@@ -274,14 +286,7 @@ export function CustomerList() {
               <MapPin size={17} />
             </div>
           </div>
-          <div className="altrex-stat-value">
-            {customers.reduce(
-              (acc: number, c: PartyRecord) =>
-                acc +
-                (c.addresses?.length || c.tbl_party_addresses?.length || 0),
-              0,
-            )}
-          </div>
+          <div className="altrex-stat-value">{locationCount}</div>
           <span className="altrex-stat-helper">Billing & shipping points</span>
         </div>
       </div>
