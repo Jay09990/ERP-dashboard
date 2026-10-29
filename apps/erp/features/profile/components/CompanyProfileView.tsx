@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { toSafeImageUrl } from "@/features/documents/components/DocumentList";
 import { useCompanyProfile } from "../api";
 import { ProfileForm } from "./ProfileForm";
 
@@ -205,9 +206,9 @@ export function CompanyProfileView() {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
               }}
             >
-              {logo ? (
+              {toSafeImageUrl(logo) ? (
                 <img
-                  src={logo}
+                  src={toSafeImageUrl(logo)!}
                   alt={companyName}
                   style={{
                     width: "100%",
@@ -620,9 +621,9 @@ export function CompanyProfileView() {
                   overflow: "hidden",
                 }}
               >
-                {logo ? (
+                {toSafeImageUrl(logo) ? (
                   <img
-                    src={logo}
+                    src={toSafeImageUrl(logo)!}
                     alt="Company Logo"
                     style={{
                       maxHeight: "100%",
@@ -666,9 +667,9 @@ export function CompanyProfileView() {
                   overflow: "hidden",
                 }}
               >
-                {signature ? (
+                {toSafeImageUrl(signature) ? (
                   <img
-                    src={signature}
+                    src={toSafeImageUrl(signature)!}
                     alt="Authorized Signature"
                     style={{
                       maxHeight: "100%",
