@@ -1,8 +1,8 @@
 # Bolt's Performance Journal
 
-## 2025-05-26 - Module-Scoped Intl Formatter Caching and Map Hoisting in Table Render Loops
-**Learning:** Instantiating `Intl.NumberFormat` or `Intl.DateTimeFormat` inside component render loops or date/currency formatters triggers expensive ICU locale resolution and GC churn on every frame. Furthermore, instantiating dictionary map literals (like status transition objects) inside row map loops creates unnecessary O(N) object allocations per render pass.
-**Action:** Always hoist `Intl` formatters and constant transition maps to static module scope outside component render cycles.
+## 2025-05-26 - Memoizing Recursive Query Data Traversals and Hoisting Static Table Formatters
+**Learning:** Executing recursive data extraction (`records(...)`) directly in component bodies without `useMemo` forces deep object graph traversals on every state update or input keystroke. In addition, constructing `Intl.DateTimeFormat` instances and status transition dictionary objects inside cell formatting functions and table `.map()` iterations causes severe garbage collection churn and unnecessary allocation overhead per frame.
+**Action:** Always wrap recursive query response extractors in `useMemo` and extract static `Intl.DateTimeFormat` instances and status transition dictionaries to module scope.
 
 ## 2025-05-25 - Hoisting Search Lowercasing and Fast-Pathing Empty Queries in Array Filter Hooks
 **Learning:** Re-evaluating `search.toLowerCase()` inside array `.filter()` callbacks causes $O(N)$ string lowercasing operations per render. Moreover, filtering over large arrays when search is empty or whitespace-only executes redundant string lowercasing and `.includes("")` comparisons across all elements. Hoisting query normalization outside the loop and returning the array directly when empty provides an $O(1)$ fast-path and eliminates $O(N)$ redundant string allocations.

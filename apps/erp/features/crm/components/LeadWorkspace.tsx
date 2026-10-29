@@ -6,7 +6,7 @@ import type { Lead, LeadActivity, NamedCrmRecord } from "@/features/crm/schema";
 import { sessionHasPermission } from "@/lib/auth/permissions";
 import { useSessionStore } from "@/stores/session-store";
 import { Button } from "@altrex/ui";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 type FormField = {
   name: string;
@@ -219,37 +219,30 @@ function FormDialog({
   );
 }
 
-// Module-scoped Intl formatters cached to avoid V8 ICU locale initialization and GC churn on every render
-const dateMediumFormatter = new Intl.DateTimeFormat("en-IN", {
+const dateTimeFormatShort = new Intl.DateTimeFormat("en-IN", {
   dateStyle: "medium",
 });
-const dateTimeShortFormatter = new Intl.DateTimeFormat("en-IN", {
+const dateTimeFormatFull = new Intl.DateTimeFormat("en-IN", {
   dateStyle: "medium",
   timeStyle: "short",
 });
-const inrCurrencyZeroDecimalFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
-// Module-scoped status transition map to prevent O(N) object allocations per lead row during render
-const NEXT_ALLOWED_STATUSES: Record<string, string[]> = {
-  new: ["contacted", "qualified", "lost"],
-  contacted: ["qualified", "lost"],
-  qualified: ["contacted", "lost"],
-  lost: ["new"],
-  converted: [],
-};
 
 function friendlyDate(value: unknown) {
   if (typeof value !== "string" || !value) return "—";
   const date = new Date(value.length <= 10 ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
   return value.includes("T")
-    ? dateTimeShortFormatter.format(date)
-    : dateMediumFormatter.format(date);
+    ? dateTimeFormatFull.format(date)
+    : dateTimeFormatShort.format(date);
 }
+
+const LEAD_STATUS_TRANSITIONS: Record<string, string[]> = {
+  new: ["contacted", "qualified", "lost"],
+  contacted: ["qualified", "lost"],
+  qualified: ["contacted", "lost"],
+  lost: ["new"],
+  converted: [],
+};
 
 function titleCase(value: string | undefined) {
   return (value ?? "—")
@@ -275,8 +268,11 @@ function CrmError({ error }: { error: unknown }) {
 
 export function LeadWorkspace() {
   const session = useSessionStore((state) => state.session);
-  const hasPermission = (permission: string) =>
-    !session || sessionHasPermission(session.permissions, permission);
+  const hasPermission = useCallback(
+    (permission: string) =>
+      !session || sessionHasPermission(session.permissions, permission),
+    [session],
+  );
   const [tab, setTab] = useState<Tab>("leads");
   const [dialog, setDialog] = useState<
     "lead" | "activity" | "source" | "industry" | null
@@ -311,6 +307,10 @@ export function LeadWorkspace() {
     () => records<Lead>(leadsQuery.data),
     [leadsQuery.data],
   );
+  const followUps = useMemo(
+    () => records<Lead>(followUpsQuery.data),
+    [followUpsQuery.data],
+  );
   const activities = useMemo(
     () => records<LeadActivity>(activitiesQuery.data),
     [activitiesQuery.data],
@@ -322,10 +322,6 @@ export function LeadWorkspace() {
   const industries = useMemo(
     () => records<NamedCrmRecord>(industriesQuery.data),
     [industriesQuery.data],
-  );
-  const followUps = useMemo(
-    () => records<Lead>(followUpsQuery.data),
-    [followUpsQuery.data],
   );
   const close = () => {
     setDialog(null);
@@ -393,18 +389,21 @@ export function LeadWorkspace() {
         : tab === "sources"
           ? sources
           : industries;
-  const tabs = (
-    ["leads", "follow-ups", "sources", "industries"] as Tab[]
-  ).filter((value) =>
-    hasPermission(
-      value === "leads"
-        ? permissions.leadsRead
-        : value === "follow-ups"
-          ? permissions.followUpsRead
-          : value === "sources"
-            ? permissions.leadSourcesRead
-            : permissions.industriesRead,
-    ),
+  const tabs = useMemo(
+    () =>
+      (["leads", "follow-ups", "sources", "industries"] as Tab[]).filter(
+        (value) =>
+          hasPermission(
+            value === "leads"
+              ? permissions.leadsRead
+              : value === "follow-ups"
+                ? permissions.followUpsRead
+                : value === "sources"
+                  ? permissions.leadSourcesRead
+                  : permissions.industriesRead,
+          ),
+      ),
+    [hasPermission],
   );
 
   if (!hasPermission(permissions.leadsRead)) {
@@ -516,6 +515,8 @@ export function LeadWorkspace() {
             {tab === "leads" &&
               leads.map((lead, index) => {
                 const id = lead.lead_id ?? index;
+                const allowedTransitions =
+                  LEAD_STATUS_TRANSITIONS[lead.status] ?? [];
                 return (
                   <tr key={id}>
                     <td>
@@ -601,13 +602,11 @@ export function LeadWorkspace() {
                             }}
                           >
                             <option value="">Change status</option>
-                            {(NEXT_ALLOWED_STATUSES[lead.status] ?? []).map(
-                              (status) => (
-                                <option key={status} value={status}>
-                                  {titleCase(status)}
-                                </option>
-                              ),
-                            )}
+                            {allowedTransitions.map((status) => (
+                              <option key={status} value={status}>
+                                {titleCase(status)}
+                              </option>
+                            ))}
                           </select>
                         )}
                         {lead.status === "qualified" &&
