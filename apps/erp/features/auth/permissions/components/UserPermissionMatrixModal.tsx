@@ -130,14 +130,9 @@ export function UserPermissionMatrixModal({
 
   const totalCount = permissions.length;
 
-  // Single-pass O(N) calculation for totals and module grouping
-  // Consolidates total granted, total inherited, and module-level permission grouping/counts
-  // to prevent multiple array allocations and O(N) traversals on every render or search keystroke.
+  // Cache grouped permissions and statistics in a single O(N) pass to avoid redundant traversals and array allocations
   const { permissionsByModule, grantedCount, inheritedCount } = useMemo(() => {
-    const map = new Map<
-      string,
-      { items: PermissionItem[]; grantedCount: number }
-    >();
+    const map = new Map<string, PermissionItem[]>();
     let granted = 0;
     let inherited = 0;
 
@@ -165,13 +160,11 @@ export function UserPermissionMatrixModal({
     };
   }, [permissions]);
 
-  // Compute filtered items, granted count, and allowed state for the active module in a single pass
+  // Compute filtered items and active module granted count in a single pass
   const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
     useMemo(() => {
-      const modData = permissionsByModule.get(activeModule);
-      const items = modData?.items || [];
+      const items = permissionsByModule.get(activeModule) || [];
       const query = permSearch.trim().toLowerCase();
-
       const filtered = query
         ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
         : items;
