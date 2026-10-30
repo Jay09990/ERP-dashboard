@@ -50,14 +50,14 @@ function isSafeRedirect(path: string): boolean {
   ) {
     return false;
   }
+  const collapsed = decoded.replace(/^\/\s+/, "/");
+  if (collapsed.startsWith("//") || collapsed.includes("\\")) {
+    return false;
+  }
   try {
     const dummyOrigin = "http://localhost";
-    const parsed = new URL(decoded, dummyOrigin);
-    return (
-      parsed.origin === dummyOrigin &&
-      parsed.pathname.startsWith("/") &&
-      !parsed.pathname.startsWith("//")
-    );
+    const parsed = new URL(collapsed, dummyOrigin);
+    return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
   } catch {
     return false;
   }

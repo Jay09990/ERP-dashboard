@@ -113,16 +113,30 @@ export function UserFormDrawer({ user, onClose }: Props) {
 
   const isPending = isCreating || isUpdating;
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isPending) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isPending]);
+
   return (
-    <div
-      className="altrex-dialog-backdrop"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
+    <div className="altrex-dialog-backdrop">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="fixed inset-0 border-none bg-transparent"
+        onClick={() => !isPending && onClose()}
+      />
       <div
-        className="altrex-dialog altrex-dialog-md"
-        onClick={(e) => e.stopPropagation()}
+        className="altrex-dialog altrex-dialog-md relative z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-drawer-title"
       >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -144,7 +158,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
               {isEdit ? <UserCog size={20} /> : <UserPlus size={20} />}
             </div>
             <div>
-              <h3 className="altrex-dialog-title">
+              <h3 id="user-drawer-title" className="altrex-dialog-title">
                 {isEdit ? "Edit User" : "Create New User"}
               </h3>
               <p className="altrex-dialog-subtitle">
@@ -159,6 +173,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
             className="altrex-icon-button"
             onClick={onClose}
             aria-label="Close"
+            disabled={isPending}
           >
             <X size={18} />
           </button>
@@ -369,7 +384,12 @@ export function UserFormDrawer({ user, onClose }: Props) {
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" form="user-form" disabled={isPending}>
+          <Button
+            type="submit"
+            form="user-form"
+            disabled={isPending}
+            aria-busy={isPending}
+          >
             {isPending ? "Saving..." : isEdit ? "Update User" : "Create User"}
           </Button>
         </div>
