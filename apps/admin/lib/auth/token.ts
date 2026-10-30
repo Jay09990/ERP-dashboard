@@ -19,8 +19,12 @@ export function setToken(token: string) {
 }
 
 export function clearToken() {
+  if (typeof window === "undefined") return; // SSR-safe guard
   localStorage.removeItem(TOKEN_KEY);
-  document.cookie = `${MARKER_COOKIE}=; path=/; max-age=0`;
+  // Match SameSite, Secure, and path attributes on deletion so strict browsers
+  // correctly invalidate the session marker cookie on logout.
+  const isSecure = window.location.protocol === "https:";
+  document.cookie = `${MARKER_COOKIE}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict${isSecure ? "; Secure" : ""}`;
 }
 
 /** Decodes the JWT payload without verifying it — client-side use only,
