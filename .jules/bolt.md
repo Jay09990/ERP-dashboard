@@ -1,8 +1,8 @@
 # Bolt's Performance Journal
 
-## 2025-05-26 - Hoisting Static Intl.NumberFormat and Intl.DateTimeFormat Instances
-**Learning:** Constructing `new Intl.NumberFormat` or `new Intl.DateTimeFormat` inside cell formatting or row rendering helper functions causes $O(N)$ ICU locale resolution, options normalization, and C++ heap object allocations on every render pass. Since `Intl` instances are stateless with respect to formatting calls, hoisting them to static module scope reuses a single cached singleton across all rows and re-renders, eliminating locale initialization latency and garbage collection churn.
-**Action:** Always define `Intl.NumberFormat` and `Intl.DateTimeFormat` instances at module scope outside helper function calls and render loops.
+## 2025-05-26 - Memoizing Recursive Query Data Traversals and Hoisting Static Table Formatters
+**Learning:** Executing recursive data extraction (`records(...)`) directly in component bodies without `useMemo` forces deep object graph traversals on every state update or input keystroke. In addition, constructing `Intl.DateTimeFormat` instances and status transition dictionary objects inside cell formatting functions and table `.map()` iterations causes severe garbage collection churn and unnecessary allocation overhead per frame.
+**Action:** Always wrap recursive query response extractors in `useMemo` and extract static `Intl.DateTimeFormat` instances and status transition dictionaries to module scope.
 
 ## 2025-05-25 - Hoisting Search Lowercasing and Fast-Pathing Empty Queries in Array Filter Hooks
 **Learning:** Re-evaluating `search.toLowerCase()` inside array `.filter()` callbacks causes $O(N)$ string lowercasing operations per render. Moreover, filtering over large arrays when search is empty or whitespace-only executes redundant string lowercasing and `.includes("")` comparisons across all elements. Hoisting query normalization outside the loop and returning the array directly when empty provides an $O(1)$ fast-path and eliminates $O(N)$ redundant string allocations.
