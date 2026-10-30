@@ -16,7 +16,7 @@ function isUnsafeSegment(seg: string): boolean {
         decoded.includes("/") ||
         decoded.includes("\\") ||
         decoded === "." ||
-        decoded.includes("\0")
+        /[\0-\x1f\x7f]/u.test(decoded)
       ) {
         return true;
       }
