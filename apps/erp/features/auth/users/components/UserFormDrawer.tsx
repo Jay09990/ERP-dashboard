@@ -417,6 +417,6 @@ export function UserFormDrawer({ user, onClose }: Props) {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
