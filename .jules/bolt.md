@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-27 - Eliminating Dead Duplicate Statistics Computation Hooks
+**Learning:** Duplicate `useMemo` statistics computation blocks that calculate unused metrics create redundant $O(N)$ array traversals and object allocations on every data update or render frame. Identifying and removing unused duplicate computation hooks eliminates wasted CPU cycles and reduces garbage collection pressure without affecting component output.
+**Action:** Always audit component `useMemo` hooks to verify that returned statistics or computed objects are actively consumed in JSX or downstream hooks.
+
 ## 2025-05-26 - Memoizing Recursive Query Data Traversals and Hoisting Static Table Formatters
 **Learning:** Executing recursive data extraction (`records(...)`) directly in component bodies without `useMemo` forces deep object graph traversals on every state update or input keystroke. In addition, constructing `Intl.DateTimeFormat` instances and status transition dictionary objects inside cell formatting functions and table `.map()` iterations causes severe garbage collection churn and unnecessary allocation overhead per frame.
 **Action:** Always wrap recursive query response extractors in `useMemo` and extract static `Intl.DateTimeFormat` instances and status transition dictionaries to module scope.
