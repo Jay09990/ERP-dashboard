@@ -578,7 +578,6 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ maxWidth: "56%" }}>
-          {/* Sanitize image URL to prevent XSS / malicious protocol execution (e.g. javascript:, data:text/html) */}
           {toSafeImageUrl(company.logo) && (
             <img
               src={toSafeImageUrl(company.logo)!}
@@ -1325,6 +1324,19 @@ export function DocumentPreviewModal({
           </div>
         )}
         <div style={{ textAlign: "right", width: "200px" }}>
+          {toSafeImageUrl(company.authorized_signature) && (
+            <img
+              src={toSafeImageUrl(company.authorized_signature)!}
+              alt="Authorized Signature"
+              style={{
+                maxHeight: "45px",
+                objectFit: "contain",
+                marginBottom: "4px",
+                display: "block",
+                marginLeft: "auto",
+              }}
+            />
+          )}
           <div
             style={{
               borderTop: "1px solid #cbd5e1",
