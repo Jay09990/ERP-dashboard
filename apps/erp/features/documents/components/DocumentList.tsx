@@ -2,7 +2,7 @@
 
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
-import { sanitizeCSVValue } from "@/lib/export-csv";
+import { exportToCSV } from "@/lib/export-csv";
 import { Button, DataTable, FilterBar } from "@altrex/ui";
 import {
   ArrowUpDown,
@@ -1306,57 +1306,53 @@ export function DocumentList({
 
   const exportCsv = () => {
     const headers = [
-      "Issue Date",
-      "Doc No",
-      "Status",
-      partyLabel,
-      "Due Date",
-      "Tax",
-      "Amount",
-      "Balance",
-      "Dr/Cr",
+      {
+        key: "issue_date",
+        label: "Issue Date",
+        transform: (_: unknown, d: any) => fmtTableDate(getDocDate(d)),
+      },
+      {
+        key: "doc_no",
+        label: "Doc No",
+        transform: (_: unknown, d: any) => getDocNo(d),
+      },
+      {
+        key: "status",
+        label: "Status",
+        transform: (val: unknown) => String(val || "draft"),
+      },
+      {
+        key: "party",
+        label: partyLabel,
+        transform: (_: unknown, d: any) => getDocPartyName(d),
+      },
+      {
+        key: "due_date",
+        label: "Due Date",
+        transform: (_: unknown, d: any) => fmtTableDate(getDocDueDate(d)),
+      },
+      {
+        key: "tax",
+        label: "Tax",
+        transform: (_: unknown, d: any) => getDocStats(d).tax.toFixed(2),
+      },
+      {
+        key: "amount",
+        label: "Amount",
+        transform: (_: unknown, d: any) => getDocStats(d).amount.toFixed(2),
+      },
+      {
+        key: "balance",
+        label: "Balance",
+        transform: (_: unknown, d: any) => getDocStats(d).balance.toFixed(2),
+      },
+      {
+        key: "drcr",
+        label: "Dr/Cr",
+        transform: () => (docType === "credit_note" ? "Cr" : "Dr"),
+      },
     ];
-    const rows = sorted.map((d) => {
-      const stats = getDocStats(d);
-      return [
-        fmtTableDate(getDocDate(d)),
-        getDocNo(d),
-        d.status || "draft",
-        getDocPartyName(d),
-        fmtTableDate(getDocDueDate(d)),
-        stats.tax.toFixed(2),
-        stats.amount.toFixed(2),
-        stats.balance.toFixed(2),
-        docType === "credit_note" ? "Cr" : "Dr",
-      ];
-    });
-
-    const csvContent = [
-      headers
-        .map((h) => `"${sanitizeCSVValue(h).replace(/"/g, '""')}"`)
-        .join(","),
-      ...rows.map((r) =>
-        r
-          .map((cell) => {
-            const str = sanitizeCSVValue(cell).replace(/"/g, '""');
-            return `"${str}"`;
-          })
-          .join(","),
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `${docType}_export_${new Date().toISOString().split("T")[0]}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    exportToCSV(`${docType}_export`, headers, sorted);
   };
 
   const handleFormSubmit = (payload: any) => {

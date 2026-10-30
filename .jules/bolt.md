@@ -1,8 +1,8 @@
 # Bolt's Performance Journal
 
-## 2025-05-26 - Pre-Extracting Sort Keys in Array Sorting Comparators (Schwartzian Transform)
-**Learning:** Re-evaluating complex data extraction and calculation helper functions (e.g., `getDocGrandTotal`, `getDocBalanceDue`, `getDocPartyName`) inside an `Array.prototype.sort()` comparator causes $O(N \log N)$ redundant calculations and property traversals. Pre-extracting sort keys into `{ doc, key }` tuples in a single $O(N)$ pass before calling `.sort()` reduces overhead to $O(N)$ key extractions and $O(N \log N)$ primitive value comparisons.
-**Action:** Always pre-extract sort keys for complex objects or calculated fields before invoking `.sort()` in `useMemo`.
+## 2025-05-26 - Memoizing Recursive Query Data Traversals and Hoisting Static Table Formatters
+**Learning:** Executing recursive data extraction (`records(...)`) directly in component bodies without `useMemo` forces deep object graph traversals on every state update or input keystroke. In addition, constructing `Intl.DateTimeFormat` instances and status transition dictionary objects inside cell formatting functions and table `.map()` iterations causes severe garbage collection churn and unnecessary allocation overhead per frame.
+**Action:** Always wrap recursive query response extractors in `useMemo` and extract static `Intl.DateTimeFormat` instances and status transition dictionaries to module scope.
 
 ## 2025-05-25 - Hoisting Search Lowercasing and Fast-Pathing Empty Queries in Array Filter Hooks
 **Learning:** Re-evaluating `search.toLowerCase()` inside array `.filter()` callbacks causes $O(N)$ string lowercasing operations per render. Moreover, filtering over large arrays when search is empty or whitespace-only executes redundant string lowercasing and `.includes("")` comparisons across all elements. Hoisting query normalization outside the loop and returning the array directly when empty provides an $O(1)$ fast-path and eliminates $O(N)$ redundant string allocations.

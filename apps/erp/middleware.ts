@@ -31,7 +31,10 @@ export function middleware(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected route
   if (!sessionCookie && !isPublicRoute && pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    return NextResponse.redirect(loginUrl);
   }
 
   // If user is authenticated and trying to access auth routes (without clear flag)
@@ -41,7 +44,10 @@ export function middleware(request: NextRequest) {
     !searchParams.has("logout") &&
     !searchParams.has("clear")
   ) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const homeUrl = request.nextUrl.clone();
+    homeUrl.pathname = "/";
+    homeUrl.search = "";
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();
