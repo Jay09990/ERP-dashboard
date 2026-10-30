@@ -31,6 +31,9 @@ function extractList<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Hoisted static helper to maintain reference identity and avoid recreation on every render
+const getItemId = (i: Item) => i.item_id ?? (i as any).id;
+
 export function ItemList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,21 +59,19 @@ export function ItemList() {
 
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
 
-  const getItemId = (i: Item) => i.item_id ?? (i as any).id;
-
-  // Optimized filtering: hoist query lowercasing outside callback to avoid redundant $O(N)$ string operations,
-  // evaluate status filter first to short-circuit, and fast-path empty query + default filter with $O(1)$ return.
+  // Performance Optimization: Hoist query lowercasing outside filter loop and fast-path empty search
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const hasStatusFilter = statusFilter !== "all";
 
-    if (!q && statusFilter === "all") {
+    // O(1) fast-path when no search query or status filter is applied
+    if (!q && !hasStatusFilter) {
       return items;
     }
 
     return items.filter((i) => {
-      if (statusFilter !== "all" && i.status !== statusFilter) {
-        return false;
-      }
+      const matchStatus = !hasStatusFilter || i.status === statusFilter;
+      if (!matchStatus) return false;
 
       if (!q) return true;
 
