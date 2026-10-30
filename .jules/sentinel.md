@@ -28,7 +28,7 @@
 **Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
 **Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.
 
-## 2025-05-26 - Unsanitized Image Sources in Modal Document Preview
-**Vulnerability:** `DocumentPreviewModal` rendered `company.logo` directly in JSX `<img src={company.logo} />` without sanitization, allowing malicious schemes (e.g. `javascript:`, non-image `data:text/html`) or control characters to bypass URL validation when previewing documents.
-**Learning:** Directly passing raw profile strings from API responses into React image element `src` attributes without validating URL schemes or MIME types can expose users to unexpected script execution or protocol handler exploits.
-**Prevention:** Always validate image sources with `toSafeImageUrl()` before rendering in React `<img>` tags, ensuring the URL strictly parses as `http:`, `https:`, or safe `data:image/...` base64 data URIs.
+## 2025-05-26 - Whitespace Obfuscated Open Redirect in Login Next Parameter
+**Vulnerability:** `isSafeRedirect` allowed relative paths with spaces or URL-encoded whitespace after the leading slash (such as `/%20//evil.com` or `/ //evil.com`), bypassing `startsWith("//")` checks while `new URL()` treated `/ //evil.com` as relative origin `http://localhost/%20//evil.com`, but browser/router navigation strips leading whitespace to resolve to protocol-relative `//evil.com`.
+**Learning:** `new URL(path, dummyOrigin)` normalizes leading spaces into `%20`, preserving the origin during URL object construction, but client-side navigation frameworks and browsers collapse leading whitespace (`/\s+/`) when resolving target locations.
+**Prevention:** Strip/collapse leading whitespace after the initial slash (`replace(/^\/\s+/, "/")`) and verify that the resulting collapsed string does not start with `//` or contain `\`.
