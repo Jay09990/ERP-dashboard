@@ -14,3 +14,7 @@
 ## 2025-05-21 - Global Keyboard Navigation Shortcut for Navigation Search
 **Learning:** In AppShell navigation layouts, global keyboard shortcuts (e.g. `⌘K`/`Ctrl+K`) for menu search must guard against focus in existing text fields (`INPUT`, `TEXTAREA`, `SELECT`, `isContentEditable`) to prevent stealing keystrokes during text entry, while expanding collapsed sidebars asynchronously before focusing the search input.
 **Action:** When binding global search shortcuts, check `event.target` for editable inputs before intercepting, and handle collapsed container expansion before setting focus.
+
+## 2026-10-30 - Form Modal Action Visual Feedback & Explicit Label Associations
+**Learning:** Form drawers and modals submitting asynchronous actions need clear inline loading indicators (e.g. `Loader2` spinner with `aria-busy={true}`) alongside proper explicit label-input associations (`htmlFor` matching input `id`) to provide clear visual feedback during network mutation pending states and ensure screen-reader clarity.
+**Action:** Always include a visual loading spinner inside modal submit buttons and link form field labels explicitly with matching element IDs.

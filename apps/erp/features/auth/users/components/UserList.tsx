@@ -475,12 +475,14 @@ export function UserList() {
           <input
             className="altrex-input"
             placeholder="Search by name, email, phone..."
+            aria-label="Search users by name, email, or phone"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: "320px" }}
           />
           <select
             className="altrex-input altrex-select"
+            aria-label="Filter users by account status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             style={{ width: "160px" }}

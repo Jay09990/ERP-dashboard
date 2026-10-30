@@ -76,10 +76,7 @@ export function MasterListModal<T extends Record<string, any>>({
 
   // Memoize record list extraction to avoid expensive recursive object graph traversals
   // on every render (e.g. when typing into search input or modal form fields).
-  const items = useMemo(
-    () => extractList<T>(responseData),
-    [responseData],
-  );
+  const items = useMemo(() => extractList<T>(responseData), [responseData]);
 
   const { mutate: createItem, isPending: isCreating } = useCreate();
   const { mutate: updateItem, isPending: isUpdating } = useUpdate();

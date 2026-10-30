@@ -2,7 +2,7 @@
 
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Shield, X } from "lucide-react";
+import { Loader2, Shield, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateRole, useUpdateRole } from "../api";
@@ -118,12 +118,13 @@ export function RoleFormModal({ role, onClose }: Props) {
             onSubmit={form.handleSubmit(onSubmit)}
             style={{ display: "grid", gap: "20px" }}
           >
-            <label className="altrex-field">
-              <span>
+            <div className="altrex-field">
+              <label htmlFor="role-name-input">
                 Role Name{" "}
                 <span style={{ color: "var(--altrex-danger-text)" }}>*</span>
-              </span>
+              </label>
               <input
+                id="role-name-input"
                 className="altrex-input"
                 placeholder="e.g. Sales Manager, Warehouse Lead"
                 {...form.register("role_name")}
@@ -133,11 +134,12 @@ export function RoleFormModal({ role, onClose }: Props) {
                   {form.formState.errors.role_name.message}
                 </span>
               )}
-            </label>
+            </div>
 
-            <label className="altrex-field">
-              <span>Description</span>
+            <div className="altrex-field">
+              <label htmlFor="role-description-input">Description</label>
               <textarea
+                id="role-description-input"
                 className="altrex-input altrex-textarea"
                 rows={3}
                 placeholder="Brief summary of what this role is responsible for and what access level it grants..."
@@ -147,7 +149,7 @@ export function RoleFormModal({ role, onClose }: Props) {
                 After creating this role, open Permissions to configure its
                 access rights.
               </span>
-            </label>
+            </div>
           </form>
         </div>
 
@@ -160,7 +162,9 @@ export function RoleFormModal({ role, onClose }: Props) {
             form="role-form"
             disabled={isPending}
             aria-busy={isPending}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
+            {isPending && <Loader2 className="animate-spin" size={16} />}
             {isPending ? "Saving..." : isEdit ? "Update Role" : "Create Role"}
           </Button>
         </div>
