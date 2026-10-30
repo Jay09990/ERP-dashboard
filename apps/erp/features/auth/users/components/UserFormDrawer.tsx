@@ -123,18 +123,6 @@ export function UserFormDrawer({ user, onClose }: Props) {
     );
   };
 
-  const isPending = isCreating || isUpdating;
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, isPending]);
-
   return (
     <div className="altrex-dialog-backdrop">
       <button

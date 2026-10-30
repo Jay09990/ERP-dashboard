@@ -1,5 +1,9 @@
 # Bolt's Performance Journal
 
+## 2025-05-28 - Avoiding Template String Allocations and Unmemoized Filtering in Search Callbacks
+**Learning:** Concatenating record properties into template strings (e.g. `${admin.name} ${admin.email}...`) inside array `.filter()` callbacks allocates temporary strings for every element on every render. Combined with unmemoized filtering, this causes severe GC pressure and re-evaluates lowercasing and `.includes("")` comparisons even when search queries are empty. Short-circuiting empty queries in $O(1)$ time, hoisting search query normalization, and evaluating individual properties directly in `useMemo` avoids string concatenation churn and prevents unnecessary recalculations.
+**Action:** Never concatenate object properties into template strings inside search filter loops; use memoized short-circuiting property checks with $O(1)$ empty query fast-paths instead.
+
 ## 2025-05-27 - Eliminating Dead Duplicate Statistics Computation Hooks
 **Learning:** Duplicate `useMemo` statistics computation blocks that calculate unused metrics create redundant $O(N)$ array traversals and object allocations on every data update or render frame. Identifying and removing unused duplicate computation hooks eliminates wasted CPU cycles and reduces garbage collection pressure without affecting component output.
 **Action:** Always audit component `useMemo` hooks to verify that returned statistics or computed objects are actively consumed in JSX or downstream hooks.
