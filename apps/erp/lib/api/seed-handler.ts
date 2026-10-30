@@ -51,6 +51,13 @@ const collections: Record<string, readonly unknown[]> = {
   "/api/inventory/transfer": erpSeed.inventory.stockTransfers,
   "/api/inventory/adjustment": erpSeed.inventory.stockAdjustments,
   "/api/project": erpSeed.projects.list,
+  "/api/manpower/trades": erpSeed.projects.trades,
+  "/api/equipment": erpSeed.projects.equipment,
+  "/api/enquiry": erpSeed.crm.enquiries,
+  "/api/hrms/employees": erpSeed.hrms.employees,
+  "/api/hrms/attendance": erpSeed.hrms.attendance,
+  "/api/hrms/leave-balances": erpSeed.hrms.leaveBalances,
+  "/api/hrms/deduction-rules": erpSeed.hrms.deductionRules,
   "/api/procurement/requisition": erpSeed.procurement.requisitions,
   "/api/procurement/grn": erpSeed.procurement.goodsReceipts,
   "/api/procurement/site-issue": erpSeed.procurement.siteIssues,
@@ -80,6 +87,9 @@ const detailIdFields: Record<string, string[]> = {
   "/api/purchase_invoice": ["purchase_invoice_id", "id"],
   "/api/credit_note": ["credit_note_id", "id"],
   "/api/debit_note": ["debit_note_id", "id"],
+  "/api/equipment": ["equipment_id", "id"],
+  "/api/enquiry": ["enquiry_id", "id"],
+  "/api/hrms/employees": ["employeeId", "employee_id", "id"],
 };
 
 function json(data: unknown, status = 200) {
@@ -173,6 +183,16 @@ function findReadResponse(request: NextRequest, path: string[]) {
     if (path[2] === "dpr") return detail.reports;
     if (path[2] === "documents") return detail.documents;
   }
+
+  if (path[0] === "manpower" && path.length >= 3 && path[2] === "logs") {
+    const detail = erpSeed.projects.detail as SeedRecord;
+    return detail.manpowerLogs ?? [];
+  }
+  if (path[0] === "equipment" && path[1] === "project" && path[3] === "logs") {
+    const detail = erpSeed.projects.detail as SeedRecord;
+    return detail.equipmentLogs ?? [];
+  }
+
 
   if (
     apiPath === "/api/auth/roles/1/permissions" ||

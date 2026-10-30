@@ -15,12 +15,25 @@ import {
   CreditCard,
   FileText,
   Mail,
+  Pencil,
   Plus,
   Search,
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { DocumentForm, type DocumentType } from "./DocumentForm";
+import { useSessionStore } from "@/stores/session-store";
+import {
+  createDocumentDraftId,
+  deleteDocumentDraft,
+  getDocumentDrafts,
+  saveDocumentDraft,
+  type SavedDocumentDraft,
+} from "../document-drafts";
+import {
+  DocumentForm,
+  type DocumentFormDraft,
+  type DocumentType,
+} from "./DocumentForm";
 import { DocumentPreviewModal } from "./DocumentPreviewModal";
 
 function extractList(value: any, keys: string[]): any[] {
@@ -697,12 +710,11 @@ async function printDocument(document: any, docType: DocumentType) {
       : items.reduce(
           (sum: number, item: any) =>
             sum +
-            Number(
-              item.discount_flat ??
-                Number(item.quantity || 0) *
-                  Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0) *
-                  (Number(item.discount_percent || 0) / 100),
-            ),
+            (Number(item.discount_flat || 0) > 0
+              ? Number(item.discount_flat)
+              : Number(item.quantity || 0) *
+                Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0) *
+                (Number(item.discount_percent || 0) / 100)),
           0,
         );
 
@@ -715,10 +727,10 @@ async function printDocument(document: any, docType: DocumentType) {
             item.unit_rate ?? item.sales_rate ?? item.rate ?? 0,
           );
           const gross = Number(item.total_rate ?? qty * rate);
-          const disc = Number(
-            item.discount_flat ??
-              gross * (Number(item.discount_percent || 0) / 100),
-          );
+          const disc =
+            Number(item.discount_flat || 0) > 0
+              ? Number(item.discount_flat)
+              : gross * (Number(item.discount_percent || 0) / 100);
           if (item.taxable_value != null)
             return sum + Number(item.taxable_value);
           if (item.total_amount != null && item.tax_amount != null)
@@ -1099,9 +1111,17 @@ export function DocumentList({
   useUpdate,
   useDelete,
 }: DocumentListProps) {
+  const session = useSessionStore((state) => state.session);
+  const draftScope = `${session?.company?.id ?? "default"}:${session?.user?.id ?? "anonymous"}`;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [activeDoc, setActiveDoc] = useState<any | null>(null);
+  const [activeDraft, setActiveDraft] = useState<SavedDocumentDraft | null>(
+    null,
+  );
+  const [savedDrafts, setSavedDrafts] = useState<SavedDocumentDraft[]>([]);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [draftError, setDraftError] = useState("");
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
   const [isOpenForm, setIsOpenForm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -1123,6 +1143,20 @@ export function DocumentList({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    try {
+      setSavedDrafts(getDocumentDrafts(draftScope, docType));
+      setDraftError("");
+    } catch (loadError) {
+      setSavedDrafts([]);
+      setDraftError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load saved drafts.",
+      );
+    }
+  }, [draftScope, docType]);
 
   const { data: responseData, isLoading, error } = useList();
   const docs = useMemo(
@@ -1372,8 +1406,57 @@ export function DocumentList({
       createDoc(payload, {
         onSuccess: () => {
           setIsOpenForm(false);
+          setShowDrafts(false);
+          if (activeDraft) {
+            try {
+              setSavedDrafts(
+                deleteDocumentDraft(draftScope, docType, activeDraft.id),
+              );
+              setDraftError("");
+            } catch (deleteError) {
+              setDraftError(
+                deleteError instanceof Error
+                  ? `Document saved, but its local draft could not be removed: ${deleteError.message}`
+                  : "Document saved, but its local draft could not be removed.",
+              );
+              setShowDrafts(true);
+            }
+          }
+          setActiveDraft(null);
         },
       });
+    }
+  };
+
+  const handleSaveDraft = (data: DocumentFormDraft) => {
+    const now = new Date().toISOString();
+    const draft: SavedDocumentDraft = {
+      id: activeDraft?.id ?? createDocumentDraftId(),
+      docType,
+      title,
+      partyName: data.partyName,
+      data,
+      createdAt: activeDraft?.createdAt ?? now,
+      updatedAt: now,
+    };
+    setSavedDrafts(saveDocumentDraft(draftScope, draft));
+    setDraftError("");
+    setActiveDraft(null);
+    setIsOpenForm(false);
+    setShowDrafts(true);
+  };
+
+  const handleDeleteDraft = (draft: SavedDocumentDraft) => {
+    if (!window.confirm(`Delete this ${title.toLowerCase()} draft?`)) return;
+    try {
+      setSavedDrafts(deleteDocumentDraft(draftScope, docType, draft.id));
+      setDraftError("");
+    } catch (deleteError) {
+      setDraftError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Unable to delete this draft.",
+      );
     }
   };
 
@@ -1388,7 +1471,132 @@ export function DocumentList({
         minWidth: 0,
       }}
     >
-      {previewDoc ? (
+      {showDrafts ? (
+        <section
+          style={{
+            background: "var(--altrex-surface)",
+            border: "1px solid var(--altrex-border)",
+            borderRadius: "8px",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "16px",
+            }}
+          >
+            <div>
+              <h2 style={{ margin: 0 }}>Drafts</h2>
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  color: "var(--altrex-muted)",
+                  fontSize: "13px",
+                }}
+              >
+                Continue editing a saved {title.toLowerCase()} or save it as a
+                document.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDrafts(false);
+                  setPreviewDoc(null);
+                }}
+              >
+                Back to documents
+              </Button>
+              <Button
+                onClick={() => {
+                  setActiveDoc(null);
+                  setActiveDraft(null);
+                  setIsOpenForm(true);
+                }}
+              >
+                <Plus size={14} /> New
+              </Button>
+            </div>
+          </div>
+
+          {draftError && (
+            <p role="alert" style={{ color: "var(--altrex-danger, #dc2626)" }}>
+              {draftError}
+            </p>
+          )}
+
+          {savedDrafts.length === 0 ? (
+            <p
+              style={{
+                color: "var(--altrex-muted)",
+                padding: "24px 0",
+                textAlign: "center",
+              }}
+            >
+              No saved drafts.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: "10px" }}>
+              {savedDrafts.map((draft) => (
+                <article
+                  key={draft.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                    border: "1px solid var(--altrex-border)",
+                    borderRadius: "8px",
+                    padding: "14px",
+                  }}
+                >
+                  <div>
+                    <strong>{draft.partyName || "Party not selected"}</strong>
+                    <div
+                      style={{
+                        color: "var(--altrex-muted)",
+                        fontSize: "12px",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {draft.data.docDate || "No date"} ·{" "}
+                      {draft.data.lineItems.length} line item
+                      {draft.data.lineItems.length === 1 ? "" : "s"} · Updated{" "}
+                      {new Date(draft.updatedAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setActiveDoc(null);
+                        setActiveDraft(draft);
+                        setShowDrafts(false);
+                        setIsOpenForm(true);
+                      }}
+                    >
+                      <Pencil size={14} /> Continue editing
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDeleteDraft(draft)}
+                    >
+                      <Trash2 size={14} /> Delete
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : previewDoc ? (
         <div
           style={{
             display: "flex",
@@ -1449,7 +1657,28 @@ export function DocumentList({
               <button
                 type="button"
                 onClick={() => {
+                  setPreviewDoc(null);
+                  setShowDrafts(true);
+                }}
+                style={{
+                  background: "var(--altrex-surface)",
+                  color: "var(--altrex-text)",
+                  border: "1px solid var(--altrex-border)",
+                  borderRadius: "5px",
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Drafts ({savedDrafts.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   setActiveDoc(null);
+                  setActiveDraft(null);
+                  setShowDrafts(false);
                   setIsOpenForm(true);
                 }}
                 style={{
@@ -1790,11 +2019,23 @@ export function DocumentList({
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPreviewDoc(null);
+                  setShowDrafts(true);
+                }}
+              >
+                Drafts ({savedDrafts.length})
+              </Button>
+
               {/* Green + New Button */}
               <button
                 type="button"
                 onClick={() => {
                   setActiveDoc(null);
+                  setActiveDraft(null);
+                  setShowDrafts(false);
                   setIsOpenForm(true);
                 }}
                 style={{
@@ -2584,14 +2825,24 @@ export function DocumentList({
       {isOpenForm && (
         <DocumentForm
           docType={docType}
-          title={activeDoc ? `Edit ${title}` : `Create New ${title}`}
+          title={
+            activeDraft
+              ? `Continue ${title} draft`
+              : activeDoc
+                ? `Edit ${title}`
+                : `Create New ${title}`
+          }
           subtitle={subtitle}
           initialData={activeDoc}
+          draftData={activeDraft?.data}
           onClose={() => {
             setIsOpenForm(false);
             setActiveDoc(null);
+            setActiveDraft(null);
+            if (activeDraft) setShowDrafts(true);
           }}
           onSubmit={handleFormSubmit}
+          onSaveDraft={handleSaveDraft}
           isSaving={isSaving}
         />
       )}

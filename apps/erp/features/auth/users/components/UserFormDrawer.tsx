@@ -121,7 +121,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="altrex-dialog altrex-dialog-md"
+        className="altrex-dialog altrex-dialog-md altrex-user-dialog"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="altrex-dialog-header">
@@ -168,13 +168,14 @@ export function UserFormDrawer({ user, onClose }: Props) {
           {isEdit ? (
             <form
               id="user-form"
+              className="altrex-user-form"
               onSubmit={editForm.handleSubmit(onEditSubmit)}
               style={{ display: "grid", gap: "16px" }}
             >
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -203,9 +204,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
               </div>
 
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -257,13 +258,14 @@ export function UserFormDrawer({ user, onClose }: Props) {
           ) : (
             <form
               id="user-form"
+              className="altrex-user-form"
               onSubmit={createForm.handleSubmit(onCreateSubmit)}
               style={{ display: "grid", gap: "16px" }}
             >
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -322,9 +324,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
               </label>
 
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -366,10 +368,21 @@ export function UserFormDrawer({ user, onClose }: Props) {
         </div>
 
         <div className="altrex-dialog-footer">
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={isPending}
+          >
             Cancel
           </Button>
-          <Button type="submit" form="user-form" disabled={isPending}>
+          <Button
+            type="submit"
+            form="user-form"
+            variant="link"
+            size="sm"
+            disabled={isPending}
+          >
             {isPending ? "Saving..." : isEdit ? "Update User" : "Create User"}
           </Button>
         </div>

@@ -833,6 +833,25 @@ textarea.altrex-input {
   max-width: calc(100vw - 32px);
 }
 
+.altrex-user-dialog {
+  box-sizing: border-box;
+}
+
+.altrex-user-dialog .altrex-dialog-body,
+.altrex-user-form,
+.altrex-user-form-grid,
+.altrex-user-form .altrex-field {
+  min-width: 0;
+}
+
+.altrex-user-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.altrex-user-form .altrex-input {
+  min-width: 0;
+}
+
 .altrex-dialog-lg {
   width: 700px;
   max-width: calc(100vw - 32px);
@@ -844,6 +863,13 @@ textarea.altrex-input {
   justify-content: space-between;
   padding: 20px 24px;
   gap: 16px;
+}
+
+.altrex-dialog-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .altrex-dialog-title {
@@ -863,6 +889,7 @@ textarea.altrex-input {
   padding: 24px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .altrex-dialog-footer {
@@ -871,6 +898,19 @@ textarea.altrex-input {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
+}
+
+@media (max-width: 520px) {
+  .altrex-user-dialog .altrex-dialog-header,
+  .altrex-user-dialog .altrex-dialog-body,
+  .altrex-user-dialog .altrex-dialog-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .altrex-user-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

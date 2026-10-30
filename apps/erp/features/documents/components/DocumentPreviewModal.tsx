@@ -431,12 +431,11 @@ export function DocumentPreviewModal({
       : items.reduce(
           (sum: number, item: any) =>
             sum +
-            Number(
-              item.discount_flat ??
-                Number(item.quantity || 0) *
-                  Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0) *
-                  (Number(item.discount_percent || 0) / 100),
-            ),
+            (Number(item.discount_flat || 0) > 0
+              ? Number(item.discount_flat)
+              : Number(item.quantity || 0) *
+                Number(item.unit_rate ?? item.sales_rate ?? item.rate ?? 0) *
+                (Number(item.discount_percent || 0) / 100)),
           0,
         );
 
@@ -449,10 +448,10 @@ export function DocumentPreviewModal({
             item.unit_rate ?? item.sales_rate ?? item.rate ?? 0,
           );
           const gross = Number(item.total_rate ?? qty * rate);
-          const disc = Number(
-            item.discount_flat ??
-              gross * (Number(item.discount_percent || 0) / 100),
-          );
+          const disc =
+            Number(item.discount_flat || 0) > 0
+              ? Number(item.discount_flat)
+              : gross * (Number(item.discount_percent || 0) / 100);
           if (item.taxable_value != null)
             return sum + Number(item.taxable_value);
           if (item.total_amount != null && item.tax_amount != null)

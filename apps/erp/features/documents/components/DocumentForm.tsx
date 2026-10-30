@@ -21,6 +21,45 @@ export type DocumentType =
   | "credit_note"
   | "debit_note";
 
+export type DocumentFormLineItemDraft = {
+  quotation_item_id?: number;
+  sales_order_item_id?: number;
+  proforma_item_id?: number;
+  delivery_challan_item_id?: number;
+  invoice_item_id?: number;
+  purchase_order_item_id?: number;
+  purchase_invoice_item_id?: number;
+  credit_note_item_id?: number;
+  debit_note_item_id?: number;
+  item_id: string;
+  description: string;
+  quantity: number;
+  hsn_code: string;
+  unit_id: string;
+  unit_rate: number;
+  discount_type: "percent" | "flat";
+  discount_value: number;
+  selected_taxes: number[];
+};
+
+export type DocumentFormDraft = {
+  partyId: string;
+  partyName: string;
+  selectedInvoiceId: string;
+  reasonId: string;
+  reasonText: string;
+  docDate: string;
+  validUntil: string;
+  customerPoNo: string;
+  customerPoDate: string;
+  poNo: string;
+  poDate: string;
+  notes: string;
+  terms: string;
+  status: "draft" | "approved" | "sent" | "cancelled";
+  lineItems: DocumentFormLineItemDraft[];
+};
+
 function extractList(value: any, keys: string[]): any[] {
   if (Array.isArray(value)) return value;
   for (const key of keys) {
@@ -46,8 +85,10 @@ interface DocumentFormProps {
   title: string;
   subtitle: string;
   initialData?: any;
+  draftData?: DocumentFormDraft;
   onClose: () => void;
   onSubmit: (payload: any) => void;
+  onSaveDraft: (draft: DocumentFormDraft) => void;
   isSaving: boolean;
 }
 
@@ -69,13 +110,27 @@ function calculateTaxAmount(taxableAmount: number, tax: any) {
     : (taxableAmount * taxValue) / 100;
 }
 
+function calculateLineDiscount(
+  quantity: number,
+  unitRate: number,
+  discountType: "percent" | "flat",
+  discountValue: number,
+) {
+  const gross = quantity * unitRate;
+  return discountType === "percent"
+    ? (gross * discountValue) / 100
+    : discountValue;
+}
+
 export function DocumentForm({
   docType,
   title,
   subtitle,
   initialData,
+  draftData,
   onClose,
   onSubmit,
+  onSaveDraft,
   isSaving,
 }: DocumentFormProps) {
   const session = useSessionStore((s) => s.session);
@@ -225,157 +280,189 @@ export function DocumentForm({
 
   // Form states
   const [partyId, setPartyId] = useState<string>(
-    initialData?.party_id?.toString() || "",
+    draftData?.partyId ?? initialData?.party_id?.toString() ?? "",
   );
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>(
-    initialData?.invoice_id?.toString() ||
-      initialData?.purchase_invoice_id?.toString() ||
-      initialData?.pi_id?.toString() ||
-      initialData?.sales_invoice_id?.toString() ||
-      "",
+    draftData?.selectedInvoiceId ??
+      (initialData?.invoice_id?.toString() ||
+        initialData?.purchase_invoice_id?.toString() ||
+        initialData?.pi_id?.toString() ||
+        initialData?.sales_invoice_id?.toString() ||
+        ""),
   );
   const [reasonId, setReasonId] = useState<string>(
-    initialData?.reason_id?.toString() || "1",
+    draftData?.reasonId ?? initialData?.reason_id?.toString() ?? "1",
   );
   const [reasonText, setReasonText] = useState<string>(
-    initialData?.reason || initialData?.reason_text || "",
+    draftData?.reasonText ??
+      (initialData?.reason || initialData?.reason_text || ""),
   );
   const [docDate, setDocDate] = useState<string>(
-    initialData?.debit_date ||
-      initialData?.debit_note_date ||
-      initialData?.credit_date ||
-      initialData?.credit_note_date ||
-      initialData?.quotation_date ||
-      initialData?.sales_order_date ||
-      initialData?.proforma_date ||
-      initialData?.delivery_date ||
-      initialData?.invoice_date ||
-      initialData?.purchase_order_date ||
-      initialData?.pi_date ||
-      initialData?.document_date ||
-      initialData?.date ||
-      new Date().toISOString().split("T")[0],
+    draftData?.docDate ??
+      (initialData?.debit_date ||
+        initialData?.debit_note_date ||
+        initialData?.credit_date ||
+        initialData?.credit_note_date ||
+        initialData?.quotation_date ||
+        initialData?.sales_order_date ||
+        initialData?.proforma_date ||
+        initialData?.delivery_date ||
+        initialData?.invoice_date ||
+        initialData?.purchase_order_date ||
+        initialData?.pi_date ||
+        initialData?.document_date ||
+        initialData?.date ||
+        new Date().toISOString().split("T")[0]),
   );
   const [validUntil, setValidUntil] = useState<string>(
-    initialData?.valid_until ||
-      initialData?.due_date ||
-      initialData?.expected_delivery_date ||
-      "",
+    draftData?.validUntil ??
+      (initialData?.valid_until ||
+        initialData?.due_date ||
+        initialData?.expected_delivery_date ||
+        ""),
   );
   const [customerPoNo, setCustomerPoNo] = useState<string>(
-    initialData?.customer_po_no || "",
+    draftData?.customerPoNo ?? initialData?.customer_po_no ?? "",
   );
   const [customerPoDate, setCustomerPoDate] = useState<string>(
-    initialData?.customer_po_date || "",
+    draftData?.customerPoDate ?? initialData?.customer_po_date ?? "",
   );
-  const [poNo, setPoNo] = useState<string>(initialData?.po_no || "");
-  const [poDate, setPoDate] = useState<string>(initialData?.po_date || "");
-  const [notes, setNotes] = useState<string>(initialData?.notes || "");
+  const [poNo, setPoNo] = useState<string>(
+    draftData?.poNo ?? initialData?.po_no ?? "",
+  );
+  const [poDate, setPoDate] = useState<string>(
+    draftData?.poDate ?? initialData?.po_date ?? "",
+  );
+  const [notes, setNotes] = useState<string>(
+    draftData?.notes ?? initialData?.notes ?? "",
+  );
   const [terms, setTerms] = useState<string>(
-    initialData?.terms_conditions || "",
+    draftData?.terms ?? initialData?.terms_conditions ?? "",
   );
   const [status, setStatus] = useState<
     "draft" | "approved" | "sent" | "cancelled"
-  >(initialData?.status || "draft");
+  >(draftData?.status ?? initialData?.status ?? "draft");
+  const [draftError, setDraftError] = useState("");
 
   // Line items state
-  const [lineItems, setLineItems] = useState<
-    {
-      quotation_item_id?: number;
-      sales_order_item_id?: number;
-      proforma_item_id?: number;
-      delivery_challan_item_id?: number;
-      invoice_item_id?: number;
-      purchase_order_item_id?: number;
-      purchase_invoice_item_id?: number;
-      credit_note_item_id?: number;
-      debit_note_item_id?: number;
-      item_id: string;
-      description: string;
-      quantity: number;
-      hsn_code: string;
-      unit_id: string;
-      unit_rate: number;
-      discount_percent: number;
-      discount_flat: number;
-      selected_taxes: number[];
-    }[]
-  >(
-    initialData?.itemsDetails?.map((item: any, itemIndex: number) => ({
-      quotation_item_id: item.quotation_item_id,
-      sales_order_item_id: item.sales_order_item_id,
-      proforma_item_id: item.proforma_item_id,
-      delivery_challan_item_id: item.delivery_challan_item_id,
-      invoice_item_id: item.invoice_item_id,
-      purchase_order_item_id: item.purchase_order_item_id,
-      purchase_invoice_item_id: item.purchase_invoice_item_id,
-      credit_note_item_id: item.credit_note_item_id,
-      debit_note_item_id: item.debit_note_item_id,
-      item_id: item.item_id?.toString() || "",
-      description: item.description || "",
-      quantity: Number(item.quantity || 1),
-      hsn_code: item.hsn_code || "",
-      unit_id: item.unit_id?.toString() || "",
-      unit_rate: Number(item.unit_rate || 0),
-      discount_percent: Number(item.discount_percent || 0),
-      discount_flat: Number(item.discount_flat || 0),
-      selected_taxes: (initialData?.taxDetails ?? [])
-        .filter((tax: any) => {
-          const ref =
-            tax.quotation_item_id ??
-            tax.sales_order_item_id ??
-            tax.proforma_item_id ??
-            tax.delivery_challan_item_id ??
-            tax.invoice_item_id ??
-            tax.purchase_order_item_id ??
-            tax.purchase_invoice_item_id ??
-            tax.credit_note_item_id ??
-            tax.debit_note_item_id ??
-            tax.quotation_item_index ??
-            tax.sales_order_item_index ??
-            tax.proforma_item_index ??
-            tax.delivery_challan_item_index ??
-            tax.invoice_item_index ??
-            tax.purchase_invoice_item_index ??
-            tax.credit_note_item_index ??
-            tax.debit_note_item_index;
-          return (
-            String(ref) ===
-            String(
-              item.quotation_item_id ??
-                item.sales_order_item_id ??
-                item.proforma_item_id ??
-                item.delivery_challan_item_id ??
-                item.invoice_item_id ??
-                item.purchase_order_item_id ??
-                item.purchase_invoice_item_id ??
-                item.credit_note_item_id ??
-                item.debit_note_item_id ??
-                item.item_id ??
-                itemIndex,
-            )
-          );
-        })
-        .map((tax: any) => Number(tax.tax_id))
-        .filter(
-          (taxId: number) =>
-            Number.isFinite(taxId) &&
-            taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId),
-        ),
-    })) || [
-      {
-        item_id: "",
-        description: "",
-        quantity: 1,
-        hsn_code: "",
-        unit_id: "",
-        unit_rate: 0,
-        discount_percent: 0,
-        discount_flat: 0,
-        selected_taxes: [],
-      },
-    ],
+  const [lineItems, setLineItems] = useState<DocumentFormLineItemDraft[]>(
+    (draftData?.lineItems.length ? draftData.lineItems : undefined) ??
+      (initialData?.itemsDetails?.map((item: any, itemIndex: number) => ({
+        quotation_item_id: item.quotation_item_id,
+        sales_order_item_id: item.sales_order_item_id,
+        proforma_item_id: item.proforma_item_id,
+        delivery_challan_item_id: item.delivery_challan_item_id,
+        invoice_item_id: item.invoice_item_id,
+        purchase_order_item_id: item.purchase_order_item_id,
+        purchase_invoice_item_id: item.purchase_invoice_item_id,
+        credit_note_item_id: item.credit_note_item_id,
+        debit_note_item_id: item.debit_note_item_id,
+        item_id: item.item_id?.toString() || "",
+        description: item.description || "",
+        quantity: Number(item.quantity || 1),
+        hsn_code: item.hsn_code || "",
+        unit_id: item.unit_id?.toString() || "",
+        unit_rate: Number(item.unit_rate || 0),
+        discount_type:
+          Number(item.discount_flat || 0) > 0 ? "flat" : "percent",
+        discount_value:
+          Number(item.discount_flat || 0) > 0
+            ? Number(item.discount_flat || 0)
+            : Number(item.discount_percent || 0),
+        selected_taxes: (initialData?.taxDetails ?? [])
+          .filter((tax: any) => {
+            const ref =
+              tax.quotation_item_id ??
+              tax.sales_order_item_id ??
+              tax.proforma_item_id ??
+              tax.delivery_challan_item_id ??
+              tax.invoice_item_id ??
+              tax.purchase_order_item_id ??
+              tax.purchase_invoice_item_id ??
+              tax.credit_note_item_id ??
+              tax.debit_note_item_id ??
+              tax.quotation_item_index ??
+              tax.sales_order_item_index ??
+              tax.proforma_item_index ??
+              tax.delivery_challan_item_index ??
+              tax.invoice_item_index ??
+              tax.purchase_invoice_item_index ??
+              tax.credit_note_item_index ??
+              tax.debit_note_item_index;
+            return (
+              String(ref) ===
+              String(
+                item.quotation_item_id ??
+                  item.sales_order_item_id ??
+                  item.proforma_item_id ??
+                  item.delivery_challan_item_id ??
+                  item.invoice_item_id ??
+                  item.purchase_order_item_id ??
+                  item.purchase_invoice_item_id ??
+                  item.credit_note_item_id ??
+                  item.debit_note_item_id ??
+                  item.item_id ??
+                  itemIndex,
+              )
+            );
+          })
+          .map((tax: any) => Number(tax.tax_id))
+          .filter(
+            (taxId: number) =>
+              Number.isFinite(taxId) &&
+              taxTypes.some((t: any) => Number(t.tax_id ?? t.id) === taxId),
+          ),
+      })) ?? [
+        {
+          item_id: "",
+          description: "",
+          quantity: 1,
+          hsn_code: "",
+          unit_id: "",
+          unit_rate: 0,
+          discount_type: "percent",
+          discount_value: 0,
+          selected_taxes: [],
+        },
+      ]),
   );
+
+  const handleSaveDraft = () => {
+    setDraftError("");
+    try {
+      const selectedParty = partiesData.find(
+        (party) => String(party.party_id ?? party.id) === partyId,
+      );
+      onSaveDraft({
+        partyId,
+        partyName:
+          selectedParty?.company_name ??
+          selectedParty?.party_name ??
+          selectedParty?.name ??
+          "",
+        selectedInvoiceId,
+        reasonId,
+        reasonText,
+        docDate,
+        validUntil,
+        customerPoNo,
+        customerPoDate,
+        poNo,
+        poDate,
+        notes,
+        terms,
+        status,
+        lineItems: lineItems.map((line) => ({
+          ...line,
+          selected_taxes: [...line.selected_taxes],
+        })),
+      });
+    } catch (error) {
+      setDraftError(
+        error instanceof Error ? error.message : "Unable to save this draft.",
+      );
+    }
+  };
 
   const handleAddLine = () => {
     setLineItems((prev) => [
@@ -387,8 +474,8 @@ export function DocumentForm({
         hsn_code: "",
         unit_id: "",
         unit_rate: 0,
-        discount_percent: 0,
-        discount_flat: 0,
+        discount_type: "percent",
+        discount_value: 0,
         selected_taxes: [],
       },
     ]);
@@ -459,8 +546,8 @@ export function DocumentForm({
           hsn_code: "",
           unit_id: "",
           unit_rate: 0,
-          discount_percent: 0,
-          discount_flat: 0,
+          discount_type: "percent",
+          discount_value: 0,
           selected_taxes: [],
         },
       ]);
@@ -551,8 +638,12 @@ export function DocumentForm({
           hsn_code: item.hsn_code || "",
           unit_id: item.unit_id?.toString() || "",
           unit_rate: Number(item.unit_rate || 0),
-          discount_percent: Number(item.discount_percent || 0),
-          discount_flat: Number(item.discount_flat || 0),
+          discount_type:
+            Number(item.discount_flat || 0) > 0 ? "flat" : "percent",
+          discount_value:
+            Number(item.discount_flat || 0) > 0
+              ? Number(item.discount_flat || 0)
+              : Number(item.discount_percent || 0),
           selected_taxes: taxIds,
         };
       }),
@@ -566,7 +657,13 @@ export function DocumentForm({
 
     lineItems.forEach((line) => {
       const lineSub =
-        line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
+        line.quantity * line.unit_rate -
+        calculateLineDiscount(
+          line.quantity,
+          line.unit_rate,
+          line.discount_type,
+          line.discount_value,
+        );
       sub += lineSub;
 
       line.selected_taxes.forEach((taxId) => {
@@ -643,7 +740,13 @@ export function DocumentForm({
 
     const itemsDetailsPayload = lineItems.map((line, lineIdx) => {
       const lineSub =
-        line.quantity * line.unit_rate * (1 - line.discount_percent / 100);
+        line.quantity * line.unit_rate -
+        calculateLineDiscount(
+          line.quantity,
+          line.unit_rate,
+          line.discount_type,
+          line.discount_value,
+        );
       let lineTaxPercent = 0;
       let lineTaxAmt = 0;
 
@@ -682,8 +785,10 @@ export function DocumentForm({
         hsn_code: line.hsn_code || "",
         unit_id: line.unit_id ? Number(line.unit_id) : undefined,
         unit_rate: Number(line.unit_rate),
-        discount_percent: Number(line.discount_percent),
-        discount_flat: Number(line.discount_flat),
+        discount_percent:
+          line.discount_type === "percent" ? Number(line.discount_value) : 0,
+        discount_flat:
+          line.discount_type === "flat" ? Number(line.discount_value) : 0,
         tax_percent: lineTaxPercent,
         tax_amount: Math.round(lineTaxAmt),
       };
@@ -1249,7 +1354,7 @@ export function DocumentForm({
                       <th>Item / Product</th>
                       <th>Qty</th>
                       <th>Unit Rate (₹)</th>
-                      <th>Disc (%) / Flat (₹)</th>
+                      <th>Discount</th>
                       <th>Taxes</th>
                       <th>Action</th>
                     </tr>
@@ -1328,41 +1433,55 @@ export function DocumentForm({
                           />
                         </td>
                         <td>
-                          <input
-                            type="number"
-                            step="0.1"
-                            className="altrex-input"
-                            value={line.discount_percent}
+                          <select
+                            className="altrex-input altrex-select"
+                            value={line.discount_type}
+                            aria-label="Discount type"
                             onChange={(e) =>
                               setLineItems((prev) =>
                                 prev.map((l, i) =>
                                   i === idx
                                     ? {
                                         ...l,
-                                        discount_percent: Number(
-                                          e.target.value,
-                                        ),
-                                      }
+                                      discount_type:
+                                        e.target.value === "flat"
+                                          ? "flat"
+                                          : "percent",
+                                    }
                                     : l,
                                 ),
                               )
                             }
                             style={{ height: "34px", fontSize: "13px" }}
-                          />
+                          >
+                            <option value="percent">Percent (%)</option>
+                            <option value="flat">Flat (₹)</option>
+                          </select>
                           <input
                             type="number"
                             min="0"
-                            step="0.01"
+                            step={
+                              line.discount_type === "percent" ? "0.1" : "0.01"
+                            }
                             className="altrex-input"
-                            placeholder="Flat ₹"
-                            value={line.discount_flat}
+                            placeholder={
+                              line.discount_type === "percent"
+                                ? "Discount %"
+                                : "Flat ₹"
+                            }
+                            aria-label={
+                              line.discount_type === "percent"
+                                ? "Discount percentage"
+                                : "Flat discount amount in rupees"
+                            }
+                            value={line.discount_value}
                             onChange={(e) =>
                               setLineItems((prev) =>
                                 prev.map((l, i) =>
                                   i === idx
                                     ? {
                                         ...l,
-                                        discount_flat: Number(e.target.value),
+                                        discount_value: Number(e.target.value),
                                       }
                                     : l,
                                 ),
@@ -1570,9 +1689,25 @@ export function DocumentForm({
         </div>
 
         {/* Footer */}
-        <div className="altrex-dialog-footer" style={{ flexShrink: 0 }}>
+        <div
+          className="altrex-dialog-footer"
+          style={{ flexShrink: 0, flexWrap: "wrap" }}
+        >
+          {draftError && (
+            <p role="alert" style={{ color: "var(--altrex-danger, #dc2626)" }}>
+              {draftError}
+            </p>
+          )}
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSaveDraft}
+            disabled={isSaving}
+          >
+            Save as draft
           </Button>
           <Button type="submit" form="doc-form" disabled={isSaving}>
             {isSaving ? "Saving..." : "Save Document"}

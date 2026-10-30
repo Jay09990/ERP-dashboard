@@ -43,6 +43,7 @@ import {
   UserCheck,
   Users,
   Users2,
+  Wrench,
 } from "lucide-react";
 
 export interface NavChildItem {
@@ -169,6 +170,25 @@ export const navigationConfig: NavParentItem[] = [
         label: "Site Issues",
         href: "/procurement/site-issues",
         icon: Truck,
+      },
+      {
+        id: "project-equipment",
+        label: "Equipment",
+        href: "/projects/equipment",
+        icon: Wrench,
+      },
+    ],
+  },
+  {
+    id: "crm",
+    label: "CRM",
+    icon: Target,
+    children: [
+      {
+        id: "leads",
+        label: "Leads",
+        href: "/crm/leads",
+        icon: Users,
       },
     ],
   },

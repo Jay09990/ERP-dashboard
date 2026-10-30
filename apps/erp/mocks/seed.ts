@@ -27,6 +27,8 @@ import type {
 import type { PartyRecord } from "../features/parties/shared/types";
 import type { ProfileValues } from "../features/profile/schema";
 import {
+  equipmentSeed,
+  labourTradesSeed,
   procurementSeed,
   projectDetailSeed,
   projectFinancialsSeed,
@@ -1197,8 +1199,73 @@ export const erpSeed = {
     list: projectSeed,
     detail: projectDetailSeed,
     financials: projectFinancialsSeed,
+    trades: labourTradesSeed,
+    equipment: equipmentSeed,
+  },
+  crm: {
+    enquiries: [
+      {
+        enquiry_id: 1,
+        enquiry_date: "2026-10-06",
+        enquiry_title: "Industrial Warehouse Construction",
+        project_type: "industrial",
+        lead_id: 1,
+        party_id: null,
+        customer_ref_no: "RFQ-2026-001",
+        plant_name: "Ahmedabad Manufacturing Plant",
+        project_location: "Ahmedabad, Gujarat",
+        estimated_value: 25000000,
+        priority: "high",
+        status: "new",
+      },
+    ],
+  },
+  hrms: {
+    employees: [
+      {
+        employeeId: 1,
+        id: 1,
+        firstName: "Rahul",
+        lastName: "Patel",
+        email: "rahul.patel@example.com",
+        phone: "9876543210",
+        employmentType: "full_time",
+        status: "active",
+        departmentId: 1,
+        designationId: 1,
+      },
+    ],
+    attendance: [
+      {
+        attendanceId: 1,
+        employeeId: 1,
+        date: "2026-10-08",
+        checkIn: "09:05:00",
+        checkOut: "18:00:00",
+        status: "present",
+      },
+    ],
+    leaveBalances: [
+      {
+        employeeId: 1,
+        year: 2026,
+        annualLeave: 12,
+        sickLeave: 8,
+        casualLeave: 6,
+      },
+    ],
+    deductionRules: [
+      {
+        ruleId: 1,
+        ruleName: "Provident Fund",
+        deductionType: "percentage",
+        percentage: 12,
+        status: "active",
+      },
+    ],
   },
   procurement: procurementSeed,
 } as const;
+
 
 export type ErpSeed = typeof erpSeed;

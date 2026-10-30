@@ -8,12 +8,17 @@
     "dev": "pnpm --filter @altrex/erp dev",
     "format": "biome check --write .",
     "lint": "biome check .",
+    "test": "pnpm --filter @altrex/erp test && pnpm --filter @altrex/admin test && pnpm --filter @altrex/api-client test && pnpm --filter @altrex/config test && pnpm --filter @altrex/ui test",
     "typecheck": "pnpm --recursive typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@testing-library/react": "^16.3.3",
     "eslint": "^9",
     "eslint-config-next": "catalog:",
-    "typescript": "catalog:"
+    "jsdom": "^30.1.3",
+    "next-test-api-route-handler": "^5.0.7",
+    "typescript": "catalog:",
+    "vitest": "^2.1.9"
   }
 }

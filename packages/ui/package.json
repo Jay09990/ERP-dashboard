@@ -9,6 +9,7 @@
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
+    "test": "vitest run --config ../../vitest.packages.config.ts packages/ui",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

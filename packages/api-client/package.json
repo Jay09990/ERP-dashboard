@@ -7,6 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "test": "vitest run --config ../../vitest.packages.config.ts packages/api-client",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

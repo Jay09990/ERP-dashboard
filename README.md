@@ -35,6 +35,7 @@ altrex/
 | Forms & validation | react-hook-form + Zod |
 | Icons | Lucide React |
 | Charts | shadcn/ui Charts (Recharts) |
+| Unit testing | Vitest + Testing Library |
 | Linting / Formatting | Biome |
 | Package manager | pnpm 9 (via Corepack) |
 
@@ -141,6 +142,7 @@ The frontend calls same-origin `/api/*` URLs through the BFF proxy at `app/api/[
 | `pnpm dev` | Start `apps/erp` in dev mode |
 | `pnpm build` | Build all workspaces |
 | `pnpm typecheck` | Run `tsc --noEmit` across all packages |
+| `pnpm test` | Run unit tests across ERP, Admin, and shared packages |
 | `pnpm lint` | Biome check (no auto-fix) |
 | `pnpm format` | Biome check with auto-fix |
 | `pnpm --filter @altrex/erp dev` | Start only the ERP app |

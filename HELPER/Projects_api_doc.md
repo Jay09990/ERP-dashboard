@@ -1,13 +1,3 @@
-## Frontend implementation coverage
-
-The ERP frontend consumes the project and procurement endpoints below through
-the same-origin API proxy. Project screens are available at `/projects` and
-`/projects/:projectId`; requisitions, GRNs, and site issues are available at
-`/procurement/requisitions`, `/procurement/grn`, and
-`/procurement/site-issues`. The Express backend remains external to this
-repository and must implement these routes. Lead routes later in this document
-are intentionally excluded from the frontend implementation.
-
 ## PROJECT ROUTES:—
 
 ### → GET PROJECTS
@@ -24,7 +14,7 @@ http://localhost:4500/api/project?partyId=5
 
 http://localhost:4500/api/project?status=in_progress&partyId=5
 
-STATUS FLOW : ["planning", "approved", "in_progress", "on_hold", "delayed", "completed", "closed", "cancelled"]
+STATUS FLOW : ["planning", "in_progress", "on_hold", "delayed", "completed", "closed", "cancelled”]
 
 ### → CREATE THE NEW PROJECT
 
@@ -323,13 +313,13 @@ http://localhost:4500/api/project/:projectId/sites
 
 ### → DELETE PROJECT SITES
 
-DELETE
+POST 
 
 http://localhost:4500/api/project/:projectId/sites/:siteId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_sites | update → status |
+| company | tbl_project_sites | update → is_deleted |
 | company | audit_logs | add |
 
 ### → ADD PROJECT BOQ
@@ -378,7 +368,7 @@ http://localhost:4500/api/project/:projectId/boq/:boqId
 
 ### → DELETE PROJECT BOQ
 
-DELETE
+POST 
 
 http://localhost:4500/api/project/:projectId/boq/:boqItemId
 
@@ -420,7 +410,7 @@ http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 {
   "milestone_name": "Foundation Completion",
   "due_date": "2026-11-30",
-  "completion_date": "2026-11-30",
+  "completion_date": "2026-11-30"
   "payment_percent": 20,
   "payment_amount": 5000000,
   "sort_order": 1,
@@ -435,7 +425,7 @@ http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 
 ### → DELETE PROJECT MILESTONES
 
-DELETE
+POST 
 
 http://localhost:4500/api/project/:projectId/milestones/:milestoneId
 
@@ -495,7 +485,7 @@ http://localhost:4500/api/project/:projectId/tasks/:taskId
 
 ### → DELETE PROJECT TASKS
 
-DELETE
+POST 
 
 http://localhost:4500/api/project/:projectId/tasks/:taskId
 
@@ -540,13 +530,7 @@ update → progress_percent |
 
 ### → GET & CREATE PROJECT DOCUMENTS
 
-GET http://localhost:4500/api/projects/:projectId/documents
-
 POST  http://localhost:4500/api/projects/:projectId/documents
-
-The example payload below repeats the DPR fields and should be replaced with the
-document metadata fields supported by the backend (for example, a site reference
-and document/file metadata) before treating it as the authoritative upload schema.
 
 ```jsx
 {
@@ -578,7 +562,7 @@ DELETE  http://localhost:4500/api/projects/:projectId/documents/:documentId
 
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
-| company | tbl_project_documents | update → status |
+| company | tbl_project_documents | update → is_deleted |
 | company | audit_logs | add |
 
 ---
@@ -891,7 +875,7 @@ http://localhost:4500/api/procurement/requisition
 
 POST
 
-http://localhost:4500/api/procurement/requisition/:requisitionId/:status
+http://localhost:4500/api/procurement/requisition/:requisitionId/:status 
 
 | CURRENT STATUS | ALLOWED STATUS |
 | --- | --- |
@@ -1047,7 +1031,51 @@ http://localhost:4500/api/procurement/site-issue/:issueId/:status
 
 ---
 
-# lead module
+# crm-lead-enquiry module
+
+#### CRM
+
+GET & POST    http://localhost:4500/api/crm/lead_sources 
+
+```jsx
+{
+  "source_name": "LinkedIn"
+}
+```
+
+| DB NAME | TABLE NAME | ACTION  |
+| --- | --- | --- |
+| company | lead_sources | ADD |
+| company | audit_logs | add |
+
+GET & POST    http://localhost:4500/api/crm/industries 
+
+```jsx
+{
+  "industry_name": "Construction"
+}
+```
+
+| DB NAME | TABLE NAME | ACTION  |
+| --- | --- | --- |
+| company | industries | ADD |
+| company | audit_logs | add |
+
+GET     
+
+http://localhost:4500/api/crm/follow-ups 
+
+http://localhost:4500/api/crm/follow-ups?scope=today 
+
+// NOTES: scope   :  due (default: overdue + today) | overdue | today | upcoming
+
+http://localhost:4500/api/crm/follow-ups?scope=upcoming&days=7 
+
+http://localhost:4500/api/crm/follow-ups?scope=upcoming&mine=true 
+
+http://localhost:4500/api/crm/follow-ups?scope=upcoming&assignedTo=5 
+
+#### LEAD
 
 GET
 
@@ -1079,11 +1107,6 @@ POST      http://localhost:4500/api/lead
   "rating": "cold",
   "estimated_value": 1250000.00,
   "next_follow_up_date": "2026-10-05",
-  "last_contacted_at": "2026-10-01 10:30:00",
-  "status": "new",
-  "lost_reason": "",
-  "party_id": "",
-  "converted_at": "",
   "notes": "Interested in annual ERP and inventory management package."
 }
 ```
@@ -1096,7 +1119,15 @@ POST      http://localhost:4500/api/lead
 PUT      http://localhost:4500/api/lead/:leadId
 
 ```jsx
-SAME AS CREATE DATA AND DATABASE
+{
+  "contact_name": "Rahul Shah",
+  "designation": "General Manager",
+  "phone": "9876543211",
+  "rating": "hot",
+  "estimated_value": 2000000,
+  "next_follow_up_date": "2026-10-08",
+  "notes": "Budget confirmed by customer"
+}
 ```
 
 DELETE      http://localhost:4500/api/lead/:leadId
@@ -1108,6 +1139,13 @@ DELETE      http://localhost:4500/api/lead/:leadId
 | company | audit_logs | add |
 
 POST    http://localhost:4500/api/lead/:leadId/status/:status 
+
+```jsx
+//if status if lost
+{
+  "lost_reason": "Customer selected another contractor"
+}
+```
 
 | CURRENT STATUS | ALLOWED STATUS |
 | --- | --- |
@@ -1125,7 +1163,38 @@ POST    http://localhost:4500/api/lead/:leadId/status/:status
 POST    http://localhost:4500/api/lead/:leadId/convert 
 
 ```jsx
+// **NOTES:** The controller also automatically carries information from the lead.
+// You can optionally provide:
 
+{
+  "party": {
+    "party_name": "ABC Engineering Pvt Ltd",
+    "email": "rahul@abcengineering.com",
+    "phone": "9876543210",
+    "gst_no": "24ABCDE1234F1Z5",
+    "pan_no": "ABCDE1234F",
+    "website": "https://abcengineering.com",
+    "currency_id": 1,
+    "addresses": [
+      {
+        "address_type": "both",
+        "address_label": "Head Office",
+        "address_line1": "GIDC Industrial Estate",
+        "city_id": 1,
+        "state_id": 1,
+        "country_id": 1,
+        "pincode": "380001"
+      }
+    ],
+    "contactPersons": [
+      {
+        "name": "Rahul Shah",
+        "email": "rahul@abcengineering.com",
+        "phone": "9876543210"
+      }
+    ]
+  }
+}
 ```
 
 | DB NAME | TABLE NAME | ACTION  |
@@ -1133,8 +1202,24 @@ POST    http://localhost:4500/api/lead/:leadId/convert
 | company | tbl_party | add |
 | company | tbl_party_addresses | add |
 | company | tbl_party_contact_person | add |
-| company | tbl_lead | UPDATE → status, party_id, lost_reason, converted_at, next_follow_up_date |
+| company | tbl_lead | UPDATE → status, party_id, converted_at |
 | company | tbl_enquiry | update → party_id |
+
+GET & POST    http://localhost:4500/api/lead/:leadId/activities
+
+```jsx
+{
+  "activity_type": "call",
+  "activity_date": "2026-10-02T10:30:00",
+  "subject": "Initial discussion",
+  "outcome": "Customer is interested in MEP installation.",
+  "next_follow_up_date": "2026-10-05"
+}
+```
+
+| DB NAME | TABLE NAME | ACTION  |
+| --- | --- | --- |
+| company | tbl_crm_activity | add |
 | company | audit_logs | add |
 
 #### ENQUIRY

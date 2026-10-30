@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "vitest run --config ../../vitest.packages.config.ts packages/config",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
