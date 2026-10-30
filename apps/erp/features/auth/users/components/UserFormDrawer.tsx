@@ -136,7 +136,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
         className="altrex-dialog altrex-dialog-md relative z-10"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="user-dialog-title"
+        aria-labelledby="user-drawer-title"
       >
         <div className="altrex-dialog-header">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -158,7 +158,7 @@ export function UserFormDrawer({ user, onClose }: Props) {
               {isEdit ? <UserCog size={20} /> : <UserPlus size={20} />}
             </div>
             <div>
-              <h3 id="user-dialog-title" className="altrex-dialog-title">
+              <h3 id="user-drawer-title" className="altrex-dialog-title">
                 {isEdit ? "Edit User" : "Create New User"}
               </h3>
               <p className="altrex-dialog-subtitle">
