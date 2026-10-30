@@ -28,7 +28,7 @@
 **Learning:** Even when text fields are escaped with `escapeHtml`, URL/image sources can contain quote characters or malicious schemes (`javascript:`, `data:text/html`) that execute code or break out of HTML attributes when rendered inside HTML template strings.
 **Prevention:** Validate image sources with scheme and MIME type checks (allowing only `http:`, `https:`, or safe `data:image/...` data URIs without control characters or HTML entities) and wrap the sanitized URL with `escapeHtml` before rendering into HTML attributes.
 
-## 2025-05-26 - Control Character Injection and CRLF Bypass in BFF Proxy Route Validation
-**Vulnerability:** `isUnsafeSegment` in BFF catch-all proxy routes only checked for null bytes (`\0`) and path traversal tokens (`..`, `/`, `\`), allowing URL-encoded control characters (such as CRLF sequences `%0d%0a` or `%09`) to bypass path validation and reach downstream fetch requests.
-**Learning:** Path segment validation that only checks for null bytes (`\0`) permits other ASCII control characters (`\r`, `\n`, `\t`, `\x1f`) to be passed into URL parsers and HTTP fetch clients, risking CRLF injection or request header/line splitting.
-**Prevention:** Validate decoded path segments against all ASCII control characters using `/[\0-\x1f\x7f]/u.test(decoded)` during multi-pass URL decoding in proxy handlers.
+## 2025-05-26 - Whitespace Obfuscated Open Redirect in Login Next Parameter
+**Vulnerability:** `isSafeRedirect` allowed relative paths with spaces or URL-encoded whitespace after the leading slash (such as `/%20//evil.com` or `/ //evil.com`), bypassing `startsWith("//")` checks while `new URL()` treated `/ //evil.com` as relative origin `http://localhost/%20//evil.com`, but browser/router navigation strips leading whitespace to resolve to protocol-relative `//evil.com`.
+**Learning:** `new URL(path, dummyOrigin)` normalizes leading spaces into `%20`, preserving the origin during URL object construction, but client-side navigation frameworks and browsers collapse leading whitespace (`/\s+/`) when resolving target locations.
+**Prevention:** Strip/collapse leading whitespace after the initial slash (`replace(/^\/\s+/, "/")`) and verify that the resulting collapsed string does not start with `//` or contain `\`.
