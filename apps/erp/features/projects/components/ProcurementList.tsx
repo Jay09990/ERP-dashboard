@@ -58,8 +58,8 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Items (JSON array)",
-        type: "json",
+        label: "Requested items",
+        type: "collection",
         required: true,
         itemFields: [
           {
@@ -104,8 +104,8 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Received items (JSON array)",
-        type: "json",
+        label: "Received items",
+        type: "collection",
         required: true,
         itemFields: [
           {
@@ -162,8 +162,8 @@ const configurations: Record<
       { name: "notes", label: "Notes", type: "textarea" },
       {
         name: "itemsDetails",
-        label: "Issued items (JSON array)",
-        type: "json",
+        label: "Items to issue",
+        type: "collection",
         required: true,
         itemFields: [
           {
@@ -474,15 +474,19 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
                   .map((key) => row[key])
                   .find((value) => value != null);
                 const date =
-                  row.requisition_date ?? row.grn_date ?? row.issue_date ?? "—";
+                  row.requisition_date ?? row.grn_date ?? row.issue_date;
                 const items = Array.isArray(row.itemsDetails)
                   ? row.itemsDetails.length
                   : 0;
                 const projectOrWarehouse =
                   row.project_name ??
-                  row.project_id ??
+                  (row.project_id == null
+                    ? undefined
+                    : `Project #${row.project_id}`) ??
                   row.warehouse_name ??
-                  row.warehouse_id ??
+                  (row.warehouse_id == null
+                    ? undefined
+                    : `Warehouse #${row.warehouse_id}`) ??
                   "—";
                 return (
                   <tr key={id ?? String(number ?? date)}>
@@ -494,7 +498,7 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
                       </strong>
                     </td>
                     <td>{String(projectOrWarehouse)}</td>
-                    <td>{String(date)}</td>
+                    <td>{dateLabel(date)}</td>
                     <td>{items}</td>
                     <td>{formatLabel(status)}</td>
                     <td>
@@ -604,11 +608,61 @@ export function ProcurementList({ kind }: { kind: ProcurementKind }) {
               ) : detailQuery.error ? (
                 <MutationError error={detailQuery.error} />
               ) : (
-                <pre
-                  style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
-                >
-                  {JSON.stringify(detail ?? {}, null, 2)}
-                </pre>
+                <div>
+                  {detail && typeof detail === "object" ? (
+                    <>
+                      <dl
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(200px, 1fr))",
+                          gap: 14,
+                          margin: 0,
+                        }}
+                      >
+                        {Object.entries(detail as Record<string, unknown>)
+                          .filter(
+                            ([key, value]) =>
+                              key !== "itemsDetails" &&
+                              !["success", "message"].includes(key) &&
+                              (value == null || typeof value !== "object"),
+                          )
+                          .map(([key, value]) => (
+                            <div key={key} className="altrex-stat-card">
+                              <dt
+                                style={{
+                                  color: "var(--altrex-muted)",
+                                  fontSize: 12,
+                                }}
+                              >
+                                {detailLabels[key] ?? formatLabel(key)}
+                              </dt>
+                              <dd
+                                style={{ margin: "6px 0 0", fontWeight: 600 }}
+                              >
+                                {displayValue(key, value)}
+                              </dd>
+                            </div>
+                          ))}
+                      </dl>
+                      {Array.isArray(
+                        (detail as Record<string, unknown>).itemsDetails,
+                      ) && (
+                        <section style={{ marginTop: 20 }}>
+                          <h3>Items</h3>
+                          <DetailItems
+                            items={
+                              (detail as Record<string, unknown>)
+                                .itemsDetails as unknown[]
+                            }
+                          />
+                        </section>
+                      )}
+                    </>
+                  ) : (
+                    <p>Details are not available.</p>
+                  )}
+                </div>
               )}
             </div>
           </dialog>

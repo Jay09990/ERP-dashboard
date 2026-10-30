@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 
+import { crmApi } from "@/features/crm/api";
 import {
-  creditNoteApi,
-  debitNoteApi,
   deliveryChallanApi,
   invoiceApi,
   purchaseInvoiceApi,
@@ -12,9 +11,10 @@ import {
   quotationApi,
   salesOrderApi,
 } from "@/features/documents/api";
+import { batchApi, stockApi } from "@/features/inventory/api";
 import { useCustomers } from "@/features/parties/customers/api";
 import { useVendors } from "@/features/parties/vendors/api";
-
+import { procurementApi, projectApi } from "@/features/projects/api";
 import {
   extractRecords,
   formatDisplayDate,
@@ -23,8 +23,8 @@ import {
   getDocumentDate,
   getDocumentId,
   isActiveQuotation,
-  isInCurrentMonth,
   isPendingDelivery,
+  toNumber,
 } from "../utils";
 
 export type DashboardActivityItem = {
@@ -47,12 +47,6 @@ export type DashboardOverview = {
   monthlyPurchases: number;
   monthlyPurchasesLabel: string;
   monthlyPurchasesCount: number;
-  monthlyCreditNotes: number;
-  monthlyCreditNotesLabel: string;
-  monthlyCreditNotesCount: number;
-  monthlyDebitNotes: number;
-  monthlyDebitNotesLabel: string;
-  monthlyDebitNotesCount: number;
   activeQuotations: number;
   pendingDeliveries: number;
   customerCount: number;
@@ -98,14 +92,12 @@ function toActivity(
   href: string,
 ): DashboardActivityItem[] {
   return docs.map((doc) => {
+    const date = getDocumentDate(doc);
+    const timestamp = date ? new Date(date).getTime() : 0;
     const id = getDocumentId(doc);
-    const dateValue = getDocumentDate(doc);
-    const amount = getDocumentAmount(doc);
-    const sortTime = dateValue ? new Date(dateValue).getTime() : 0;
-
     return {
       id,
-      key: `${label}-${id || Math.random().toString(36).slice(2)}`,
+      key: `${label}-${id || timestamp}`,
       label,
       href,
       status: String(doc.status ?? "draft"),
@@ -119,19 +111,24 @@ function toActivity(
   });
 }
 
-/** Aggregates live dashboard KPIs from documented list APIs (no dedicated dashboard endpoint). */
+/** Combines live module lists into dashboard metrics and chart-ready series. */
 export function useDashboardOverview(): DashboardOverview {
   const invoicesQuery = invoiceApi.useList();
-  const purchaseInvoicesQuery = purchaseInvoiceApi.useList();
+  const purchasesQuery = purchaseInvoiceApi.useList();
   const quotationsQuery = quotationApi.useList();
   const challansQuery = deliveryChallanApi.useList();
   const salesOrdersQuery = salesOrderApi.useList();
   const purchaseOrdersQuery = purchaseOrderApi.useList();
   const customersQuery = useCustomers();
   const vendorsQuery = useVendors();
-
-  const creditNotesQuery = creditNoteApi.useList();
-  const debitNotesQuery = debitNoteApi.useList();
+  const projectsQuery = projectApi.useList();
+  const stockQuery = stockApi.useSummary();
+  const batchesQuery = batchApi.useList();
+  const leadsQuery = crmApi.useLeads();
+  const followUpsQuery = crmApi.useFollowUps("due");
+  const requisitionsQuery = procurementApi.useRequisitions();
+  const grnsQuery = procurementApi.useGrns();
+  const siteIssuesQuery = procurementApi.useSiteIssues();
 
   const queries = [
     invoicesQuery,
@@ -156,13 +153,11 @@ export function useDashboardOverview(): DashboardOverview {
 
   return useMemo(() => {
     const invoices = extractRecords(invoicesQuery.data);
-    const purchaseInvoices = extractRecords(purchaseInvoicesQuery.data);
+    const purchases = extractRecords(purchasesQuery.data);
     const quotations = extractRecords(quotationsQuery.data);
     const challans = extractRecords(challansQuery.data);
     const salesOrders = extractRecords(salesOrdersQuery.data);
     const purchaseOrders = extractRecords(purchaseOrdersQuery.data);
-    const creditNotes = extractRecords(creditNotesQuery.data);
-    const debitNotes = extractRecords(debitNotesQuery.data);
     const customers = extractRecords(customersQuery.data);
     const vendors = extractRecords(vendorsQuery.data);
     const projects = extractRecords(projectsQuery.data);
@@ -427,8 +422,8 @@ export function useDashboardOverview(): DashboardOverview {
 
     // Recent Activity Feed
     const recentActivity = [
-      ...toActivity(invoices, "Sales Invoice", "/sales/invoices"),
-      ...toActivity(purchaseInvoices, "Purchase Invoice", "/purchase/invoices"),
+      ...toActivity(invoices, "Sales invoice", "/sales/invoices"),
+      ...toActivity(purchases, "Purchase invoice", "/purchase/invoices"),
       ...toActivity(quotations, "Quotation", "/sales/quotations"),
       ...toActivity(salesOrders, "Sales order", "/sales/orders"),
       ...toActivity(purchaseOrders, "Purchase order", "/purchase/orders"),
