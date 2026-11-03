@@ -4,8 +4,22 @@ import { handleSeedRequest } from "@/lib/api/seed-handler";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
+/**
+ * Rejects path segments containing path traversal sequences (..), directory separators (/ \),
+ * or ASCII control characters (CRLF, null bytes, etc.) to prevent Path Traversal,
+ * HTTP Request Smuggling, and header/path injection in upstream proxy requests.
+ */
 function isUnsafeSegment(seg: string): boolean {
-  if (!seg || seg.includes("..") || seg.includes("/") || seg.includes("\\") || seg === ".") return true;
+  if (
+    !seg ||
+    seg.includes("..") ||
+    seg.includes("/") ||
+    seg.includes("\\") ||
+    seg === "." ||
+    /[\0-\x1f\x7f]/u.test(seg)
+  ) {
+    return true;
+  }
   let decoded = seg;
   try {
     for (let i = 0; i < 3; i++) {
@@ -16,7 +30,7 @@ function isUnsafeSegment(seg: string): boolean {
         decoded.includes("/") ||
         decoded.includes("\\") ||
         decoded === "." ||
-        decoded.includes("\0")
+        /[\0-\x1f\x7f]/u.test(decoded)
       ) {
         return true;
       }
