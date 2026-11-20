@@ -513,6 +513,8 @@ export function DocumentPreviewModal({
     (detail.status || "draft") === "approved" ||
     (detail.status || "draft") === "sent";
 
+  const safeLogo = toSafeImageUrl(company.logo);
+
   const renderPaperCard = () => (
     <div
       style={{
