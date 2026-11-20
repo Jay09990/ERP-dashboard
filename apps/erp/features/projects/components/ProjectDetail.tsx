@@ -170,13 +170,20 @@ function titleOf(record: Record<string, unknown>, section: Section) {
   return "Record";
 }
 
+// Module-scoped Intl formatters to avoid ICU locale initialization and GC churn on every render
+const inrCurrencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const mediumDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+});
+
 function currency(value: unknown) {
   const number = Number(value ?? 0);
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(number) ? number : 0);
+  return inrCurrencyFormatter.format(Number.isFinite(number) ? number : 0);
 }
 
 function dateLabel(value: string | undefined) {
@@ -184,7 +191,7 @@ function dateLabel(value: string | undefined) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+    : mediumDateFormatter.format(date);
 }
 
 function displayLabel(key: string) {
@@ -220,7 +227,7 @@ function displayDetailValue(key: string, value: unknown) {
     const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
     return Number.isNaN(date.getTime())
       ? String(value)
-      : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+      : mediumDateFormatter.format(date);
   }
   if (key.endsWith("_percent")) return `${value}%`;
   if (["unit_rate", "payment_amount"].includes(key)) return currency(value);

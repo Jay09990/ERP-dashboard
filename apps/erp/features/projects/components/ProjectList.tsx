@@ -189,13 +189,20 @@ const fromOrderFields: FieldDefinition[] = [
   ),
 ];
 
+// Module-scoped Intl formatters to avoid ICU locale initialization and GC churn on every render
+const inrCurrencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const mediumDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+});
+
 function money(value: number | undefined) {
   if (value == null) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+  return inrCurrencyFormatter.format(Number(value));
 }
 
 function dateLabel(value: string | undefined) {
@@ -203,7 +210,7 @@ function dateLabel(value: string | undefined) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+    : mediumDateFormatter.format(date);
 }
 
 function statusLabel(value: string) {
