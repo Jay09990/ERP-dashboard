@@ -49,36 +49,49 @@ export function AdministratorList() {
     () => getTenantAdministrators(companies),
     [companies],
   );
-  const filtered = administrators.filter((admin) =>
-    `${admin.name} ${admin.email} ${admin.phone} ${admin.companyName}`
-      .toLowerCase()
-      .includes(search.trim().toLowerCase()),
-  );
+  // Performance Optimization: Hoist query normalization outside filter loop,
+  // fast-path empty search queries in O(1) time, and eliminate template string allocations.
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return administrators;
 
-  const columns = [
-    { key: "name" as const, label: "Administrator" },
-    { key: "email" as const, label: "Email" },
-    { key: "phone" as const, label: "Phone" },
-    {
-      key: "companyName" as const,
-      label: "Company",
-      render: (admin: TenantAdministrator) => (
-        <Link
-          className="altrex-table-link"
-          href={`/companies/${admin.companyId}`}
-        >
-          {admin.companyName}
-        </Link>
-      ),
-    },
-    {
-      key: "companyStatus" as const,
-      label: "Company status",
-      render: (admin: TenantAdministrator) => (
-        <StatusPill status={admin.companyStatus} />
-      ),
-    },
-  ];
+    return administrators.filter(
+      (admin) =>
+        admin.name.toLowerCase().includes(query) ||
+        admin.email.toLowerCase().includes(query) ||
+        admin.phone.toLowerCase().includes(query) ||
+        admin.companyName.toLowerCase().includes(query),
+    );
+  }, [administrators, search]);
+
+  // Memoize column metadata to preserve reference identity across renders
+  const columns = useMemo(
+    () => [
+      { key: "name" as const, label: "Administrator" },
+      { key: "email" as const, label: "Email" },
+      { key: "phone" as const, label: "Phone" },
+      {
+        key: "companyName" as const,
+        label: "Company",
+        render: (admin: TenantAdministrator) => (
+          <Link
+            className="altrex-table-link"
+            href={`/companies/${admin.companyId}`}
+          >
+            {admin.companyName}
+          </Link>
+        ),
+      },
+      {
+        key: "companyStatus" as const,
+        label: "Company status",
+        render: (admin: TenantAdministrator) => (
+          <StatusPill status={admin.companyStatus} />
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <>
