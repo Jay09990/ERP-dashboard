@@ -254,6 +254,22 @@ body {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--altrex-primary) 20%, transparent);
 }
 
+.altrex-nav-search-kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--altrex-border);
+  background: var(--altrex-surface);
+  color: var(--altrex-muted);
+}
+
 .altrex-nav-parent-btn {
   width: 100%;
   min-height: 38px;

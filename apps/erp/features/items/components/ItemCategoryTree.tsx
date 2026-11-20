@@ -2,7 +2,7 @@
 
 import { Button, LoadingState } from "@altrex/ui";
 import { FolderTree, Plus, Trash2, X } from "lucide-react";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useCreateItemCategory,
   useDeleteItemCategory,
@@ -124,6 +124,7 @@ const CategoryTreeNode = React.memo(function CategoryTreeNode({
         <div style={{ display: "flex", gap: "8px" }}>
           <Button
             variant="outline"
+            aria-label={`Add sub-category to ${extractCategoryName(cat)}`}
             onClick={() => onAddSubCategory(id)}
             style={{ fontSize: "12px", padding: "3px 8px" }}
           >
@@ -184,6 +185,19 @@ export function ItemCategoryTree() {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [parentId, setParentId] = useState<string>("");
+
+  useEffect(() => {
+    if (!isOpenModal) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpenModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpenModal]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,17 +326,26 @@ export function ItemCategoryTree() {
 
       {/* Category Creation Modal */}
       {isOpenModal && (
-        <div
-          className="altrex-dialog-backdrop"
-          onClick={() => setIsOpenModal(false)}
-        >
+        <div className="altrex-dialog-backdrop">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="fixed inset-0 border-none bg-transparent"
+            onClick={() => setIsOpenModal(false)}
+          />
           <div
-            className="altrex-dialog altrex-dialog-md"
-            onClick={(e) => e.stopPropagation()}
+            className="altrex-dialog altrex-dialog-md relative z-10"
+            // biome-ignore lint/a11y/useSemanticElements: custom modal container uses WAI-ARIA role="dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-category-title"
           >
             <div className="altrex-dialog-header">
               <div>
-                <h3 className="altrex-dialog-title">Create Item Category</h3>
+                <h3 id="add-category-title" className="altrex-dialog-title">
+                  Create Item Category
+                </h3>
                 <p className="altrex-dialog-subtitle">
                   {parentId
                     ? "Add a nested sub-category"
@@ -333,8 +356,7 @@ export function ItemCategoryTree() {
                 type="button"
                 className="altrex-icon-button"
                 onClick={() => setIsOpenModal(false)}
-                aria-label="Close"
-                title="Close"
+                aria-label="Close dialog"
               >
                 <X size={18} />
               </button>

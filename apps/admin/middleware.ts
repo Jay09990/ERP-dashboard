@@ -30,7 +30,10 @@ export function middleware(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected route
   if (!sessionCookie && !isPublicRoute && pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    return NextResponse.redirect(loginUrl);
   }
 
   // If user is authenticated and trying to access auth routes
@@ -47,11 +50,17 @@ export function middleware(request: NextRequest) {
     }
     // Redirect authenticated users from register to dashboard
     if (pathname === "/register") {
-      return NextResponse.redirect(new URL("/", request.url));
+      const homeUrl = request.nextUrl.clone();
+      homeUrl.pathname = "/";
+      homeUrl.search = "";
+      return NextResponse.redirect(homeUrl);
     }
     // Redirect authenticated users from login to dashboard (unless they have next param)
     if (pathname === "/login" && !searchParams.has("next")) {
-      return NextResponse.redirect(new URL("/", request.url));
+      const homeUrl = request.nextUrl.clone();
+      homeUrl.pathname = "/";
+      homeUrl.search = "";
+      return NextResponse.redirect(homeUrl);
     }
     return NextResponse.next();
   }
