@@ -16,6 +16,14 @@ interface Props {
   onClose: () => void;
 }
 
+const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
+  view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
+  create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
+  update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
+  delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
+};
+const DEFAULT_CHIP = { bg: "rgba(139,92,246,0.1)", color: "#8b5cf6" };
+
 export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
   const { data: allPermissions, isLoading: isLoadingAll } = useAllPermissions();
   const { data: rolePermissions, isLoading: isLoadingRole } =
@@ -102,27 +110,36 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
 
   const totalCount = permissions.length;
 
-  // Cache grouped permissions and granted count in a single O(N) pass to avoid redundant array allocations and traversals on every render or search keystroke
+  // Cache grouped permissions, module counts, and overall granted count in a single O(N) pass
+  // Storing pre-calculated module grantedCount avoids $M$ redundant array allocations in the sidebar render loop
   const { permissionsByModule, grantedCount } = useMemo(() => {
-    const map = new Map<string, PermissionItem[]>();
+    const map = new Map<
+      string,
+      { items: PermissionItem[]; grantedCount: number }
+    >();
     let granted = 0;
     for (const p of permissions) {
       if (p.is_allowed) granted++;
       const mod = p.module_name || "General";
-      let list = map.get(mod);
-      if (!list) {
-        list = [];
-        map.set(mod, list);
+      let entry = map.get(mod);
+      if (!entry) {
+        entry = { items: [], grantedCount: 0 };
+        map.set(mod, entry);
       }
-      list.push(p);
+      entry.items.push(p);
+      if (p.is_allowed) {
+        entry.grantedCount++;
+      }
     }
     return { permissionsByModule: map, grantedCount: granted };
   }, [permissions]);
 
-  // Compute filtered items and active module granted count in a single pass
+  // Compute filtered items and active module granted/allowed counts in a single pass
+  // Fast-paths empty search queries and computes totals without multiple traversals
   const { activeModuleItems, activeModuleAllowed, activeModuleGranted } =
     useMemo(() => {
-      const items = permissionsByModule.get(activeModule) || [];
+      const modData = permissionsByModule.get(activeModule);
+      const items = modData?.items || [];
       const query = permSearch.trim().toLowerCase();
       const filtered = query
         ? items.filter((p) => p.permission_name.toLowerCase().includes(query))
@@ -260,8 +277,9 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
             }}
           >
             {modules.map((mod) => {
-              const modItems = permissionsByModule.get(mod) || [];
-              const modGranted = modItems.filter((p) => p.is_allowed).length;
+              const modData = permissionsByModule.get(mod);
+              const modItems = modData?.items || [];
+              const modGranted = modData?.grantedCount || 0;
               const isActive = mod === activeModule;
               return (
                 <button
@@ -424,19 +442,7 @@ export function PermissionMatrixModal({ roleId, roleName, onClose }: Props) {
                   {activeModuleItems.map((item) => {
                     const actionParts = item.permission_name.split(":");
                     const action = actionParts[actionParts.length - 1];
-                    const actionColors: Record<
-                      string,
-                      { bg: string; color: string }
-                    > = {
-                      view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
-                      create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
-                      update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
-                      delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
-                    };
-                    const chip = actionColors[action] || {
-                      bg: "rgba(139,92,246,0.1)",
-                      color: "#8b5cf6",
-                    };
+                    const chip = ACTION_COLORS[action] || DEFAULT_CHIP;
 
                     return (
                       <label

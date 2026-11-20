@@ -18,6 +18,14 @@ interface Props {
   onClose: () => void;
 }
 
+const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
+  view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
+  create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
+  update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
+  delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
+};
+const DEFAULT_CHIP = { bg: "rgba(139,92,246,0.1)", color: "#8b5cf6" };
+
 export function UserPermissionMatrixModal({
   userId,
   userName,
@@ -134,12 +142,15 @@ export function UserPermissionMatrixModal({
         if (p.inherited) inherited++;
       }
       const mod = p.module_name || "General";
-      let list = map.get(mod);
-      if (!list) {
-        list = [];
-        map.set(mod, list);
+      let entry = map.get(mod);
+      if (!entry) {
+        entry = { items: [], grantedCount: 0 };
+        map.set(mod, entry);
       }
-      list.push(p);
+      entry.items.push(p);
+      if (p.is_allowed) {
+        entry.grantedCount++;
+      }
     }
 
     return {
@@ -306,8 +317,9 @@ export function UserPermissionMatrixModal({
             }}
           >
             {modules.map((mod) => {
-              const modItems = permissionsByModule.get(mod) || [];
-              const modGranted = modItems.filter((p) => p.is_allowed).length;
+              const modData = permissionsByModule.get(mod);
+              const modItems = modData?.items || [];
+              const modGranted = modData?.grantedCount || 0;
               const isActive = mod === activeModule;
               return (
                 <button
@@ -465,19 +477,7 @@ export function UserPermissionMatrixModal({
                   {activeModuleItems.map((item) => {
                     const actionParts = item.permission_name.split(":");
                     const action = actionParts[actionParts.length - 1];
-                    const actionColors: Record<
-                      string,
-                      { bg: string; color: string }
-                    > = {
-                      view: { bg: "rgba(59,130,246,0.1)", color: "#3b82f6" },
-                      create: { bg: "rgba(16,185,129,0.1)", color: "#10b981" },
-                      update: { bg: "rgba(245,158,11,0.1)", color: "#f59e0b" },
-                      delete: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
-                    };
-                    const chip = actionColors[action] || {
-                      bg: "rgba(139,92,246,0.1)",
-                      color: "#8b5cf6",
-                    };
+                    const chip = ACTION_COLORS[action] || DEFAULT_CHIP;
 
                     return (
                       <label
