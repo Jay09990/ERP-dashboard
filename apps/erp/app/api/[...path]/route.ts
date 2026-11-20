@@ -41,7 +41,8 @@ async function proxy(request: NextRequest, path: string[]) {
   if (!backendUrl) return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
 
   const pathStr = path.join("/");
-  const baseUrl = backendUrl.replace(/\/+$/, "");
+  // Strip trailing slashes and redundant /api suffix to prevent double /api/api/ routing
+  const baseUrl = backendUrl.replace(/\/+$/, "").replace(/\/api\/?$/, "");
   const rawSearch = request.nextUrl.search ?? "";
   // Strip control characters (CRLF/null bytes) from search parameters to prevent query injection
   const cleanSearch = rawSearch.replace(/[\r\n\0]/g, "");

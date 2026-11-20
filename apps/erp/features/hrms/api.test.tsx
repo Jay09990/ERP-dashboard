@@ -4,10 +4,15 @@ import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hrmsApi } from "./api";
 
-const { getMock } = vi.hoisted(() => ({ getMock: vi.fn() }));
+const { getMock, postMock, putMock, deleteMock } = vi.hoisted(() => ({
+  getMock: vi.fn(),
+  postMock: vi.fn(),
+  putMock: vi.fn(),
+  deleteMock: vi.fn(),
+}));
 
 vi.mock("@/lib/api/client", () => ({
-  apiClient: { get: getMock, post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  apiClient: { get: getMock, post: postMock, put: putMock, delete: deleteMock },
 }));
 
 function createWrapper() {
@@ -23,6 +28,9 @@ describe("HRMS API hooks", () => {
   afterEach(() => {
     cleanup();
     getMock.mockReset();
+    postMock.mockReset();
+    putMock.mockReset();
+    deleteMock.mockReset();
   });
 
   it("loads employees with supplied filters", async () => {
@@ -44,5 +52,39 @@ describe("HRMS API hooks", () => {
 
     expect(result.current.fetchStatus).toBe("idle");
     expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it("loads work locations", async () => {
+    const locations = [{ location_id: 1, location_name: "Head Office" }];
+    getMock.mockResolvedValue(locations);
+    const { result } = renderHook(() => hrmsApi.useWorkLocations(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual(locations));
+    expect(getMock).toHaveBeenCalledWith(endpoints.hrms.workLocations);
+  });
+
+  it("loads leave requests with filters", async () => {
+    const requests = [{ leave_id: 1, reason: "Vacation" }];
+    getMock.mockResolvedValue(requests);
+    const filters = { status: "pending" };
+    const { result } = renderHook(() => hrmsApi.useLeaveRequests(filters), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual(requests));
+    expect(getMock).toHaveBeenCalledWith(endpoints.hrms.leaveRequests, filters);
+  });
+
+  it("loads payroll runs", async () => {
+    const payroll = [{ payroll_id: 1, year: 2026, month: 10 }];
+    getMock.mockResolvedValue(payroll);
+    const { result } = renderHook(() => hrmsApi.usePayrollRuns(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.data).toEqual(payroll));
+    expect(getMock).toHaveBeenCalledWith(endpoints.hrms.payroll);
   });
 });

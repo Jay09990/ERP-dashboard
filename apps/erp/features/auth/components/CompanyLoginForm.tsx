@@ -84,6 +84,7 @@ export function CompanyLoginForm() {
       // biome-ignore lint/suspicious/noExplicitAny: Backend user object shape varies
       const u = user as Record<string, any>;
       setToken(token);
+      const roleId = Number(u.roleId ?? u.role_id ?? 0);
       const session: SessionSnapshot = {
         user: {
           id: String(u.userId ?? u.user_id ?? u.id ?? ""),
@@ -92,6 +93,8 @@ export function CompanyLoginForm() {
           phone: u.phone ?? "",
         },
         permissions: normalizePermissionNames(u.permissions),
+        // roleId 1 = super-admin: bypass all permission guards
+        isSuperAdmin: roleId === 1,
         company:
           u.companyId || u.company_id || u.company
             ? {

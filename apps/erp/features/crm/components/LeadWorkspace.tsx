@@ -270,7 +270,8 @@ export function LeadWorkspace() {
   const session = useSessionStore((state) => state.session);
   const hasPermission = useCallback(
     (permission: string) =>
-      !session || sessionHasPermission(session.permissions, permission),
+      !session ||
+      sessionHasPermission(session.permissions, permission, session.isSuperAdmin),
     [session],
   );
   const [tab, setTab] = useState<Tab>("leads");

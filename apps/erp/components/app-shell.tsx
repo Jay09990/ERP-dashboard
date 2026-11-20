@@ -165,13 +165,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     (permKey?: string) => {
       if (!permKey) return true;
       if (!permissionSet) return true;
+      // Super-admins bypass all permission checks
+      if (session?.isSuperAdmin) return true;
       return (
         permissionSet.has(permKey) ||
         permissionSet.has("*") ||
         permissionSet.has("all")
       );
     },
-    [permissionSet],
+    [permissionSet, session?.isSuperAdmin],
   );
 
   // Filtered navigation based on permissions and search query

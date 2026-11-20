@@ -57,6 +57,17 @@ const collections: Record<string, readonly unknown[]> = {
   "/api/hrms/employees": erpSeed.hrms.employees,
   "/api/hrms/attendance": erpSeed.hrms.attendance,
   "/api/hrms/leave-balances": erpSeed.hrms.leaveBalances,
+  "/api/hrms/leave-requests": erpSeed.hrms.leaveRequests,
+  "/api/hrms/overtime": erpSeed.hrms.overtime,
+  "/api/hrms/tasks": erpSeed.hrms.tasks,
+  "/api/hrms/assignments": erpSeed.hrms.assignments,
+  "/api/hrms/timesheets": erpSeed.hrms.timesheets,
+  "/api/hrms/payroll": erpSeed.hrms.payrollRuns,
+  "/api/hrms/work-locations": erpSeed.hrms.workLocations,
+  "/api/hrms/salary-components": erpSeed.hrms.salaryComponents,
+  "/api/hrms/salary-structures": erpSeed.hrms.salaryStructures,
+  "/api/hrms/statutory-rules": erpSeed.hrms.statutoryRules,
+  "/api/hrms/leave-types": erpSeed.hrms.leaveTypes,
   "/api/hrms/deduction-rules": erpSeed.hrms.deductionRules,
   "/api/procurement/requisition": erpSeed.procurement.requisitions,
   "/api/procurement/grn": erpSeed.procurement.goodsReceipts,
@@ -90,6 +101,15 @@ const detailIdFields: Record<string, string[]> = {
   "/api/equipment": ["equipment_id", "id"],
   "/api/enquiry": ["enquiry_id", "id"],
   "/api/hrms/employees": ["employeeId", "employee_id", "id"],
+  "/api/hrms/work-locations": ["location_id", "id"],
+  "/api/hrms/salary-structures": ["structure_id", "id"],
+  "/api/hrms/statutory-rules": ["rule_id", "id"],
+  "/api/hrms/leave-types": ["leave_type_id", "id"],
+  "/api/hrms/leave-requests": ["leave_id", "leaveRequestId", "id"],
+  "/api/hrms/overtime": ["overtime_id", "id"],
+  "/api/hrms/tasks": ["task_id", "taskId", "id"],
+  "/api/hrms/assignments": ["assignment_id", "assignmentId", "id"],
+  "/api/hrms/payroll": ["payroll_id", "payrollId", "id"],
 };
 
 function json(data: unknown, status = 200) {
@@ -158,6 +178,14 @@ function findReadResponse(request: NextRequest, path: string[]) {
   const apiPath = `/api/${path.join("/")}`;
 
   if (apiPath === "/api/auth/profile") return erpSeed.companyProfile;
+  if (apiPath === "/api/hrms/settings") return erpSeed.hrms.settings;
+  if (apiPath === "/api/hrms/analytics") return erpSeed.hrms.analytics;
+  if (apiPath === "/api/hrms/attendance/summary")
+    return erpSeed.hrms.attendanceSummary;
+  if (apiPath === "/api/hrms/me") return erpSeed.hrms.employees[0];
+  if (apiPath === "/api/hrms/me/attendance") return erpSeed.hrms.attendance;
+  if (apiPath === "/api/hrms/me/leave") return erpSeed.hrms.leaveBalances;
+  if (apiPath === "/api/hrms/me/payslips") return erpSeed.hrms.payslips;
   if (apiPath === "/api/items/item-category/parents") {
     return erpSeed.items.categories.filter(
       (category) => category.parent_category_id === null,

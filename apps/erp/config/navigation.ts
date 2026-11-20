@@ -193,6 +193,55 @@ export const navigationConfig: NavParentItem[] = [
     ],
   },
   {
+    id: "hrms",
+    label: "HRMS",
+    icon: Users,
+    children: [
+      {
+        id: "hrms-dashboard",
+        label: "Overview",
+        href: "/hrms",
+        icon: LayoutDashboard,
+      },
+      {
+        id: "hrms-employees",
+        label: "Employees",
+        href: "/hrms/employees",
+        icon: UserCheck,
+      },
+      {
+        id: "hrms-attendance",
+        label: "Attendance",
+        href: "/hrms/attendance",
+        icon: Clock,
+      },
+      {
+        id: "hrms-leaves",
+        label: "Leaves",
+        href: "/hrms/leaves",
+        icon: CalendarRange,
+      },
+      {
+        id: "hrms-payroll",
+        label: "Payroll",
+        href: "/hrms/payroll",
+        icon: Coins,
+      },
+      {
+        id: "hrms-work-locations",
+        label: "Work Locations",
+        href: "/hrms/work-locations",
+        icon: MapPin,
+      },
+      {
+        id: "hrms-settings",
+        label: "HR Settings",
+        href: "/hrms/settings",
+        icon: Briefcase,
+      },
+    ],
+  },
+  {
     id: "parties",
     label: "Parties",
     icon: Users2,
