@@ -545,11 +545,9 @@ export function LeadWorkspace() {
                     <td>
                       {lead.estimated_value == null
                         ? "—"
-                        : new Intl.NumberFormat("en-IN", {
-                            style: "currency",
-                            currency: "INR",
-                            maximumFractionDigits: 0,
-                          }).format(lead.estimated_value)}
+                        : inrCurrencyZeroDecimalFormatter.format(
+                            lead.estimated_value,
+                          )}
                     </td>
                     <td>{titleCase(lead.status)}</td>
                     <td>
