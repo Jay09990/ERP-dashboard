@@ -84,6 +84,7 @@ export function CompanyLoginForm() {
       // biome-ignore lint/suspicious/noExplicitAny: Backend user object shape varies
       const u = user as Record<string, any>;
       setToken(token);
+      const roleId = Number(u.roleId ?? u.role_id ?? 0);
       const session: SessionSnapshot = {
         user: {
           id: String(u.userId ?? u.user_id ?? u.id ?? ""),
@@ -92,6 +93,8 @@ export function CompanyLoginForm() {
           phone: u.phone ?? "",
         },
         permissions: normalizePermissionNames(u.permissions),
+        // roleId 1 = super-admin: bypass all permission guards
+        isSuperAdmin: roleId === 1,
         company:
           u.companyId || u.company_id || u.company
             ? {
@@ -120,10 +123,9 @@ export function CompanyLoginForm() {
       description="Use your email address or phone number to continue."
     >
       <form className="altrex-auth-form" onSubmit={form.handleSubmit(submit)}>
-        <label className="altrex-field" htmlFor="company-login">
+        <label className="altrex-field">
           <span>Email or phone</span>
           <Input
-            id="company-login"
             aria-invalid={Boolean(form.formState.errors.login)}
             {...form.register("login")}
           />
@@ -133,11 +135,10 @@ export function CompanyLoginForm() {
             </small>
           )}
         </label>
-        <label className="altrex-field" htmlFor="company-password">
+        <label className="altrex-field">
           <span>Password</span>
           <div className="altrex-password-row">
             <Input
-              id="company-password"
               type={showPassword ? "text" : "password"}
               aria-invalid={Boolean(form.formState.errors.password)}
               {...form.register("password")}

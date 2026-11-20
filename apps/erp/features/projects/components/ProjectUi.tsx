@@ -419,7 +419,7 @@ export function EntityFormDialog({
             <X size={16} />
           </button>
         </header>
-        <form onSubmit={handleSubmit}>
+        <form className="altrex-dialog-form" onSubmit={handleSubmit}>
           <div className="altrex-dialog-body">
             <div
               style={{

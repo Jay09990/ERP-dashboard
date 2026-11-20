@@ -82,4 +82,93 @@ export const crmApi = {
     useCrmMutation((body: { industry_name: string }) =>
       apiClient.post(endpoints.crm.industries, body),
     ),
+  useEnquiries: (filters?: Record<string, string>, enabled = true) =>
+    useQuery({
+      queryKey: ["enquiries", filters],
+      queryFn: () => apiClient.get<unknown>(endpoints.crm.enquiries, filters),
+      enabled,
+    }),
+  useEnquiry: (id: number | string | null, enabled = true) =>
+    useQuery({
+      queryKey: ["enquiry", id],
+      queryFn: () => apiClient.get<unknown>(endpoints.crm.enquiry(id as number)),
+      enabled: id != null && enabled,
+    }),
+  useCreateEnquiry: () =>
+    useCrmMutation((body: unknown) =>
+      apiClient.post(endpoints.crm.enquiries, body),
+    ),
+  useUpdateEnquiry: () =>
+    useCrmMutation(({ id, body }: { id: number | string; body: unknown }) =>
+      apiClient.put(endpoints.crm.enquiry(id), body),
+    ),
+  useDeleteEnquiry: () =>
+    useCrmMutation((id: number | string) =>
+      apiClient.delete(endpoints.crm.enquiry(id)),
+    ),
+  useChangeEnquiryStatus: () =>
+    useCrmMutation(
+      ({
+        id,
+        status,
+        body,
+      }: { id: number | string; status: string; body?: unknown }) =>
+        apiClient.post(endpoints.crm.enquiryStatus(id, status), body),
+    ),
+  useLinkQuotation: () =>
+    useCrmMutation(
+      ({
+        id,
+        quotationId,
+      }: { id: number | string; quotationId: number | string }) =>
+        apiClient.post(
+          endpoints.crm.enquiryLinkQuotation(id, quotationId),
+          {},
+        ),
+    ),
+  useEnquiryActivities: (id: number | string | null, enabled = true) =>
+    useQuery({
+      queryKey: ["enquiry-activities", id],
+      queryFn: () =>
+        apiClient.get<unknown>(endpoints.crm.enquiryActivities(id as number)),
+      enabled: id != null && enabled,
+    }),
+  useCreateEnquiryActivity: () =>
+    useCrmMutation(
+      ({ id, body }: { id: number | string; body: unknown }) =>
+        apiClient.post(endpoints.crm.enquiryActivities(id), body),
+    ),
+  useEnquiryDocuments: (id: number | string | null, enabled = true) =>
+    useQuery({
+      queryKey: ["enquiry-documents", id],
+      queryFn: () =>
+        apiClient.get<unknown>(endpoints.crm.enquiryDocuments(id as number)),
+      enabled: id != null && enabled,
+    }),
+  useCreateEnquiryDocument: () =>
+    useCrmMutation(
+      ({ id, body }: { id: number | string; body: unknown }) =>
+        apiClient.post(endpoints.crm.enquiryDocuments(id), body),
+    ),
+  useDeleteEnquiryDocument: () =>
+    useCrmMutation(
+      ({ id, docId }: { id: number | string; docId: number | string }) =>
+        apiClient.delete(endpoints.crm.enquiryDocument(id, docId)),
+    ),
 };
+
+export const enquiryApi = {
+  useList: crmApi.useEnquiries,
+  useDetail: crmApi.useEnquiry,
+  useCreate: crmApi.useCreateEnquiry,
+  useUpdate: crmApi.useUpdateEnquiry,
+  useDelete: crmApi.useDeleteEnquiry,
+  useChangeStatus: crmApi.useChangeEnquiryStatus,
+  useLinkQuotation: crmApi.useLinkQuotation,
+  useActivities: crmApi.useEnquiryActivities,
+  useCreateActivity: crmApi.useCreateEnquiryActivity,
+  useDocuments: crmApi.useEnquiryDocuments,
+  useCreateDocument: crmApi.useCreateEnquiryDocument,
+  useDeleteDocument: crmApi.useDeleteEnquiryDocument,
+};
+

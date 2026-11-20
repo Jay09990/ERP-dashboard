@@ -1,4 +1,3 @@
-/** Visual business overview, arranged as a responsive dashboard grid. */
 "use client";
 
 import {

@@ -14,6 +14,26 @@ export const permissions = {
   industriesRead: "industry:view",
   industriesCreate: "industry:create",
   followUpsRead: "follow_up:view",
+  // HRMS Permissions
+  hrSettingsView: "hr_settings:view",
+  hrSettingsUpdate: "hr_settings:update",
+  hrConfigManage: "hr_config:manage",
+  hrEmployeeView: "hr_employee:view",
+  hrEmployeeCreate: "hr_employee:create",
+  hrEmployeeUpdate: "hr_employee:update",
+  hrEmployeeDelete: "hr_employee:delete",
+  hrEmployeePrivateUpdate: "hr_employee:private:update",
+  hrSalaryView: "hr_salary:view",
+  hrSalaryUpdate: "hr_salary:update",
+  hrDocumentView: "hr_document:view",
+  hrDocumentManage: "hr_document:manage",
+  hrTaskView: "hr_task:view",
+  hrTaskManage: "hr_task:manage",
+  hrAssignmentView: "hr_assignment:view",
+  hrAssignmentManage: "hr_assignment:manage",
+  hrSelfAccess: "hr_self:access",
+  hrLeaveView: "hr_leave:view",
+  hrPayrollView: "hr_payroll:view",
 } as const;
 
 export const legacyPermissionAliases: Record<string, string> = {

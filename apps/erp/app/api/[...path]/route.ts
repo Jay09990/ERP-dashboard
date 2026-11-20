@@ -41,7 +41,8 @@ async function proxy(request: NextRequest, path: string[]) {
   if (!backendUrl) return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
 
   const pathStr = path.join("/");
-  const baseUrl = backendUrl.replace(/\/+$/, "");
+  // Strip trailing slashes and redundant /api suffix to prevent double /api/api/ routing
+  const baseUrl = backendUrl.replace(/\/+$/, "").replace(/\/api\/?$/, "");
   const rawSearch = request.nextUrl.search ?? "";
   // Strip control characters (CRLF/null bytes) from search parameters to prevent query injection
   const cleanSearch = rawSearch.replace(/[\r\n\0]/g, "");
@@ -53,26 +54,10 @@ async function proxy(request: NextRequest, path: string[]) {
 
   let response: Response;
   try {
-    const disallowedHeaders = new Set([
-      "host",
-      "connection",
-      "keep-alive",
-      "transfer-encoding",
-      "upgrade",
-      "proxy-authorization",
-      "proxy-authenticate",
-      "te",
-      "trailer",
-      "content-length",
-    ]);
     const headers = new Headers();
     request.headers.forEach((value, key) => {
-      if (!disallowedHeaders.has(key.toLowerCase())) {
-        // Strip control characters (CRLF/null bytes) to prevent header injection
-        const cleanValue = value.replace(/[\r\n\0]/g, "").trim();
-        if (cleanValue) {
-          headers.set(key, cleanValue);
-        }
+      if (key.toLowerCase() !== "host" && key.toLowerCase() !== "connection") {
+        headers.set(key, value);
       }
     });
 

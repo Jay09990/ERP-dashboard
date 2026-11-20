@@ -183,13 +183,14 @@ export function UserFormDrawer({ user, onClose }: Props) {
           {isEdit ? (
             <form
               id="user-form"
+              className="altrex-user-form"
               onSubmit={editForm.handleSubmit(onEditSubmit)}
               style={{ display: "grid", gap: "16px" }}
             >
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -220,9 +221,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
               </div>
 
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -277,13 +278,14 @@ export function UserFormDrawer({ user, onClose }: Props) {
           ) : (
             <form
               id="user-form"
+              className="altrex-user-form"
               onSubmit={createForm.handleSubmit(onCreateSubmit)}
               style={{ display: "grid", gap: "16px" }}
             >
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -346,9 +348,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
               </div>
 
               <div
+                className="altrex-user-form-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
                   gap: "16px",
                 }}
               >
@@ -392,7 +394,12 @@ export function UserFormDrawer({ user, onClose }: Props) {
         </div>
 
         <div className="altrex-dialog-footer">
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <Button

@@ -25,7 +25,7 @@ import {
   Landmark,
   LayoutDashboard,
   type LucideIcon,
-  Map as MapIcon,
+  Map,
   MapPin,
   Network,
   Package,
@@ -43,8 +43,8 @@ import {
   UserCheck,
   Users,
   Users2,
+  Wrench,
 } from "lucide-react";
-import { permissions } from "./permissions";
 
 export interface NavChildItem {
   id: string;
@@ -171,19 +171,73 @@ export const navigationConfig: NavParentItem[] = [
         href: "/procurement/site-issues",
         icon: Truck,
       },
+      {
+        id: "project-equipment",
+        label: "Equipment",
+        href: "/projects/equipment",
+        icon: Wrench,
+      },
     ],
   },
   {
     id: "crm",
     label: "CRM",
-    icon: Users,
+    icon: Target,
     children: [
       {
         id: "leads",
-        label: "Leads & Follow-ups",
+        label: "Leads",
         href: "/crm/leads",
         icon: Users,
-        permission: permissions.leadsRead,
+      },
+    ],
+  },
+  {
+    id: "hrms",
+    label: "HRMS",
+    icon: Users,
+    children: [
+      {
+        id: "hrms-dashboard",
+        label: "Overview",
+        href: "/hrms",
+        icon: LayoutDashboard,
+      },
+      {
+        id: "hrms-employees",
+        label: "Employees",
+        href: "/hrms/employees",
+        icon: UserCheck,
+      },
+      {
+        id: "hrms-attendance",
+        label: "Attendance",
+        href: "/hrms/attendance",
+        icon: Clock,
+      },
+      {
+        id: "hrms-leaves",
+        label: "Leaves",
+        href: "/hrms/leaves",
+        icon: CalendarRange,
+      },
+      {
+        id: "hrms-payroll",
+        label: "Payroll",
+        href: "/hrms/payroll",
+        icon: Coins,
+      },
+      {
+        id: "hrms-work-locations",
+        label: "Work Locations",
+        href: "/hrms/work-locations",
+        icon: MapPin,
+      },
+      {
+        id: "hrms-settings",
+        label: "HR Settings",
+        href: "/hrms/settings",
+        icon: Briefcase,
       },
     ],
   },
@@ -416,7 +470,7 @@ export const navigationConfig: NavParentItem[] = [
             id: "states",
             label: "States",
             href: "/masters/states",
-            icon: MapIcon,
+            icon: Map,
           },
           {
             id: "cities",

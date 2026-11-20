@@ -584,8 +584,243 @@ http://localhost:4500/api/manpower/trades
 | DB NAME | TABLE NAME | ACTION |
 | --- | --- | --- |
 | company | labour_trade_mst | add |
-
 | company | audit_logs | add |
+
+→ MANPOWER LOGS
+
+Fillter by dates and trade id 
+
+GET http://localhost:4500/api/manpower/5/logs?from=2026-10-01&to=2026-10-07&tradeId=1
+
+GET & POST
+
+http://localhost:4500/api/manpower/:projectId/logs      
+
+```jsx
+{
+  "log_date": "2026-10-07",
+  "trade_id": 1,
+  "headcount": 5,
+  "regular_hours": 8,
+  "overtime_hours": 2,
+  "rate_per_hour": 300,
+  "ot_rate_per_hour": 450,
+  "subcontractor_id": 10,
+  "site_id": 3,
+  "remarks": "Electrical installation work"
+}
+```
+
+| Field | Required | Example | Meaning |
+| --- | --- | --- | --- |
+| `log_date` | Yes | `2026-10-07` | Work date |
+| `trade_id` | Yes | `1` | Labour trade |
+| `headcount` | Yes | `5` | Number of workers |
+| `regular_hours` | No | `8` | Normal working hours |
+| `overtime_hours` | No | `2` | OT hours |
+| `rate_per_hour` | Yes | `300` | Normal hourly rate |
+| `ot_rate_per_hour` | No | `450` | Overtime hourly rate |
+| `subcontractor_id` | No | `10` | Subcontractor/party |
+| `site_id` | No | `3` | Project site |
+| `remarks` | No | `"Electrical installation work"` | Notes |
+
+### How the cost is calculated
+
+For example:
+
+```
+Headcount       = 5
+Regular hours   = 8
+Overtime        = 2
+Regular rate    = ₹300
+OT rate         = ₹450
+```
+
+Conceptually:
+
+```
+Regular Cost
+= 5 × 8 × ₹300
+= ₹12,000
+```
+
+```
+Overtime Cost
+= 5 × 2 × ₹450
+= ₹4,500
+```
+
+```
+Total Labour Cost
+= ₹12,000 + ₹4,500
+= ₹16,500
+```
+
+| DB NAME | TABLE NAME | ACTION |
+| --- | --- | --- |
+| company | tbl_project_manpower_log | add |
+| company | tbl_project_costs | add |
+| company | tbl_project | update → actual_cost |
+| company | audit_logs | add |
+
+PUT & DELETE 
+
+http://localhost:4500/api/manpower/:projectId/logs/:manpowerLogId  
+
+```jsx
+// For update
+{
+  "headcount": 7,
+  "regular_hours": 8,
+  "overtime_hours": 2,
+  "rate_per_hour": 350,
+  "ot_rate_per_hour": 500,
+  "remarks": "Updated electrical installation work"
+}
+```
+
+| DB NAME | TABLE NAME | ACTION |
+| --- | --- | --- |
+| company | tbl_project_manpower_log | update |
+| company | tbl_project_costs | add |
+| company | tbl_project | update → actual_cost |
+| company | audit_logs | add |
+
+---
+
+## EQUIPMENT ROUTES:—
+
+→ GET EQUIEMENT
+
+http://localhost:4500/api/equipment
+
+http://localhost:4500/api/equipment/:equipmentId 
+
+filter by : status, type, search
+
+http://localhost:4500/api/equipment?status=active&type=crane&search=Tower
+
+→ CREATE EQUIPMENT
+
+POST   http://localhost:4500/api/equipment
+
+```jsx
+{
+  "equipment_name": "Diesel Forklift",
+  "equipment_type": "forklift",
+  "ownership": "rented",
+  "vendor_id": 10,   //OPTIONAL
+  "rate_per_hour": 1200,
+  "rate_per_day": 8500,
+  "status": "active",
+  "notes": "Material handling"
+}
+```
+
+→ UPDATE EQUIPMENT
+
+PUT   http://localhost:4500/api/equipment/:equipmentId 
+
+```jsx
+{
+  "equipment_name": "Tower Crane Updated",
+  "rate_per_hour": 2800,
+  "rate_per_day": 20000,
+  "notes": "Updated crane rate"
+}
+```
+
+DELETE   http://localhost:4500/api/equipment/:equipmentId
+
+first check equipment log are exits or not if exits then get message “This equipment has ____ usage log(s). Remove those first”. table: tbl_project_equipment_log
+
+| DB NAME | TABLE NAME | ACTION for create | ACTION for update | ACTION for delete |
+| --- | --- | --- | --- | --- |
+| company | equipment_mst | add | update | update → is_deleted |
+| company | audit_logs | add | add | add |
+
+→ EQUIPMENT LOG
+
+GET
+
+ http://localhost:4500/api/equipment/project/:projectId/logs 
+
+FILTER BY : from, to, equipmentId
+
+http://localhost:4500/api/equipment/project/5/logs?from=2026-10-01&to=2026-10-31&equipmentId=1
+
+POST
+
+ http://localhost:4500/api/equipment/project/:projectId/logs 
+
+```jsx
+{
+  "equipment_id": 1,
+  "site_id": 3,
+  "log_date": "2026-10-07",
+  "hours_used": 8,
+  "rate_per_hour": 2500,
+  "fuel_cost": 1500,
+  "operator_name": "Ramesh Patel",
+  "remarks": "Tower crane used for structural lifting"
+}
+```
+
+### Equipment Cost Calculation
+
+Your `computeEquipmentCost()` does:
+
+```
+(hours_used × rate_per_hour) + fuel_cost
+```
+
+For example:
+
+```
+Hours Used       = 8
+Rate Per Hour    = ₹2,500
+Fuel Cost        = ₹1,500
+```
+
+Calculation:
+
+```
+8 × ₹2,500 = ₹20,000
+
+₹20,000 + ₹1,500
+           ↓
+Equipment Cost = ₹21,500
+```
+
+Your service rounds the result to 2 decimal places.
+
+→ UPDATE
+
+PUT http://localhost:4500/api/equipment/project/:projectId/logs/:equipmentLogId 
+
+```jsx
+{
+  "equipment_id": 1,
+  "site_id": 3,
+  "log_date": "2026-10-07",
+  "hours_used": 10,
+  "rate_per_hour": 2800,
+  "fuel_cost": 2000,
+  "operator_name": "Ramesh Patel",
+  "remarks": "Updated equipment usage for structural lifting"
+}
+```
+
+→ DELETE EQUIPMENT LOG
+
+DELETE  http://localhost:4500/api/equipment/project/:projectId/logs/:equipmentLogId
+
+| DB NAME | TABLE NAME | ACTION for create | ACTION for UPDATE | ACTION  for delete |
+| --- | --- | --- | --- | --- |
+| company | tbl_project_equipment_log | add | update | update → is_deleted |
+| company | tbl_project_costs | add | add | add |
+| company | tbl_project | update → actual_cost | update → actual_cost | update → actual_cost |
+| company | audit_logs | add | add | add |
 
 ---
 
@@ -1207,9 +1442,17 @@ http://localhost:4500/api/enquiry/:enquiryId/documents/:documentId
 
 ---
 
+---
+
 # FLOW OF THE SOFTWARE PROCESS
 
 Setup forms → Customers/Items → Lead → Enquiry → Quotation → Sales order → Project (with its 8 sub-forms) → Requisition → PO → GRN → Stock → Site issue → Invoice → Credit/Debit note → Close project.
+
+!image.png
+
+!image.png
+
+!image.png
 
 ```jsx
                     ┌───────────────┐
