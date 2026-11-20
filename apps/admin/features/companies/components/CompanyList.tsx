@@ -7,7 +7,7 @@ import {
   TableSkeleton,
 } from "@/components/shared";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useChangeCompanyStatus, useCompanies } from "../api";
 import type { Company } from "../types";
 import { DeactivateDialog } from "./DeactivateDialog";
@@ -30,79 +30,96 @@ export function CompanyList() {
   const { mutate: changeStatus, isPending: isChangingStatus } =
     useChangeCompanyStatus();
 
-  const query = search.trim().toLowerCase();
-  const filtered = companies.filter((company) => {
-    const matchesStatus = !statusFilter || company.status === statusFilter;
-    const matchesSearch =
-      !query ||
-      company.company_name?.toLowerCase().includes(query) ||
-      company.company_code?.toLowerCase().includes(query) ||
-      company.company_email?.toLowerCase().includes(query);
-    return matchesStatus && matchesSearch;
-  });
+  // Performance Optimization: Hoist query normalization outside filter loop,
+  // fast-path empty filters in O(1) time without array traversal, and memoize
+  // filtered results to prevent redundant filtering when opening/closing dialogs.
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query && !statusFilter) return companies;
 
-  const columns = [
-    {
-      key: "status" as const,
-      label: "Status",
-      render: (c: Company) => <StatusPill status={c.status} />,
-    },
-    {
-      key: "company_name" as const,
-      label: "Company",
-      render: (c: Company) => (
-        <Link href={`/companies/${c.company_id}`} className="altrex-table-link">
-          {c.company_name}
-        </Link>
-      ),
-    },
-    { key: "company_code" as const, label: "Code" },
-    { key: "company_email" as const, label: "Email" },
-    { key: "phone" as const, label: "Phone" },
-    {
-      key: "company_id" as const,
-      label: "Actions",
-      render: (c: Company) => (
-        <div className="altrex-row-actions">
+    return companies.filter((company) => {
+      const matchesStatus = !statusFilter || company.status === statusFilter;
+      if (!matchesStatus) return false;
+      if (!query) return true;
+
+      return (
+        company.company_name?.toLowerCase().includes(query) ||
+        company.company_code?.toLowerCase().includes(query) ||
+        company.company_email?.toLowerCase().includes(query)
+      );
+    });
+  }, [companies, search, statusFilter]);
+
+  // Memoize column metadata to preserve reference stability across renders
+  // and eliminate allocating duplicate column wrapper objects on every frame.
+  const columns = useMemo(
+    () => [
+      {
+        key: "status" as const,
+        label: "Status",
+        render: (c: Company) => <StatusPill status={c.status} />,
+      },
+      {
+        key: "company_name" as const,
+        label: "Company",
+        render: (c: Company) => (
           <Link
             href={`/companies/${c.company_id}`}
-            className="altrex-button altrex-button-sm altrex-button-neutral"
+            className="altrex-table-link"
           >
-            View
+            {c.company_name}
           </Link>
-
-          {c.status === "active" ? (
-            <button
-              type="button"
-              className="altrex-button altrex-button-sm altrex-button-warning"
-              onClick={() => setDeactivateTarget(c)}
-            >
-              Deactivate
-            </button>
-          ) : (
-            <button
-              type="button"
+        ),
+      },
+      { key: "company_code" as const, label: "Code" },
+      { key: "company_email" as const, label: "Email" },
+      { key: "phone" as const, label: "Phone" },
+      {
+        key: "company_id" as const,
+        label: "Actions",
+        render: (c: Company) => (
+          <div className="altrex-row-actions">
+            <Link
+              href={`/companies/${c.company_id}`}
               className="altrex-button altrex-button-sm altrex-button-neutral"
-              disabled={isChangingStatus}
-              onClick={() =>
-                changeStatus({ id: c.company_id, status: "active" })
-              }
             >
-              Re-activate
-            </button>
-          )}
+              View
+            </Link>
 
-          <button
-            type="button"
-            className="altrex-button altrex-button-sm altrex-button-danger"
-            onClick={() => setHardDeleteTarget(c)}
-          >
-            Delete
-          </button>
-        </div>
-      ),
-    },
-  ];
+            {c.status === "active" ? (
+              <button
+                type="button"
+                className="altrex-button altrex-button-sm altrex-button-warning"
+                onClick={() => setDeactivateTarget(c)}
+              >
+                Deactivate
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="altrex-button altrex-button-sm altrex-button-neutral"
+                disabled={isChangingStatus}
+                onClick={() =>
+                  changeStatus({ id: c.company_id, status: "active" })
+                }
+              >
+                Re-activate
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="altrex-button altrex-button-sm altrex-button-danger"
+              onClick={() => setHardDeleteTarget(c)}
+            >
+              Delete
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [changeStatus, isChangingStatus],
+  );
 
   return (
     <>
@@ -164,15 +181,7 @@ export function CompanyList() {
       )}
 
       {!isLoading && filtered.length > 0 && (
-        <DataTable
-          columns={columns.map((col) => ({
-            key: col.key,
-            label: col.label,
-            // DataTable accepts a render prop per column
-            ...(col.render ? { render: col.render } : {}),
-          }))}
-          data={filtered}
-        />
+        <DataTable columns={columns} data={filtered} rowKey="company_id" />
       )}
 
       {/* Dialogs — mounted outside the table so they overlay correctly */}
