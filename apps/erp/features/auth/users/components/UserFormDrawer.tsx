@@ -5,7 +5,7 @@ import { endpoints } from "@/lib/api/endpoints";
 import { Button } from "@altrex/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { UserCog, UserPlus, X } from "lucide-react";
+import { Loader2, UserCog, UserPlus, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateUser, useUpdateUser } from "../api";
@@ -122,18 +122,6 @@ export function UserFormDrawer({ user, onClose }: Props) {
       },
     );
   };
-
-  const isPending = isCreating || isUpdating;
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isPending) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, isPending]);
 
   return (
     <div className="altrex-dialog-backdrop">
@@ -412,7 +400,9 @@ export function UserFormDrawer({ user, onClose }: Props) {
             form="user-form"
             disabled={isPending}
             aria-busy={isPending}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
+            {isPending && <Loader2 className="animate-spin" size={16} />}
             {isPending ? "Saving..." : isEdit ? "Update User" : "Create User"}
           </Button>
         </div>

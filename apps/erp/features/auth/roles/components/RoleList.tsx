@@ -344,6 +344,7 @@ export function RoleList() {
         <input
           className="altrex-input"
           placeholder="Search by role name or description..."
+          aria-label="Search roles by name or description"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ width: "320px" }}
