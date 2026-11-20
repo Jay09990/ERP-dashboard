@@ -31,6 +31,9 @@ function extractList<T>(value: unknown, visited = new Set<unknown>()): T[] {
   return [];
 }
 
+// Hoisted static helper to maintain reference identity and avoid recreation on every render
+const getItemId = (i: Item) => i.item_id ?? (i as any).id;
+
 export function ItemList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,28 +59,26 @@ export function ItemList() {
 
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
 
-  const getItemId = (i: Item) => i.item_id ?? (i as any).id;
-
-  // Optimized filtering:
-  // 1. Fast-path return all items if search query is empty and status filter is "all" (O(1) avoid traversal).
-  // 2. Hoist normalized search query lowercasing outside .filter() callback to prevent O(N) string transformations per render.
+  // Performance Optimization: Hoist query lowercasing outside filter loop and fast-path empty search
   const filtered = useMemo(() => {
-    const trimmedQuery = search.trim().toLowerCase();
-    const isAllStatus = statusFilter === "all";
+    const q = search.trim().toLowerCase();
+    const hasStatusFilter = statusFilter !== "all";
 
-    if (!trimmedQuery && isAllStatus) {
+    // O(1) fast-path when no search query or status filter is applied
+    if (!q && !hasStatusFilter) {
       return items;
     }
 
     return items.filter((i) => {
-      const matchStatus = isAllStatus || i.status === statusFilter;
+      const matchStatus = !hasStatusFilter || i.status === statusFilter;
       if (!matchStatus) return false;
-      if (!trimmedQuery) return true;
+
+      if (!q) return true;
 
       return (
-        (i.item_name && i.item_name.toLowerCase().includes(trimmedQuery)) ||
-        (i.item_code && i.item_code.toLowerCase().includes(trimmedQuery)) ||
-        (i.hsn_code && i.hsn_code.toLowerCase().includes(trimmedQuery))
+        i.item_name?.toLowerCase().includes(q) ||
+        i.item_code?.toLowerCase().includes(q) ||
+        i.hsn_code?.toLowerCase().includes(q)
       );
     });
   }, [items, search, statusFilter]);

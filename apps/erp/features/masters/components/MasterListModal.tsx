@@ -73,7 +73,13 @@ export function MasterListModal<T extends Record<string, any>>({
   const [formData, setFormData] = useState<Record<string, any>>({});
 
   const { data: responseData, isLoading, error } = useList();
-  const items: T[] = extractList<T>(responseData);
+
+  // Memoize record list extraction to avoid expensive recursive object graph traversals
+  // on every render (e.g. when typing into search input or modal form fields).
+  const items = useMemo(
+    () => extractList<T>(responseData),
+    [responseData],
+  );
 
   const { mutate: createItem, isPending: isCreating } = useCreate();
   const { mutate: updateItem, isPending: isUpdating } = useUpdate();
@@ -94,12 +100,14 @@ export function MasterListModal<T extends Record<string, any>>({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpenModal]);
 
+  // Hoist search query normalization outside the filter loop and fast-path empty search strings.
+  // This avoids O(N * K) string lowercasing operations and allocations on every render.
   const filtered = useMemo(() => {
-    if (!search.trim()) return items;
+    const query = search.trim().toLowerCase();
+    if (!query) return items;
     return items.filter((item) =>
       Object.values(item).some(
-        (val) =>
-          val && String(val).toLowerCase().includes(search.toLowerCase()),
+        (val) => val != null && String(val).toLowerCase().includes(query),
       ),
     );
   }, [items, search]);
@@ -161,48 +169,52 @@ export function MasterListModal<T extends Record<string, any>>({
 
   const isPending = isCreating || isUpdating;
 
-  const tableColumns = [
-    ...columns,
-    {
-      key: idField as keyof T,
-      label: "Actions",
-      render: (row: T) => {
-        const id = getItemId(row)?.toString() ?? "";
-        return (
-          <div className="altrex-row-actions">
-            <Button
-              variant="outline"
-              onClick={() => handleOpenEdit(row)}
-              style={{ fontSize: "12px", padding: "4px 10px" }}
-            >
-              <Edit size={13} />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (
-                  confirm(`Are you sure you want to delete this master item?`)
-                ) {
-                  deleteItem(id);
-                }
-              }}
-              disabled={isDeleting}
-              aria-label={`Delete record ${id}`}
-              style={{
-                color: "var(--altrex-danger-text)",
-                borderColor: "rgba(220, 38, 38, 0.2)",
-                fontSize: "12px",
-                padding: "4px 10px",
-              }}
-            >
-              <Trash2 size={13} />
-            </Button>
-          </div>
-        );
+  // Memoize table columns to maintain stable column reference and prevent object allocations on every render.
+  const tableColumns = useMemo(
+    () => [
+      ...columns,
+      {
+        key: idField as keyof T,
+        label: "Actions",
+        render: (row: T) => {
+          const id = getItemId(row)?.toString() ?? "";
+          return (
+            <div className="altrex-row-actions">
+              <Button
+                variant="outline"
+                onClick={() => handleOpenEdit(row)}
+                style={{ fontSize: "12px", padding: "4px 10px" }}
+              >
+                <Edit size={13} />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (
+                    confirm(`Are you sure you want to delete this master item?`)
+                  ) {
+                    deleteItem(id);
+                  }
+                }}
+                disabled={isDeleting}
+                aria-label={`Delete record ${id}`}
+                style={{
+                  color: "var(--altrex-danger-text)",
+                  borderColor: "rgba(220, 38, 38, 0.2)",
+                  fontSize: "12px",
+                  padding: "4px 10px",
+                }}
+              >
+                <Trash2 size={13} />
+              </Button>
+            </div>
+          );
+        },
       },
-    },
-  ];
+    ],
+    [columns, idField, isDeleting, deleteItem, fields],
+  );
 
   return (
     <>

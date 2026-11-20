@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,9 +47,13 @@ function isSafeRedirect(path: string): boolean {
   ) {
     return false;
   }
+  const collapsed = decoded.replace(/^\/\s+/, "/");
+  if (collapsed.startsWith("//") || collapsed.includes("\\")) {
+    return false;
+  }
   try {
     const dummyOrigin = "http://localhost";
-    const parsed = new URL(decoded, dummyOrigin);
+    const parsed = new URL(collapsed, dummyOrigin);
     return parsed.origin === dummyOrigin && parsed.pathname.startsWith("/");
   } catch {
     return false;
@@ -159,8 +163,20 @@ export function CompanyLoginForm() {
             <span>{serverError}</span>
           </div>
         ) : null}
-        <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          Sign in
+        <Button
+          type="submit"
+          size="lg"
+          disabled={form.formState.isSubmitting}
+          aria-busy={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Signing in…
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
       </form>
     </AuthCard>

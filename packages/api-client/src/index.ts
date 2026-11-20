@@ -22,8 +22,23 @@ export type ApiClient = {
   delete<T>(path: string): Promise<T>;
 };
 
+function sanitizeApiPath(path: string): string {
+  if (
+    !path ||
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("\\") ||
+    /\p{Control}/u.test(path) ||
+    /^(https?|javascript|data|file|blob|about):/i.test(path)
+  ) {
+    throw new Error("Invalid or unsafe API path");
+  }
+  return path;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
+  const safePath = sanitizeApiPath(path);
+  const response = await fetch(safePath, {
     ...init,
     credentials: "include",
     headers: { "content-type": "application/json", ...init.headers },

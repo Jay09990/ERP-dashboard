@@ -210,13 +210,18 @@ const detailLabels: Record<string, string> = {
   itemsDetails: "Items",
 };
 
+// Module-scoped Intl formatter to avoid ICU locale initialization and GC churn on every render
+const mediumDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "medium",
+});
+
 function displayValue(key: string, value: unknown): string {
   if (value == null || value === "") return "Not provided";
   if (key.endsWith("_date") && typeof value === "string") {
     const date = new Date(`${value.slice(0, 10)}T00:00:00`);
     return Number.isNaN(date.getTime())
       ? value
-      : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+      : mediumDateFormatter.format(date);
   }
   if (key === "status" && typeof value === "string") return formatLabel(value);
   if (typeof value === "boolean") return value ? "Yes" : "No";
@@ -228,7 +233,7 @@ function dateLabel(value: unknown) {
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value
-    : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(date);
+    : mediumDateFormatter.format(date);
 }
 
 function itemLabel(key: string) {

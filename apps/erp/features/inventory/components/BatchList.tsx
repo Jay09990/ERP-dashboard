@@ -43,21 +43,35 @@ export function BatchList() {
 
   const getId = (b: Batch) => b.batch_id ?? b.id;
 
+  // Optimized filtering:
+  // 1. Hoist search.trim().toLowerCase() & statusFilter.toLowerCase() query normalization outside the .filter loop.
+  // 2. Return batches directly in O(1) time when no filters are active.
+  // 3. Short-circuit on status filter before executing lowercasing & search substring checks on item fields.
   const filteredBatches = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const normalizedStatusFilter = statusFilter.toLowerCase();
+
+    if (!q && !normalizedStatusFilter) {
+      return batches;
+    }
+
     return batches.filter((b) => {
-      const batchNo = b.batch_no || "";
-      const itemName = b.item_name || "";
-      const itemCode = b.item_code || "";
-      const status = b.status || "active";
+      if (
+        normalizedStatusFilter &&
+        (b.status || "active").toLowerCase() !== normalizedStatusFilter
+      ) {
+        return false;
+      }
 
-      const matchesSearch =
-        batchNo.toLowerCase().includes(search.toLowerCase()) ||
-        itemName.toLowerCase().includes(search.toLowerCase()) ||
-        itemCode.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus =
-        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
+      if (!q) {
+        return true;
+      }
 
-      return matchesSearch && matchesStatus;
+      return (
+        (b.batch_no?.toLowerCase().includes(q) ?? false) ||
+        (b.item_name?.toLowerCase().includes(q) ?? false) ||
+        (b.item_code?.toLowerCase().includes(q) ?? false)
+      );
     });
   }, [batches, search, statusFilter]);
 
