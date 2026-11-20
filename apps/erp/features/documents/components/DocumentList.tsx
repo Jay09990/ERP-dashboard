@@ -1155,63 +1155,66 @@ export function DocumentList({
   const partyLabel = isVendorDoc ? "Vendor Name" : "Client Name";
 
   // Filter & Search
+  // Optimized single-pass filtering: hoists normalized query strings outside loop to avoid redundant
+  // lowercasing and temporary array allocations [getDocNo, getDocPartyName, ...] inside callbacks.
   const filtered = useMemo(() => {
-    let result = docs;
-    if (statusFilter) {
-      result = result.filter(
-        (d) =>
-          (d.status || "draft").toLowerCase() === statusFilter.toLowerCase(),
-      );
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter((d) =>
-        [getDocNo(d), getDocPartyName(d), d.notes, d.status].some(
-          (val) => val && String(val).toLowerCase().includes(q),
-        ),
-      );
-    }
-    return result;
+    const q = (search || "").trim().toLowerCase();
+    const statusNorm = (statusFilter || "").trim().toLowerCase();
+
+    if (!q && !statusNorm) return docs;
+
+    return docs.filter((d) => {
+      if (statusNorm && (d.status || "draft").toLowerCase() !== statusNorm) {
+        return false;
+      }
+
+      if (q) {
+        if ((getDocNo(d) || "").toLowerCase().includes(q)) return true;
+        if ((getDocPartyName(d) || "").toLowerCase().includes(q)) return true;
+        if (d.notes && String(d.notes).toLowerCase().includes(q)) return true;
+        if (d.status && String(d.status).toLowerCase().includes(q)) return true;
+        return false;
+      }
+
+      return true;
+    });
   }, [docs, search, statusFilter]);
 
   // Sort
+  // Pre-extract sort keys in O(N) pass (Schwartzian transform) to avoid O(N log N) redundant calculations
+  // of getDocGrandTotal, getDocBalanceDue, getDocTaxAmount, getDocPartyName, and getDocNo during sort comparisons.
   const sorted = useMemo(() => {
-    const list = [...filtered];
-    list.sort((a, b) => {
-      let valA: any = "";
-      let valB: any = "";
+    if (filtered.length <= 1) return filtered;
 
+    const itemsWithKeys = filtered.map((d) => {
+      let key: any = "";
       if (sortField === "date") {
-        valA = getDocDate(a);
-        valB = getDocDate(b);
+        key = getDocDate(d);
       } else if (sortField === "docNo") {
-        valA = getDocNo(a);
-        valB = getDocNo(b);
+        key = getDocNo(d);
       } else if (sortField === "party") {
-        valA = getDocPartyName(a);
-        valB = getDocPartyName(b);
+        key = getDocPartyName(d);
       } else if (sortField === "dueDate") {
-        valA = getDocDueDate(a);
-        valB = getDocDueDate(b);
+        key = getDocDueDate(d);
       } else if (sortField === "tax") {
-        valA = getDocTaxAmount(a);
-        valB = getDocTaxAmount(b);
+        key = getDocTaxAmount(d);
       } else if (sortField === "amount") {
-        valA = getDocGrandTotal(a);
-        valB = getDocGrandTotal(b);
+        key = getDocGrandTotal(d);
       } else if (sortField === "balance") {
-        valA = getDocBalanceDue(a);
-        valB = getDocBalanceDue(b);
+        key = getDocBalanceDue(d);
       } else {
-        valA = getDocId(a);
-        valB = getDocId(b);
+        key = getDocId(d);
       }
+      return { doc: d, key };
+    });
 
-      if (valA < valB) return sortAsc ? -1 : 1;
-      if (valA > valB) return sortAsc ? 1 : -1;
+    itemsWithKeys.sort((a, b) => {
+      if (a.key < b.key) return sortAsc ? -1 : 1;
+      if (a.key > b.key) return sortAsc ? 1 : -1;
       return 0;
     });
-    return list;
+
+    return itemsWithKeys.map((item) => item.doc);
   }, [filtered, sortField, sortAsc]);
 
   // Pagination
