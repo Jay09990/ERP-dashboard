@@ -55,19 +55,34 @@ export function WarehouseList() {
 
   const getId = (w: Warehouse) => w.warehouse_id ?? w.id;
 
+  // Optimized filtering:
+  // 1. Fast-path return all warehouses if search query and status filter are empty/all (O(1) avoid traversal).
+  // 2. Hoist normalized search and status queries lowercasing outside .filter() callback to avoid O(N) string transformations per render.
   const filteredWarehouses = useMemo(() => {
+    const trimmedQuery = search.trim().toLowerCase();
+    const normalizedStatus = statusFilter.trim().toLowerCase();
+
+    if (!trimmedQuery && (!normalizedStatus || normalizedStatus === "all")) {
+      return warehouses;
+    }
+
     return warehouses.filter((w) => {
+      const status = (w.status || "active").toLowerCase();
+      const matchesStatus =
+        !normalizedStatus ||
+        normalizedStatus === "all" ||
+        status === normalizedStatus;
+
+      if (!matchesStatus) return false;
+      if (!trimmedQuery) return true;
+
       const name = w.warehouse_name || "";
       const addr = w.address || "";
-      const status = w.status || "active";
 
-      const matchesSearch =
-        name.toLowerCase().includes(search.toLowerCase()) ||
-        addr.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus =
-        !statusFilter || status.toLowerCase() === statusFilter.toLowerCase();
-
-      return matchesSearch && matchesStatus;
+      return (
+        name.toLowerCase().includes(trimmedQuery) ||
+        addr.toLowerCase().includes(trimmedQuery)
+      );
     });
   }, [warehouses, search, statusFilter]);
 
