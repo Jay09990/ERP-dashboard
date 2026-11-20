@@ -32,3 +32,8 @@
 **Vulnerability:** `isSafeRedirect` allowed relative paths with spaces or URL-encoded whitespace after the leading slash (such as `/%20//evil.com` or `/ //evil.com`), bypassing `startsWith("//")` checks while `new URL()` treated `/ //evil.com` as relative origin `http://localhost/%20//evil.com`, but browser/router navigation strips leading whitespace to resolve to protocol-relative `//evil.com`.
 **Learning:** `new URL(path, dummyOrigin)` normalizes leading spaces into `%20`, preserving the origin during URL object construction, but client-side navigation frameworks and browsers collapse leading whitespace (`/\s+/`) when resolving target locations.
 **Prevention:** Strip/collapse leading whitespace after the initial slash (`replace(/^\/\s+/, "/")`) and verify that the resulting collapsed string does not start with `//` or contain `\`.
+
+## 2025-05-27 - Control Character and CRLF Injection in BFF Route Proxy Path Segments
+**Vulnerability:** `isUnsafeSegment` in BFF catch-all API proxy routes only checked for null bytes (`\0`) when verifying decoded path segments, allowing URL-encoded CRLF (`%0d%0a`) and other ASCII control characters to pass validation and be forwarded upstream via `fetch()`.
+**Learning:** Checking only for null bytes leaves other control characters (`\r`, `\n`, `\t`, `\x00-\x1f`, `\x7f`) unhandled, which can lead to HTTP request smuggling or downstream header/path injection when forwarded upstream.
+**Prevention:** Reject both raw and multi-pass decoded path segments containing ASCII control characters matching `/[\0-\x1f\x7f]/u` alongside path traversal tokens.
