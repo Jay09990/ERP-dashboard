@@ -14,6 +14,13 @@ export interface Lead {
   email?: string;
   website?: string;
   gst_no?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city_id?: number | null;
+  state_id?: number | null;
+  country_id?: number | null;
+  pincode?: string;
+  assigned_to?: number | null;
   industry_id?: number | null;
   lead_source_id?: number | null;
   referred_by?: string;

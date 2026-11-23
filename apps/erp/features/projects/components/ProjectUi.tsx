@@ -17,6 +17,9 @@ export type FieldDefinition = {
     | "reference"
     | "collection";
   required?: boolean;
+  min?: number;
+  max?: number;
+  valueType?: "number";
   placeholder?: string;
   rows?: number;
   nullable?: boolean;
@@ -34,7 +37,7 @@ export function extractRecords<T>(
   seen.add(value);
 
   const record = value as Record<string, unknown>;
-  for (const key of [
+  const collectionKeys = [
     "projects",
     "project",
     "project_sites",
@@ -44,11 +47,21 @@ export function extractRecords<T>(
     "project_documents",
     "projectDocuments",
     "projectSites",
+    "sites",
+    "site",
     "boqItems",
     "milestones",
     "tasks",
     "costBudget",
+    "manpower",
+    "manpowerLogs",
+    "manpower_logs",
+    "equipment",
+    "equipmentLogs",
+    "equipment_logs",
+    "logs",
     "documents",
+    "projDoc",
     "dpr",
     "daily_progress_reports",
     "dailyProgressReports",
@@ -66,9 +79,13 @@ export function extractRecords<T>(
     "data",
     "result",
     "payload",
-  ]) {
-    if (key in record) {
-      const result = extractRecords<T>(record[key], seen);
+  ];
+  for (const key of collectionKeys) {
+    const matchedKey = Object.keys(record).find(
+      (recordKey) => recordKey.toLowerCase() === key.toLowerCase(),
+    );
+    if (matchedKey) {
+      const result = extractRecords<T>(record[matchedKey], seen);
       if (result.length > 0) return result;
     }
   }
@@ -79,6 +96,8 @@ export function extractRecord<T>(value: unknown): T | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   for (const key of [
+    "Projects",
+    "Project",
     "project",
     "requisition",
     "grn",
@@ -87,12 +106,40 @@ export function extractRecord<T>(value: unknown): T | null {
     "data",
     "result",
   ]) {
-    const nested = record[key];
-    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    const matchedKey = Object.keys(record).find(
+      (recordKey) => recordKey.toLowerCase() === key.toLowerCase(),
+    );
+    const nested = matchedKey ? record[matchedKey] : undefined;
+    if (Array.isArray(nested)) {
+      const firstRecord = nested.find(
+        (item): item is Record<string, unknown> =>
+          Boolean(item) && typeof item === "object" && !Array.isArray(item),
+      );
+      if (firstRecord) {
+        return extractRecord<T>(firstRecord) ?? (firstRecord as T);
+      }
+    } else if (nested && typeof nested === "object") {
       return extractRecord<T>(nested) ?? (nested as T);
     }
   }
   return value as T;
+}
+
+function parseNumber(
+  field: Pick<FieldDefinition, "label" | "min" | "max">,
+  value: string,
+) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    throw new Error(`${field.label} must be a valid number.`);
+  }
+  if (field.min != null && number < field.min) {
+    throw new Error(`${field.label} must be at least ${field.min}.`);
+  }
+  if (field.max != null && number > field.max) {
+    throw new Error(`${field.label} must be no more than ${field.max}.`);
+  }
+  return number;
 }
 
 export function recordId(
@@ -195,6 +242,7 @@ export function SearchableReferencePicker({
 
 export function EntityFormDialog({
   title,
+  dialogClassName,
   fields,
   initialValues,
   fieldOptions = {},
@@ -207,6 +255,7 @@ export function EntityFormDialog({
   onSubmit,
 }: {
   title: string;
+  dialogClassName?: string;
   fields: FieldDefinition[];
   initialValues?: Record<string, unknown>;
   fieldOptions?: Record<string, ReferenceOption[]>;
@@ -304,13 +353,10 @@ export function EntityFormDialog({
                     return itemValues;
                   }
                   if (itemField.type === "number") {
-                    const number = Number(itemValue);
-                    if (!Number.isFinite(number)) {
-                      throw new Error(
-                        `${itemField.label} must be a valid number.`,
-                      );
-                    }
-                    itemValues[itemField.name] = number;
+                    itemValues[itemField.name] = parseNumber(
+                      itemField,
+                      itemValue,
+                    );
                     return itemValues;
                   }
                   if (itemField.type === "reference") {
@@ -360,11 +406,7 @@ export function EntityFormDialog({
           continue;
         }
         if (field.type === "number") {
-          const number = Number(value);
-          if (!Number.isFinite(number)) {
-            throw new Error(`${field.label} must be a valid number.`);
-          }
-          payload[field.name] = number;
+          payload[field.name] = parseNumber(field, value);
         } else if (field.type === "reference") {
           const options = fieldOptions[field.name] ?? field.options ?? [];
           const isExistingReference =
@@ -382,9 +424,34 @@ export function EntityFormDialog({
             throw new Error(`${field.label} must be a valid record ID.`);
           }
           payload[field.name] = referenceId;
+        } else if (field.type === "select") {
+          const options = fieldOptions[field.name] ?? field.options ?? [];
+          if (!options.some((option) => option.value === value)) {
+            throw new Error(
+              `Choose a valid ${field.label.toLowerCase()} from the list.`,
+            );
+          }
+          if (field.valueType === "number") {
+            const referenceId = Number(value);
+            if (!Number.isSafeInteger(referenceId) || referenceId < 1) {
+              throw new Error(`${field.label} must be a valid record ID.`);
+            }
+            payload[field.name] = referenceId;
+          } else {
+            payload[field.name] = value;
+          }
         } else {
           payload[field.name] = value;
         }
+      }
+      const startDate = payload.start_date;
+      const plannedEndDate = payload.planned_end_date;
+      if (
+        typeof startDate === "string" &&
+        typeof plannedEndDate === "string" &&
+        plannedEndDate < startDate
+      ) {
+        throw new Error("Planned end date must be on or after the start date.");
       }
       onSubmit(payload);
     } catch (error) {
@@ -398,7 +465,7 @@ export function EntityFormDialog({
     <div className="altrex-dialog-backdrop" onMouseDown={onClose}>
       <dialog
         open
-        className="altrex-dialog altrex-dialog-lg"
+        className={`altrex-dialog altrex-dialog-lg ${dialogClassName ?? ""}`}
         aria-modal="true"
         aria-labelledby="entity-form-title"
         onMouseDown={(event) => event.stopPropagation()}
@@ -476,7 +543,8 @@ export function EntityFormDialog({
                                 {itemField.type === "select" ? (
                                   <select
                                     id={`${field.name}-${rowIndex}-${itemField.name}`}
-                                    className="altrex-input"
+                                    className="altrex-input altrex-select"
+                                    required={itemField.required}
                                     value={row[itemField.name] ?? ""}
                                     onChange={(event) =>
                                       setCollectionValues((current) => ({
@@ -539,6 +607,17 @@ export function EntityFormDialog({
                                     id={`${field.name}-${rowIndex}-${itemField.name}`}
                                     className="altrex-input"
                                     type={itemField.type ?? "text"}
+                                    required={itemField.required}
+                                    min={
+                                      itemField.type === "number"
+                                        ? itemField.min
+                                        : undefined
+                                    }
+                                    max={
+                                      itemField.type === "number"
+                                        ? itemField.max
+                                        : undefined
+                                    }
                                     step={
                                       itemField.type === "number"
                                         ? "any"
@@ -619,7 +698,7 @@ export function EntityFormDialog({
                   ) : field.type === "select" ? (
                     <select
                       id={field.name}
-                      className="altrex-input"
+                      className="altrex-input altrex-select"
                       value={values[field.name] ?? ""}
                       required={field.required}
                       onChange={(event) =>
@@ -627,13 +706,16 @@ export function EntityFormDialog({
                       }
                     >
                       <option value="">
-                        Select {field.label.toLowerCase()}
+                        {field.placeholder ??
+                          `Select ${field.label.toLowerCase()}`}
                       </option>
-                      {field.options?.map((option) => (
+                      {(fieldOptions[field.name] ?? field.options ?? []).map(
+                        (option) => (
                         <option value={option.value} key={option.value}>
                           {option.label}
                         </option>
-                      ))}
+                        ),
+                      )}
                     </select>
                   ) : field.type === "reference" ? (
                     <SearchableReferencePicker
@@ -652,6 +734,8 @@ export function EntityFormDialog({
                       value={values[field.name] ?? ""}
                       placeholder={field.placeholder}
                       required={field.required}
+                      min={field.type === "number" ? field.min : undefined}
+                      max={field.type === "number" ? field.max : undefined}
                       step={field.type === "number" ? "any" : undefined}
                       onChange={(event) =>
                         updateValue(field.name, event.target.value)

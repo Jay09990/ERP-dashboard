@@ -62,9 +62,15 @@ function useReadList(
 const projectInvalidations = [
   ["projects"],
   ["project"],
+  ["project-manpower"],
+  ["project-equipment"],
   ["project-financials"],
   ["project-dpr"],
   ["project-documents"],
+] as const;
+const equipmentInvalidations = [
+  ["equipment"],
+  ...projectInvalidations,
 ] as const;
 const procurementInvalidations = [
   ["procurement"],
@@ -341,7 +347,7 @@ export const projectApi = {
     useWrite(
       ({ body }: MutationInput) =>
         apiClient.post(endpoints.equipment.list, body),
-      projectInvalidations,
+      equipmentInvalidations,
     ),
   useUpdateEquipment: () =>
     useWrite(
@@ -350,7 +356,7 @@ export const projectApi = {
           endpoints.equipment.detail(needId(id, "Equipment ID")),
           body,
         ),
-      projectInvalidations,
+      equipmentInvalidations,
     ),
   useDeleteEquipment: () =>
     useWrite(
@@ -358,7 +364,7 @@ export const projectApi = {
         apiClient.delete(
           endpoints.equipment.detail(needId(id, "Equipment ID")),
         ),
-      projectInvalidations,
+      equipmentInvalidations,
     ),
   useEquipmentLogs: (
     id: Id,

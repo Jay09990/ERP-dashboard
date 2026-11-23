@@ -85,6 +85,13 @@ export const navigationConfig: NavParentItem[] = [
     icon: TrendingUp,
     children: [
       {
+        id: "sales-overview",
+        label: "Overview",
+        href: "/sales",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
         id: "quotations",
         label: "Quotations",
         href: "/sales/quotations",
@@ -123,6 +130,13 @@ export const navigationConfig: NavParentItem[] = [
     icon: ShoppingBag,
     children: [
       {
+        id: "purchase-overview",
+        label: "Overview",
+        href: "/purchase",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
         id: "purchase-orders",
         label: "Purchase Orders",
         href: "/purchase/orders",
@@ -147,6 +161,12 @@ export const navigationConfig: NavParentItem[] = [
     label: "Projects",
     icon: Briefcase,
     children: [
+      {
+        id: "projects-overview",
+        label: "Overview",
+        href: "/projects/overview",
+        icon: LayoutDashboard,
+      },
       {
         id: "project-register",
         label: "Projects",
@@ -184,6 +204,13 @@ export const navigationConfig: NavParentItem[] = [
     label: "CRM",
     icon: Target,
     children: [
+      {
+        id: "crm-overview",
+        label: "Overview",
+        href: "/crm",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       {
         id: "leads",
         label: "Leads",
@@ -247,6 +274,13 @@ export const navigationConfig: NavParentItem[] = [
     icon: Users2,
     children: [
       {
+        id: "parties-overview",
+        label: "Overview",
+        href: "/parties",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
         id: "customers",
         label: "Customers",
         href: "/parties/customers",
@@ -265,6 +299,13 @@ export const navigationConfig: NavParentItem[] = [
     label: "Inventory",
     icon: Package,
     children: [
+      {
+        id: "inventory-overview",
+        label: "Overview",
+        href: "/inventory",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       {
         id: "items",
         label: "Items",
@@ -327,6 +368,12 @@ export const navigationConfig: NavParentItem[] = [
     icon: ShieldCheck,
     children: [
       {
+        id: "administration-overview",
+        label: "Overview",
+        href: "/administration",
+        icon: LayoutDashboard,
+      },
+      {
         id: "users",
         label: "Users",
         href: "/users",
@@ -353,6 +400,7 @@ export const navigationConfig: NavParentItem[] = [
     id: "masters",
     label: "Masters",
     icon: Database,
+    href: "/masters",
     subGroups: [
       {
         id: "org-hr",

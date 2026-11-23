@@ -134,6 +134,8 @@ export interface Employee {
   employeeId?: number;
   employee_id?: number;
   id?: number;
+  user_id?: number | null;
+  userId?: number | null;
   first_name?: string;
   firstName?: string;
   last_name?: string;

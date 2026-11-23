@@ -612,17 +612,19 @@ export function VendorList() {
         </div>
       </div>
 
-      <PartyFormDrawer
-        partyType="vendor"
-        party={selectedVendor}
-        isOpen={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setSelectedVendor(null);
-        }}
-        onSubmit={handleFormSubmit}
-        isSubmitting={isCreating || isUpdating}
-      />
+      {drawerOpen && (
+        <PartyFormDrawer
+          partyType="vendor"
+          party={selectedVendor}
+          isOpen={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false);
+            setSelectedVendor(null);
+          }}
+          onSubmit={handleFormSubmit}
+          isSubmitting={isCreating || isUpdating}
+        />
+      )}
 
       {deleteId && (
         <div

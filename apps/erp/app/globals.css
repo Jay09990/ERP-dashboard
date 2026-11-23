@@ -1,6 +1,26 @@
 @import "tailwindcss";
 @import "@altrex/ui/styles.css";
 
+@theme {
+  --color-primary: var(--altrex-primary);
+  --color-primary-foreground: #ffffff;
+  --color-background: var(--altrex-canvas);
+  --color-foreground: var(--altrex-text);
+  --color-card: var(--altrex-surface);
+  --color-card-foreground: var(--altrex-text);
+  --color-secondary: var(--altrex-surface);
+  --color-secondary-foreground: var(--altrex-text);
+  --color-muted: var(--altrex-raised);
+  --color-muted-foreground: var(--altrex-muted);
+  --color-accent: var(--altrex-hover);
+  --color-accent-foreground: var(--altrex-text);
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--altrex-border);
+  --color-input: var(--altrex-border);
+  --color-ring: var(--altrex-primary);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS — Executive Slate Dark & Light Modes
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -465,6 +485,30 @@ body {
   flex: 1;
 }
 .altrex-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.equipment-registry-filters {
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(160px, 200px));
+}
+.project-financial-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.project-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 24px;
+  margin: 16px 0 0;
+}
+.project-summary-grid dt {
+  color: var(--altrex-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.project-summary-grid dd {
+  margin: 4px 0 0;
+  color: var(--altrex-text);
+}
 .altrex-eyebrow { color: var(--altrex-muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
 h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
 
@@ -519,48 +563,110 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
    BUTTONS
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.altrex-button {
+.altrex-button,
+.altrex-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
+  height: 36px;
   padding: 0 16px;
   border-radius: 8px;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   font-family: inherit;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   white-space: nowrap;
   gap: 8px;
+  box-sizing: border-box;
 }
 
-.altrex-button:active {
+.altrex-button:active,
+.altrex-btn:active {
   transform: scale(0.98);
 }
 
-.altrex-button-primary {
-  background: var(--altrex-primary);
+.altrex-button:disabled,
+.altrex-btn:disabled,
+.altrex-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none !important;
+}
+
+.altrex-button-primary,
+.altrex-btn-primary {
+  background: var(--altrex-primary, #2563eb) !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--altrex-primary) 45%, transparent);
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
 }
 
-.altrex-button-primary:hover {
-  background: var(--altrex-primary-hover);
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--altrex-primary) 60%, transparent);
+.altrex-button-primary:hover,
+.altrex-btn-primary:hover {
+  background: var(--altrex-primary-hover, #1d4ed8) !important;
+  box-shadow: 0 4px 10px -1px color-mix(in srgb, var(--altrex-primary, #2563eb) 45%, transparent),
+              0 2px 4px -2px color-mix(in srgb, var(--altrex-primary, #2563eb) 30%, transparent);
 }
 
-.altrex-button-secondary {
-  background: var(--altrex-surface);
-  color: var(--altrex-text);
-  border-color: var(--altrex-border);
+.altrex-button-secondary,
+.altrex-button-outline,
+.altrex-button-neutral,
+.altrex-btn-outline {
+  background: var(--altrex-surface, #ffffff) !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid var(--altrex-border, #cbd5e1) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.altrex-button-secondary:hover {
-  background: var(--altrex-hover);
-  border-color: color-mix(in srgb, var(--altrex-primary) 30%, var(--altrex-border));
+.altrex-button-secondary:hover,
+.altrex-button-outline:hover,
+.altrex-button-neutral:hover,
+.altrex-btn-outline:hover {
+  background: var(--altrex-hover, #f1f5f9) !important;
+  border-color: var(--altrex-primary, #2563eb) !important;
+  color: var(--altrex-primary, #2563eb) !important;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
+}
+
+.altrex-btn-secondary {
+  background: var(--altrex-raised, #f1f5f9) !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid var(--altrex-border, #cbd5e1) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.altrex-btn-secondary:hover {
+  background: var(--altrex-hover, #e2e8f0) !important;
+  border-color: color-mix(in srgb, var(--altrex-primary, #2563eb) 35%, var(--altrex-border, #cbd5e1)) !important;
+}
+
+.altrex-btn-destructive {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 3px 0 rgba(220, 38, 38, 0.25);
+}
+
+.altrex-btn-destructive:hover {
+  background: #b91c1c !important;
+  box-shadow: 0 4px 8px -1px rgba(220, 38, 38, 0.35);
+}
+
+.altrex-btn-ghost {
+  background: transparent !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.altrex-btn-ghost:hover {
+  background: var(--altrex-hover, #f1f5f9) !important;
+  color: var(--altrex-primary, #2563eb) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -581,6 +687,15 @@ h1 { margin: 4px 0 0; color: var(--altrex-text); font-size: 26px; font-weight: 8
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
+/* Prevent fixed min-width overflow inside dialogs, tables, and compact fields */
+.altrex-dialog .altrex-input,
+.altrex-table td .altrex-input,
+table td .altrex-input,
+.altrex-field .altrex-input,
+.altrex-dialog-body .altrex-input {
+  min-width: 0;
+}
+
 /* Ensure inline styles don't override the base styles */
 .altrex-input:focus {
   outline: none;
@@ -593,6 +708,16 @@ textarea.altrex-input {
   min-height: 80px;
   resize: vertical;
   font-family: inherit;
+}
+
+.project-dpr-dialog textarea.altrex-input {
+  min-height: 56px;
+  padding: 8px 12px;
+}
+
+.project-dpr-dialog select.altrex-select option {
+  background: var(--altrex-surface);
+  color: var(--altrex-text);
 }
 
 /* Handle inline-style overrides gracefully */
@@ -774,11 +899,20 @@ textarea.altrex-input {
 
 @media (max-width: 1024px) {
   .altrex-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .project-financial-grid,
+  .project-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
   .altrex-content, .altrex-topbar { padding-left: 16px; padding-right: 16px; }
   .altrex-page-header { align-items: flex-start; flex-direction: column; }
+  .equipment-registry-filters { grid-template-columns: minmax(0, 1fr); }
+  .project-financial-grid,
+  .project-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .altrex-input { width: 100%; min-width: 0; }
   .altrex-stat-grid { grid-template-columns: 1fr; }
 
@@ -916,6 +1050,55 @@ textarea.altrex-input {
   padding: 16px 24px;
 }
 
+.crm-lead-dialog-backdrop {
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.crm-lead-dialog {
+  position: relative;
+  inset: auto;
+  box-sizing: border-box;
+  width: min(700px, calc(100vw - 48px));
+  max-width: none;
+  max-height: min(760px, calc(100vh - 48px));
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.crm-lead-form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.crm-lead-dialog .altrex-dialog-header,
+.crm-lead-dialog .altrex-dialog-footer {
+  flex-shrink: 0;
+}
+
+.crm-lead-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.crm-lead-form-grid .altrex-field {
+  min-width: 0;
+}
+
+.crm-lead-form-error {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 520px) {
   .altrex-user-dialog .altrex-dialog-header,
   .altrex-user-dialog .altrex-dialog-body,
@@ -926,6 +1109,27 @@ textarea.altrex-input {
 
   .altrex-user-form-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-lead-dialog-backdrop {
+    padding: 12px;
+  }
+
+  .crm-lead-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .crm-lead-dialog .altrex-dialog-header,
+  .crm-lead-dialog .altrex-dialog-footer {
+    padding: 16px;
+  }
+
+  .crm-lead-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
   }
 }
 

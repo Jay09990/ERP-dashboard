@@ -60,6 +60,7 @@ async function proxy(request: NextRequest, path: string[]) {
         headers.set(key, value);
       }
     });
+    headers.set("connection", "keep-alive");
 
     response = await fetch(targetUrl.toString(), {
       method: request.method,
@@ -76,6 +77,17 @@ async function proxy(request: NextRequest, path: string[]) {
   const cleanedContentType = rawContentType.replace(/[\r\n\0]/g, "").trim();
   const safeContentType = cleanedContentType.length > 0 ? cleanedContentType : "application/json";
   result.headers.set("content-type", safeContentType);
+
+  // Forward performance-critical headers if provided by upstream backend
+  const etag = response.headers.get("etag");
+  if (etag) result.headers.set("etag", etag);
+  const cacheControl = response.headers.get("cache-control");
+  if (cacheControl) {
+    result.headers.set("cache-control", cacheControl);
+  } else if (request.method === "GET") {
+    // Avoid stale caching issues while preventing proxy re-compression stalls
+    result.headers.set("cache-control", "private, no-cache, no-transform");
+  }
   return result;
 }
 

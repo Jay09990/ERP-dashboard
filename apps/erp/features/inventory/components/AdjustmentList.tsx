@@ -336,27 +336,16 @@ export function AdjustmentList() {
             Audit and adjust physical stock counts, damages, or discrepancies.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Button variant="outline" onClick={() => refetch()}>
             <RefreshCw size={15} />
             Refresh
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleExportCSV}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
+          <Button variant="outline" onClick={handleExportCSV}>
             <Download size={15} />
             Export CSV
           </Button>
-          <Button
-            onClick={() => setIsOpenDrawer(true)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
+          <Button onClick={() => setIsOpenDrawer(true)}>
             <Plus size={16} />
             New Adjustment
           </Button>
@@ -442,12 +431,14 @@ export function AdjustmentList() {
         />
       )}
 
-      <AdjustmentFormDrawer
-        isOpen={isOpenDrawer}
-        onClose={() => setIsOpenDrawer(false)}
-        onSubmit={handleSave}
-        isPending={isCreating}
-      />
+      {isOpenDrawer && (
+        <AdjustmentFormDrawer
+          isOpen={isOpenDrawer}
+          onClose={() => setIsOpenDrawer(false)}
+          onSubmit={handleSave}
+          isPending={isCreating}
+        />
+      )}
     </>
   );
 }

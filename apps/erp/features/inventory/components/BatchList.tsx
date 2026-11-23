@@ -287,12 +287,8 @@ export function BatchList() {
             Track batch numbers, manufacturing dates, and expiration lifecycle.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Button
-            variant="outline"
-            onClick={handleExportCSV}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Button variant="outline" onClick={handleExportCSV}>
             <Download size={15} />
             Export CSV
           </Button>
@@ -301,7 +297,6 @@ export function BatchList() {
               setEditingBatch(null);
               setIsOpenDrawer(true);
             }}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
             <Plus size={16} />
             Add Batch
@@ -387,13 +382,15 @@ export function BatchList() {
         />
       )}
 
-      <BatchFormDrawer
-        isOpen={isOpenDrawer}
-        onClose={() => setIsOpenDrawer(false)}
-        onSubmit={handleSave}
-        isPending={isCreating || isUpdating}
-        initialData={editingBatch}
-      />
+      {isOpenDrawer && (
+        <BatchFormDrawer
+          isOpen={isOpenDrawer}
+          onClose={() => setIsOpenDrawer(false)}
+          onSubmit={handleSave}
+          isPending={isCreating || isUpdating}
+          initialData={editingBatch}
+        />
+      )}
     </>
   );
 }

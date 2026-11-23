@@ -56,23 +56,61 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     {
       name: "boq_type",
       label: "Type (material, service, labour)",
+      type: "select",
       required: true,
+      options: ["material", "service", "labour"].map((value) => ({
+        value,
+        label: value[0].toUpperCase() + value.slice(1),
+      })),
     },
     { name: "item_id", label: "Item", type: "reference" },
     { name: "description", label: "Description", required: true },
-    { name: "quantity", label: "Quantity", type: "number", required: true },
+    {
+      name: "quantity",
+      label: "Quantity",
+      type: "number",
+      min: 0.0001,
+      required: true,
+    },
     { name: "unit_id", label: "Unit", type: "reference" },
-    { name: "unit_rate", label: "Unit rate", type: "number", required: true },
-    { name: "consumed_quantity", label: "Consumed quantity", type: "number" },
+    {
+      name: "unit_rate",
+      label: "Unit rate",
+      type: "number",
+      min: 0,
+      required: true,
+    },
+    {
+      name: "consumed_quantity",
+      label: "Consumed quantity",
+      type: "number",
+      min: 0,
+    },
   ],
   milestones: [
     { name: "milestone_name", label: "Milestone", required: true },
-    { name: "due_date", label: "Due date", type: "date" },
+    { name: "due_date", label: "Due date", type: "date", required: true },
     { name: "completion_date", label: "Completion date", type: "date" },
-    { name: "payment_percent", label: "Payment percent", type: "number" },
-    { name: "payment_amount", label: "Payment amount", type: "number" },
-    { name: "sort_order", label: "Sort order", type: "number" },
-    { name: "status", label: "Status", placeholder: "pending" },
+    {
+      name: "payment_percent",
+      label: "Payment percent",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    { name: "payment_amount", label: "Payment amount", type: "number", min: 0 },
+    { name: "sort_order", label: "Sort order", type: "number", min: 1 },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["pending", "in_progress", "completed", "invoiced"].map(
+        (value) => ({
+          value,
+          label: value.replaceAll("_", " "),
+        }),
+      ),
+    },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   tasks: [
@@ -81,9 +119,33 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     { name: "assigned_to", label: "Assigned user", type: "reference" },
     { name: "start_date", label: "Start date", type: "date" },
     { name: "due_date", label: "Due date", type: "date" },
-    { name: "priority", label: "Priority", placeholder: "low, medium, high" },
-    { name: "progress_percent", label: "Progress (%)", type: "number" },
-    { name: "status", label: "Status", placeholder: "pending" },
+    {
+      name: "priority",
+      label: "Priority",
+      type: "select",
+      options: ["low", "medium", "high"].map((value) => ({
+        value,
+        label: value[0].toUpperCase() + value.slice(1),
+      })),
+    },
+    {
+      name: "progress_percent",
+      label: "Progress (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["pending", "in_progress", "completed", "cancelled"].map(
+        (value) => ({
+          value,
+          label: value.replaceAll("_", " "),
+        }),
+      ),
+    },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   manpower: [
@@ -99,17 +161,24 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
       name: "headcount",
       label: "Headcount (workers)",
       type: "number",
+      min: 1,
       required: true,
     },
-    { name: "regular_hours", label: "Regular hours", type: "number" },
+    { name: "regular_hours", label: "Regular hours", type: "number", min: 0 },
     {
       name: "rate_per_hour",
       label: "Hourly rate (₹)",
       type: "number",
+      min: 0,
       required: true,
     },
-    { name: "overtime_hours", label: "Overtime hours", type: "number" },
-    { name: "ot_rate_per_hour", label: "OT rate/hr (₹)", type: "number" },
+    { name: "overtime_hours", label: "Overtime hours", type: "number", min: 0 },
+    {
+      name: "ot_rate_per_hour",
+      label: "OT rate/hr (₹)",
+      type: "number",
+      min: 0,
+    },
     {
       name: "subcontractor_id",
       label: "Subcontractor",
@@ -130,37 +199,86 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
       name: "hours_used",
       label: "Hours used",
       type: "number",
+      min: 0.0001,
       required: true,
     },
     {
       name: "rate_per_hour",
       label: "Rate per hour (₹)",
       type: "number",
+      min: 0,
       required: true,
     },
-    { name: "fuel_cost", label: "Fuel cost (₹)", type: "number" },
+    { name: "fuel_cost", label: "Fuel cost (₹)", type: "number", min: 0 },
     { name: "operator_name", label: "Operator name" },
     { name: "remarks", label: "Usage notes", type: "textarea" },
   ],
   reports: [
-    { name: "site_id", label: "Project site", type: "reference" },
+    {
+      name: "site_id",
+      label: "Project site",
+      type: "select",
+      valueType: "number",
+      placeholder: "Select project site",
+    },
     { name: "report_date", label: "Report date", type: "date", required: true },
-    { name: "weather", label: "Weather" },
-    { name: "manpower_count", label: "Manpower count", type: "number" },
-    { name: "equipment_used", label: "Equipment used", type: "textarea" },
-    { name: "work_completed", label: "Work completed", type: "textarea" },
-    { name: "material_used", label: "Material used", type: "textarea" },
-    { name: "material_shortage", label: "Material shortage", type: "textarea" },
-    { name: "work_planned_next", label: "Next planned work", type: "textarea" },
-    { name: "progress_percent", label: "Progress (%)", type: "number" },
-    { name: "issues", label: "Issues", type: "textarea" },
-    { name: "safety_issues", label: "Safety issues", type: "textarea" },
+    {
+      name: "weather",
+      label: "Weather",
+      type: "select",
+      placeholder: "Select weather",
+      options: ["Clear", "Sunny", "Cloudy", "Rainy", "Windy", "Stormy", "Other"].map(
+        (value) => ({ value, label: value }),
+      ),
+    },
+    {
+      name: "manpower_count",
+      label: "Manpower count",
+      type: "number",
+      min: 0,
+    },
+    {
+      name: "equipment_used",
+      label: "Equipment used",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "work_completed",
+      label: "Work completed",
+      type: "textarea",
+      rows: 2,
+      required: true,
+    },
+    { name: "material_used", label: "Material used", type: "textarea", rows: 2 },
+    {
+      name: "material_shortage",
+      label: "Material shortage",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "work_planned_next",
+      label: "Next planned work",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "progress_percent",
+      label: "Progress (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    { name: "issues", label: "Issues", type: "textarea", rows: 2 },
+    { name: "safety_issues", label: "Safety issues", type: "textarea", rows: 2 },
     {
       name: "client_instructions",
       label: "Client instructions",
       type: "textarea",
+      rows: 2,
     },
-    { name: "remarks", label: "Remarks", type: "textarea" },
+    { name: "remarks", label: "Remarks", type: "textarea", rows: 2 },
   ],
   documents: [
     { name: "site_id", label: "Project site", type: "reference" },
@@ -205,8 +323,12 @@ function childRows(value: unknown, keys: string[]): Record<string, unknown>[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) return [];
   const record = value as Record<string, unknown>;
   for (const key of keys) {
-    if (Array.isArray(record[key])) {
-      return record[key].filter(
+    const matchedKey = Object.keys(record).find(
+      (recordKey) => recordKey.toLowerCase() === key.toLowerCase(),
+    );
+    const rows = matchedKey ? record[matchedKey] : undefined;
+    if (Array.isArray(rows)) {
+      return rows.filter(
         (item): item is Record<string, unknown> =>
           Boolean(item) && typeof item === "object" && !Array.isArray(item),
       );
@@ -397,6 +519,14 @@ export function ProjectDetail({ id }: { id: string }) {
   }
 
   const projectRecord = project as Record<string, unknown>;
+  const projectCustomer =
+    project.party_name ??
+    (project.party_id != null
+      ? `Customer #${project.party_id}`
+      : "Customer not provided");
+  const projectStatus = project.status
+    ? String(project.status).replaceAll("_", " ")
+    : "Status unavailable";
   const siteOptions: ReferenceOption[] = childRows(
     projectRecord,
     sectionKeys.sites ?? [],
@@ -564,8 +694,7 @@ export function ProjectDetail({ id }: { id: string }) {
             </span>
             <h1>{project.project_name}</h1>
             <p>
-              {project.party_name ?? "Customer not provided"} ·{" "}
-              {String(project.status).replaceAll("_", " ")}
+              {projectCustomer} · {projectStatus}
             </p>
           </div>
         </div>
@@ -599,12 +728,7 @@ export function ProjectDetail({ id }: { id: string }) {
       {section === "overview" ? (
         <>
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 12,
-              marginBottom: 16,
-            }}
+            className="project-financial-grid"
           >
             {[
               [
@@ -636,13 +760,7 @@ export function ProjectDetail({ id }: { id: string }) {
           )}
           <section className="altrex-card">
             <h2>Project summary</h2>
-            <dl
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "10px 24px",
-              }}
-            >
+            <dl className="project-summary-grid">
               <div>
                 <dt>Location</dt>
                 <dd>{project.project_location || "—"}</dd>
@@ -661,11 +779,11 @@ export function ProjectDetail({ id }: { id: string }) {
               </div>
               <div>
                 <dt>Start date</dt>
-                <dd>{project.start_date || "—"}</dd>
+                <dd>{dateLabel(project.start_date)}</dd>
               </div>
               <div>
                 <dt>Planned finish</dt>
-                <dd>{project.planned_end_date || "—"}</dd>
+                <dd>{dateLabel(project.planned_end_date)}</dd>
               </div>
               <div>
                 <dt>Progress</dt>
@@ -935,6 +1053,7 @@ export function ProjectDetail({ id }: { id: string }) {
         <EntityFormDialog
           title={`${editing ? "Update" : "Add"} ${sectionLabels[section]}`}
           fields={activeFields}
+          dialogClassName={section === "reports" ? "project-dpr-dialog" : ""}
           fieldOptions={fieldOptions}
           lookupLoading={lookups.isLoading}
           lookupError={lookups.error}

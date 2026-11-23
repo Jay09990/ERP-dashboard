@@ -14,3 +14,4 @@ export { TransferList } from "./components/TransferList";
 export { TransferFormDrawer } from "./components/TransferFormDrawer";
 export { AdjustmentList } from "./components/AdjustmentList";
 export { AdjustmentFormDrawer } from "./components/AdjustmentFormDrawer";
+export { InventoryOverview } from "./components/InventoryOverview";

@@ -3,9 +3,12 @@
 import { permissions } from "@/config/permissions";
 import { crmApi } from "@/features/crm/api";
 import type { Lead, LeadActivity, NamedCrmRecord } from "@/features/crm/schema";
+import { apiClient } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
 import { sessionHasPermission } from "@/lib/auth/permissions";
 import { useSessionStore } from "@/stores/session-store";
 import { Button } from "@altrex/ui";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
 type FormField = {
@@ -14,11 +17,15 @@ type FormField = {
   type?:
     | "text"
     | "number"
+    | "select"
     | "date"
     | "datetime-local"
     | "email"
     | "url"
     | "textarea";
+  valueType?: "number";
+  options?: { value: string; label: string }[];
+  placeholder?: string;
   required?: boolean;
 };
 type Tab = "leads" | "follow-ups" | "sources" | "industries";
@@ -31,17 +38,63 @@ const leadFields: FormField[] = [
   { name: "email", label: "Email", type: "email" },
   { name: "website", label: "Website", type: "url" },
   { name: "gst_no", label: "GST number" },
-  { name: "industry_id", label: "Industry reference", type: "number" },
-  { name: "lead_source_id", label: "Lead source reference", type: "number" },
+  {
+    name: "industry_id",
+    label: "Industry",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select industry",
+  },
+  {
+    name: "lead_source_id",
+    label: "Lead source",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select lead source",
+  },
   { name: "referred_by", label: "Referred by" },
   { name: "address_line1", label: "Address" },
   { name: "address_line2", label: "Address line 2" },
-  { name: "city_id", label: "City reference", type: "number" },
-  { name: "state_id", label: "State reference", type: "number" },
-  { name: "country_id", label: "Country reference", type: "number" },
+  {
+    name: "city_id",
+    label: "City",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select city",
+  },
+  {
+    name: "state_id",
+    label: "State",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select state",
+  },
+  {
+    name: "country_id",
+    label: "Country",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select country",
+  },
   { name: "pincode", label: "Postal code" },
-  { name: "assigned_to", label: "Assigned user reference", type: "number" },
-  { name: "rating", label: "Lead rating" },
+  {
+    name: "assigned_to",
+    label: "Assigned user",
+    type: "select",
+    valueType: "number",
+    placeholder: "Select user",
+  },
+  {
+    name: "rating",
+    label: "Lead rating",
+    type: "select",
+    placeholder: "Select rating",
+    options: [
+      { value: "cold", label: "Cold" },
+      { value: "warm", label: "Warm" },
+      { value: "hot", label: "Hot" },
+    ],
+  },
   { name: "estimated_value", label: "Estimated value", type: "number" },
   { name: "next_follow_up_date", label: "Next follow-up", type: "date" },
   { name: "notes", label: "Notes", type: "textarea" },
@@ -64,6 +117,8 @@ function records<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
   if (!data || typeof data !== "object") return [];
   const object = data as Record<string, unknown>;
+  const normalizeKey = (key: string) =>
+    key.replace(/[^a-z0-9]/gi, "").toLowerCase();
   for (const key of [
     "data",
     "leads",
@@ -74,16 +129,73 @@ function records<T>(data: unknown): T[] {
     "follow_ups",
     "activities",
     "lead_sources",
+    "lead_source",
     "industries",
+    "industry",
+    "users",
+    "cities",
+    "city",
+    "states",
+    "state",
+    "countries",
+    "country",
     "result",
   ]) {
-    if (Array.isArray(object[key])) return object[key] as T[];
-    if (object[key] && typeof object[key] === "object") {
-      const nested = records<T>(object[key]);
+    const matchedKey = Object.keys(object).find(
+      (recordKey) => normalizeKey(recordKey) === normalizeKey(key),
+    );
+    if (!matchedKey) continue;
+    if (Array.isArray(object[matchedKey])) return object[matchedKey] as T[];
+    if (object[matchedKey] && typeof object[matchedKey] === "object") {
+      const nested = records<T>(object[matchedKey]);
       if (nested.length) return nested;
     }
   }
   return [];
+}
+
+function recordValue(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (record[key] !== undefined) return record[key];
+  }
+  const normalizedKeys = new Set(
+    keys.map((key) => key.replace(/[^a-z0-9]/gi, "").toLowerCase()),
+  );
+  const matchingKey = Object.keys(record).find((key) =>
+    normalizedKeys.has(key.replace(/[^a-z0-9]/gi, "").toLowerCase()),
+  );
+  return matchingKey ? record[matchingKey] : undefined;
+}
+
+function referenceOptions(
+  data: unknown,
+  idKeys: string[],
+  labelKeys: string[],
+) {
+  return records<Record<string, unknown>>(data).flatMap((record) => {
+    const id = recordValue(record, idKeys);
+    if ((typeof id !== "number" && typeof id !== "string") || !String(id)) {
+      return [];
+    }
+    const label = recordValue(record, labelKeys);
+    const firstName = recordValue(record, ["first_name", "firstName"]);
+    const lastName = recordValue(record, ["last_name", "lastName"]);
+    const fullName = [firstName, lastName]
+      .filter(
+        (name): name is string =>
+          typeof name === "string" && name.trim().length > 0,
+      )
+      .join(" ");
+    return [
+      {
+        value: String(id),
+        label:
+          (typeof label === "number" || typeof label === "string") && label
+            ? String(label)
+            : fullName || `#${String(id)}`,
+      },
+    ];
+  });
 }
 
 function FormDialog({
@@ -111,10 +223,13 @@ function FormDialog({
   );
   const [error, setError] = useState("");
   return (
-    <div className="altrex-dialog-backdrop" onMouseDown={onClose}>
+    <div
+      className="altrex-dialog-backdrop crm-lead-dialog-backdrop"
+      onMouseDown={onClose}
+    >
       <dialog
         open
-        className="altrex-dialog altrex-dialog-lg"
+        className="altrex-dialog altrex-dialog-lg crm-lead-dialog"
         aria-modal="true"
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -130,6 +245,7 @@ function FormDialog({
           </button>
         </header>
         <form
+          className="crm-lead-form"
           onSubmit={(event) => {
             event.preventDefault();
             try {
@@ -139,7 +255,7 @@ function FormDialog({
                 if (field.required && !value)
                   throw new Error(`${field.label} is required.`);
                 if (!value) continue;
-                if (field.type === "number") {
+                if (field.type === "number" || field.valueType === "number") {
                   const number = Number(value);
                   if (!Number.isFinite(number))
                     throw new Error(`${field.label} must be a number.`);
@@ -154,14 +270,7 @@ function FormDialog({
             }
           }}
         >
-          <div
-            className="altrex-dialog-body"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 14,
-            }}
-          >
+          <div className="altrex-dialog-body crm-lead-form-grid">
             {fields.map((field) => (
               <label
                 className="altrex-field"
@@ -188,6 +297,28 @@ function FormDialog({
                       }))
                     }
                   />
+                ) : field.type === "select" ? (
+                  <select
+                    id={`crm-${field.name}`}
+                    className="altrex-input"
+                    required={field.required}
+                    value={values[field.name] ?? ""}
+                    onChange={(event) =>
+                      setValues((current) => ({
+                        ...current,
+                        [field.name]: event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">
+                      {field.placeholder ?? "Select an option"}
+                    </option>
+                    {field.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     id={`crm-${field.name}`}
@@ -205,7 +336,11 @@ function FormDialog({
                 )}
               </label>
             ))}
-            {error && <p role="alert">{error}</p>}
+            {error && (
+              <p className="crm-lead-form-error" role="alert">
+                {error}
+              </p>
+            )}
           </div>
           <footer className="altrex-dialog-footer">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -281,6 +416,42 @@ export function LeadWorkspace() {
   const [editing, setEditing] = useState<Lead | null>(null);
   const [activeLead, setActiveLead] = useState<number | null>(null);
   const [followUpScope, setFollowUpScope] = useState("due");
+  const usersQuery = useQuery({
+    queryKey: ["crm", "lead-reference", "users"],
+    queryFn: () => apiClient.get<unknown>(endpoints.auth.users),
+    enabled: dialog === "lead",
+    staleTime: 5 * 60 * 1000,
+    select: (data) =>
+      referenceOptions(data, ["user_id", "id"], [
+        "full_name",
+        "fullName",
+        "name",
+      ]),
+  });
+  const citiesQuery = useQuery({
+    queryKey: ["crm", "lead-reference", "cities"],
+    queryFn: () => apiClient.get<unknown>(endpoints.masters.city),
+    enabled: dialog === "lead",
+    staleTime: 5 * 60 * 1000,
+    select: (data) =>
+      referenceOptions(data, ["city_id", "id"], ["city_name", "name"]),
+  });
+  const statesQuery = useQuery({
+    queryKey: ["crm", "lead-reference", "states"],
+    queryFn: () => apiClient.get<unknown>(endpoints.masters.state),
+    enabled: dialog === "lead",
+    staleTime: 5 * 60 * 1000,
+    select: (data) =>
+      referenceOptions(data, ["state_id", "id"], ["state_name", "name"]),
+  });
+  const countriesQuery = useQuery({
+    queryKey: ["crm", "lead-reference", "countries"],
+    queryFn: () => apiClient.get<unknown>(endpoints.masters.country),
+    enabled: dialog === "lead",
+    staleTime: 5 * 60 * 1000,
+    select: (data) =>
+      referenceOptions(data, ["country_id", "id"], ["country_name", "name"]),
+  });
   const leadsQuery = crmApi.useLeads(hasPermission(permissions.leadsRead));
   const sourcesQuery = crmApi.useLeadSources(
     hasPermission(permissions.leadSourcesRead),
@@ -362,6 +533,12 @@ export function LeadWorkspace() {
   const error =
     leadsQuery.error ||
     followUpsQuery.error ||
+    sourcesQuery.error ||
+    industriesQuery.error ||
+    usersQuery.error ||
+    citiesQuery.error ||
+    statesQuery.error ||
+    countriesQuery.error ||
     createLead.error ||
     updateLead.error ||
     deleteLead.error ||
@@ -370,9 +547,81 @@ export function LeadWorkspace() {
     createActivity.error ||
     createSource.error ||
     createIndustry.error;
+  const leadOptions: Record<string, { value: string; label: string }[]> = {
+    industry_id: referenceOptions(
+      industries,
+      ["industry_id", "id"],
+      ["industry_name", "name"],
+    ),
+    lead_source_id: referenceOptions(
+      sources,
+      ["lead_source_id", "id"],
+      ["source_name", "name"],
+    ),
+    city_id: citiesQuery.data ?? [],
+    state_id: statesQuery.data ?? [],
+    country_id: countriesQuery.data ?? [],
+    assigned_to: usersQuery.data ?? [],
+  };
+  const emptyOptionLabels: Record<string, string> = {
+    industry_id: !hasPermission(permissions.industriesRead)
+      ? "Industry list access is required"
+      : industriesQuery.isError
+        ? "Unable to load industries"
+      : industriesQuery.isLoading
+        ? "Loading industries..."
+        : "No industries available",
+    lead_source_id: !hasPermission(permissions.leadSourcesRead)
+      ? "Lead source list access is required"
+      : sourcesQuery.isError
+        ? "Unable to load lead sources"
+      : sourcesQuery.isLoading
+        ? "Loading lead sources..."
+        : "No lead sources available",
+    city_id: citiesQuery.isError
+      ? "Unable to load cities"
+      : citiesQuery.isLoading
+        ? "Loading cities..."
+        : "No cities available",
+    state_id: statesQuery.isError
+      ? "Unable to load states"
+      : statesQuery.isLoading
+        ? "Loading states..."
+        : "No states available",
+    country_id: countriesQuery.isError
+      ? "Unable to load countries"
+      : countriesQuery.isLoading
+        ? "Loading countries..."
+        : "No countries available",
+    assigned_to: usersQuery.isError
+      ? "Unable to load users"
+      : usersQuery.isLoading
+        ? "Loading users..."
+        : "No users available",
+  };
   const formFields =
     dialog === "lead"
-      ? leadFields
+      ? leadFields.map((field) => {
+          const options = field.options ?? leadOptions[field.name];
+          if (!options) return field;
+          const currentValue = editing?.[field.name as keyof Lead];
+          const currentOption =
+            currentValue == null
+              ? null
+              : { value: String(currentValue), label: `#${currentValue}` };
+          return {
+            ...field,
+            placeholder:
+              options.length === 0
+                ? (emptyOptionLabels[field.name] ?? field.placeholder)
+                : field.placeholder,
+            options:
+              currentOption &&
+              !options.some((option) => option.value === currentOption.value)
+                ? [...options, currentOption]
+                : options,
+          };
+        })
       : dialog === "activity"
         ? activityFields
         : [

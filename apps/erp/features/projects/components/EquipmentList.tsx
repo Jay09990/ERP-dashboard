@@ -114,14 +114,15 @@ export function EquipmentList() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const errors = [
+    equipmentQuery.error,
     createMutation.error,
     updateMutation.error,
     deleteMutation.error,
   ].filter(Boolean);
 
   return (
-    <div>
-      <div className="altrex-page-header">
+    <div style={{ width: "100%", minWidth: 0, boxSizing: "border-box" }}>
+      <div className="altrex-page-header" style={{ flexWrap: "wrap" }}>
         <div>
           <span className="altrex-eyebrow">Project Management</span>
           <h1>Equipment Registry</h1>
@@ -130,7 +131,7 @@ export function EquipmentList() {
             ownership.
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <Link
             href="/projects"
             className="altrex-button altrex-button-secondary"
@@ -153,11 +154,10 @@ export function EquipmentList() {
       ))}
 
       <div
-        className="altrex-filter-bar"
+        className="altrex-filter-bar equipment-registry-filters"
         style={{
-          display: "flex",
+          display: "grid",
           gap: 12,
-          flexWrap: "wrap",
           marginBottom: 16,
         }}
       >
@@ -165,12 +165,13 @@ export function EquipmentList() {
           type="search"
           placeholder="Search by equipment name..."
           className="altrex-input"
-          style={{ maxWidth: 280 }}
+          style={{ width: "100%", minWidth: 0 }}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
           className="altrex-select"
+          style={{ width: "100%", minWidth: 0 }}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -181,6 +182,7 @@ export function EquipmentList() {
         </select>
         <select
           className="altrex-select"
+          style={{ width: "100%", minWidth: 0 }}
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
         >
@@ -195,9 +197,14 @@ export function EquipmentList() {
       {equipmentQuery.isLoading ? (
         <TableSkeleton columns={6} message="Loading equipment registry..." />
       ) : records.length === 0 ? (
-        <div className="altrex-table-state">
-          <Wrench size={32} style={{ opacity: 0.4, margin: "0 auto 12px" }} />
-          <p>No equipment records found matching the criteria.</p>
+        <div
+          className="altrex-table-state"
+          style={{ flexDirection: "column", gap: 8 }}
+        >
+          <Wrench size={32} style={{ opacity: 0.4 }} />
+          <p style={{ margin: 0 }}>
+            No equipment records found matching the criteria.
+          </p>
         </div>
       ) : (
         <div className="altrex-table-wrap">

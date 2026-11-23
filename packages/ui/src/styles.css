@@ -2,14 +2,16 @@
    @ALTREX/UI PACKAGE STYLES — Executive Shared Components
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.altrex-button {
-  min-height: 38px;
+.altrex-button,
+.altrex-btn {
+  min-height: 36px;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 0 16px;
   font-family: inherit;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -17,41 +19,93 @@
   gap: 8px;
   user-select: none;
   white-space: nowrap;
-  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
 
-.altrex-button:active {
+.altrex-button:active,
+.altrex-btn:active {
   transform: scale(0.98);
 }
 
-.altrex-button-primary {
-  background: var(--altrex-primary, #3b82f6);
-  color: #ffffff !important;
-  box-shadow: 0 2px 10px
-    color-mix(in srgb, var(--altrex-primary, #3b82f6) 40%, transparent);
+.altrex-button:disabled,
+.altrex-btn:disabled,
+.altrex-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none !important;
 }
 
-.altrex-button-primary:hover {
-  background: var(--altrex-primary-hover, #2563eb);
-  box-shadow: 0 4px 16px
-    color-mix(in srgb, var(--altrex-primary, #3b82f6) 55%, transparent);
+.altrex-button-primary,
+.altrex-btn-primary {
+  background: var(--altrex-primary, #2563eb) !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+}
+
+.altrex-button-primary:hover,
+.altrex-btn-primary:hover {
+  background: var(--altrex-primary-hover, #1d4ed8) !important;
+  box-shadow: 0 4px 10px -1px color-mix(in srgb, var(--altrex-primary, #2563eb) 45%, transparent),
+              0 2px 4px -2px color-mix(in srgb, var(--altrex-primary, #2563eb) 30%, transparent);
 }
 
 .altrex-button-neutral,
-.altrex-button-outline {
-  background: var(--altrex-surface);
-  color: var(--altrex-text);
-  border: 1px solid var(--altrex-border);
+.altrex-button-outline,
+.altrex-btn-outline {
+  background: var(--altrex-surface, #ffffff) !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid var(--altrex-border, #cbd5e1) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .altrex-button-neutral:hover,
-.altrex-button-outline:hover {
-  background: var(--altrex-hover);
-  border-color: color-mix(
-    in srgb,
-    var(--altrex-primary) 35%,
-    var(--altrex-border)
-  );
+.altrex-button-outline:hover,
+.altrex-btn-outline:hover {
+  background: var(--altrex-hover, #f1f5f9) !important;
+  border-color: var(--altrex-primary, #2563eb) !important;
+  color: var(--altrex-primary, #2563eb) !important;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
+}
+
+.altrex-button-secondary,
+.altrex-btn-secondary {
+  background: var(--altrex-raised, #f1f5f9) !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid var(--altrex-border, #cbd5e1) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.altrex-button-secondary:hover,
+.altrex-btn-secondary:hover {
+  background: var(--altrex-hover, #e2e8f0) !important;
+  border-color: color-mix(in srgb, var(--altrex-primary, #2563eb) 35%, var(--altrex-border, #cbd5e1)) !important;
+}
+
+.altrex-btn-destructive {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 3px 0 rgba(220, 38, 38, 0.25);
+}
+
+.altrex-btn-destructive:hover {
+  background: #b91c1c !important;
+  box-shadow: 0 4px 8px -1px rgba(220, 38, 38, 0.35);
+}
+
+.altrex-btn-ghost {
+  background: transparent !important;
+  color: var(--altrex-text, #0f172a) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.altrex-btn-ghost:hover {
+  background: var(--altrex-hover, #f1f5f9) !important;
+  color: var(--altrex-primary, #2563eb) !important;
 }
 
 .altrex-table-wrap {
