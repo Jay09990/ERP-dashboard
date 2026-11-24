@@ -25,7 +25,7 @@ import {
   Landmark,
   LayoutDashboard,
   type LucideIcon,
-  Map as MapIcon,
+  Map,
   MapPin,
   Network,
   Package,
@@ -43,8 +43,8 @@ import {
   UserCheck,
   Users,
   Users2,
+  Wrench,
 } from "lucide-react";
-import { permissions } from "./permissions";
 
 export interface NavChildItem {
   id: string;
@@ -85,6 +85,13 @@ export const navigationConfig: NavParentItem[] = [
     icon: TrendingUp,
     children: [
       {
+        id: "sales-overview",
+        label: "Overview",
+        href: "/sales",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
         id: "quotations",
         label: "Quotations",
         href: "/sales/quotations",
@@ -123,6 +130,13 @@ export const navigationConfig: NavParentItem[] = [
     icon: ShoppingBag,
     children: [
       {
+        id: "purchase-overview",
+        label: "Overview",
+        href: "/purchase",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
         id: "purchase-orders",
         label: "Purchase Orders",
         href: "/purchase/orders",
@@ -148,6 +162,12 @@ export const navigationConfig: NavParentItem[] = [
     icon: Briefcase,
     children: [
       {
+        id: "projects-overview",
+        label: "Overview",
+        href: "/projects/overview",
+        icon: LayoutDashboard,
+      },
+      {
         id: "project-register",
         label: "Projects",
         href: "/projects",
@@ -171,19 +191,80 @@ export const navigationConfig: NavParentItem[] = [
         href: "/procurement/site-issues",
         icon: Truck,
       },
+      {
+        id: "project-equipment",
+        label: "Equipment",
+        href: "/projects/equipment",
+        icon: Wrench,
+      },
     ],
   },
   {
     id: "crm",
     label: "CRM",
+    icon: Target,
+    children: [
+      {
+        id: "crm-overview",
+        label: "Overview",
+        href: "/crm",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
+        id: "leads",
+        label: "Leads",
+        href: "/crm/leads",
+        icon: Users,
+      },
+    ],
+  },
+  {
+    id: "hrms",
+    label: "HRMS",
     icon: Users,
     children: [
       {
-        id: "leads",
-        label: "Leads & Follow-ups",
-        href: "/crm/leads",
-        icon: Users,
-        permission: permissions.leadsRead,
+        id: "hrms-dashboard",
+        label: "Overview",
+        href: "/hrms",
+        icon: LayoutDashboard,
+      },
+      {
+        id: "hrms-employees",
+        label: "Employees",
+        href: "/hrms/employees",
+        icon: UserCheck,
+      },
+      {
+        id: "hrms-attendance",
+        label: "Attendance",
+        href: "/hrms/attendance",
+        icon: Clock,
+      },
+      {
+        id: "hrms-leaves",
+        label: "Leaves",
+        href: "/hrms/leaves",
+        icon: CalendarRange,
+      },
+      {
+        id: "hrms-payroll",
+        label: "Payroll",
+        href: "/hrms/payroll",
+        icon: Coins,
+      },
+      {
+        id: "hrms-work-locations",
+        label: "Work Locations",
+        href: "/hrms/work-locations",
+        icon: MapPin,
+      },
+      {
+        id: "hrms-settings",
+        label: "HR Settings",
+        href: "/hrms/settings",
+        icon: Briefcase,
       },
     ],
   },
@@ -192,6 +273,13 @@ export const navigationConfig: NavParentItem[] = [
     label: "Parties",
     icon: Users2,
     children: [
+      {
+        id: "parties-overview",
+        label: "Overview",
+        href: "/parties",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       {
         id: "customers",
         label: "Customers",
@@ -211,6 +299,13 @@ export const navigationConfig: NavParentItem[] = [
     label: "Inventory",
     icon: Package,
     children: [
+      {
+        id: "inventory-overview",
+        label: "Overview",
+        href: "/inventory",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       {
         id: "items",
         label: "Items",
@@ -273,6 +368,12 @@ export const navigationConfig: NavParentItem[] = [
     icon: ShieldCheck,
     children: [
       {
+        id: "administration-overview",
+        label: "Overview",
+        href: "/administration",
+        icon: LayoutDashboard,
+      },
+      {
         id: "users",
         label: "Users",
         href: "/users",
@@ -299,6 +400,7 @@ export const navigationConfig: NavParentItem[] = [
     id: "masters",
     label: "Masters",
     icon: Database,
+    href: "/masters",
     subGroups: [
       {
         id: "org-hr",
@@ -416,7 +518,7 @@ export const navigationConfig: NavParentItem[] = [
             id: "states",
             label: "States",
             href: "/masters/states",
-            icon: MapIcon,
+            icon: Map,
           },
           {
             id: "cities",

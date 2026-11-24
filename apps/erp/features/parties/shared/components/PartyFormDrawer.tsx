@@ -171,25 +171,37 @@ export function PartyFormDrawer({
 
   return (
     <div
-      className="altrex-dialog-backdrop"
       style={{
+        position: "fixed",
+        inset: 0,
         zIndex: 1000,
+        display: "flex",
+        justifyContent: "flex-end",
+        background: "rgba(0, 0, 0, 0.45)",
       }}
     >
       <div
-        className="altrex-dialog"
-        role="dialog"
-        aria-modal="true"
         style={{
-          width: "min(680px, 100%)",
-          maxHeight: "min(90vh, calc(100dvh - 32px))",
+          width: "100%",
+          maxWidth: 680,
+          height: "100%",
+          background: "var(--altrex-canvas)",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "-4px 0 24px rgba(0, 0, 0, 0.2)",
+          animation: "slideInRight 180ms ease-out",
         }}
       >
-        {/* Keep the form title visible while the fields scroll. */}
+        {/* Drawer Header */}
         <div
-          className="altrex-dialog-header"
           style={{
-            minHeight: 64,
+            height: 64,
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid var(--altrex-border)",
+            background: "var(--altrex-surface)",
           }}
         >
           <div>
@@ -214,251 +226,253 @@ export function PartyFormDrawer({
             type="button"
             onClick={onClose}
             className="altrex-icon-button"
-            aria-label="Close form"
+            aria-label="Close drawer"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Keep actions outside the scrolling field area. */}
+        {/* Drawer Body Form */}
         <form
           onSubmit={handleSubmit(handleSave)}
           style={{
             flex: 1,
+            overflowY: "auto",
+            padding: 24,
             display: "flex",
             flexDirection: "column",
-            minHeight: 0,
-            overflow: "hidden",
+            gap: 24,
           }}
         >
+          {/* Section 1: Basic Identity */}
           <div
-            className="altrex-dialog-body"
-            style={{ display: "grid", gap: 24 }}
+            style={{
+              padding: 18,
+              border: "1px solid var(--altrex-border)",
+              borderRadius: 8,
+              background: "var(--altrex-surface)",
+            }}
           >
-            {/* Section 1: Basic Identity */}
-            <div
+            <h4
               style={{
-                padding: 18,
-                border: "1px solid var(--altrex-border)",
-                borderRadius: 8,
-                background: "var(--altrex-surface)",
+                margin: "0 0 14px",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--altrex-text)",
               }}
             >
-              <h4
-                style={{
-                  margin: "0 0 14px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--altrex-text)",
-                }}
-              >
-                Basic Details
-              </h4>
+              Basic Details
+            </h4>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 14,
-                }}
-              >
-                <label
-                  className="altrex-field"
-                  style={{ gridColumn: "1 / -1" }}
-                >
-                  <span>
-                    {partyType === "customer"
-                      ? "Customer Name *"
-                      : "Vendor / Company Name *"}
-                  </span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="e.g. Acme Corporation"
-                    {...register("party_name")}
-                  />
-                  {errors.party_name && (
-                    <span className="altrex-field-error">
-                      {errors.party_name.message}
-                    </span>
-                  )}
-                </label>
-
-                <label className="altrex-field">
-                  <span>Phone Number *</span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="e.g. +91 9876543210"
-                    {...register("phone")}
-                  />
-                  {errors.phone && (
-                    <span className="altrex-field-error">
-                      {errors.phone.message}
-                    </span>
-                  )}
-                </label>
-
-                <label className="altrex-field">
-                  <span>Email Address</span>
-                  <input
-                    type="email"
-                    className="altrex-input"
-                    placeholder="billing@company.com"
-                    {...register("email")}
-                  />
-                  {errors.email && (
-                    <span className="altrex-field-error">
-                      {errors.email.message}
-                    </span>
-                  )}
-                </label>
-
-                <label className="altrex-field">
-                  <span>Primary Contact Person</span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="e.g. Jane Doe"
-                    {...register("contact_name")}
-                  />
-                </label>
-
-                <label className="altrex-field">
-                  <span>Website</span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="https://example.com"
-                    {...register("website")}
-                  />
-                </label>
-
-                <label className="altrex-field">
-                  <span>GSTIN / Tax ID</span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="24AAAAA0000A1Z5"
-                    {...register("gst_no")}
-                  />
-                </label>
-
-                <label className="altrex-field">
-                  <span>PAN Number</span>
-                  <input
-                    type="text"
-                    className="altrex-input"
-                    placeholder="AAAAA0000A"
-                    {...register("pan_no")}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Section 2: Financial Terms */}
             <div
               style={{
-                padding: 18,
-                border: "1px solid var(--altrex-border)",
-                borderRadius: 8,
-                background: "var(--altrex-surface)",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
               }}
             >
-              <h4
-                style={{
-                  margin: "0 0 14px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--altrex-text)",
-                }}
-              >
-                Financial & Currency
-              </h4>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 14,
-                }}
-              >
-                <label className="altrex-field">
-                  <span>Currency</span>
-                  <select
-                    className="altrex-input altrex-select"
-                    {...register("currency_id")}
-                  >
-                    {currencies.map((c: any) => (
-                      <option
-                        key={c.id ?? c.currency_id}
-                        value={c.id ?? c.currency_id}
-                      >
-                        {c.currency_code ?? c.code ?? "INR"} (
-                        {c.currency_name ?? c.name ?? "Indian Rupee"})
-                      </option>
-                    ))}
-                    {currencies.length === 0 && (
-                      <option value={1}>INR (Indian Rupee)</option>
-                    )}
-                  </select>
-                </label>
-
-                <label className="altrex-field">
-                  <span>Opening Balance</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="altrex-input"
-                    placeholder="0.00"
-                    {...register("opening_balance")}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Section 3: Addresses Repeater */}
-            <AddressRepeater
-              control={control}
-              register={register}
-              setValue={setValue}
-              watch={watch}
-              errors={errors}
-            />
-
-            {/* Section 4: Contact Persons Repeater */}
-            <ContactPersonRepeater
-              control={control}
-              register={register}
-              errors={errors}
-            />
-
-            {/* Section 5: Remarks / Notes */}
-            <div
-              style={{
-                padding: 18,
-                border: "1px solid var(--altrex-border)",
-                borderRadius: 8,
-                background: "var(--altrex-surface)",
-              }}
-            >
-              <label className="altrex-field" style={{ margin: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>
-                  Internal Notes & Remarks
+              <label className="altrex-field" style={{ gridColumn: "1 / -1" }}>
+                <span>
+                  {partyType === "customer"
+                    ? "Customer Name *"
+                    : "Vendor / Company Name *"}
                 </span>
-                <textarea
+                <input
+                  type="text"
                   className="altrex-input"
-                  rows={3}
-                  placeholder="Add special notes, payment terms, or instructions..."
-                  style={{ height: "auto", padding: 10 }}
-                  {...register("notes")}
+                  placeholder="e.g. Acme Corporation"
+                  {...register("party_name")}
+                />
+                {errors.party_name && (
+                  <span className="altrex-field-error">
+                    {errors.party_name.message}
+                  </span>
+                )}
+              </label>
+
+              <label className="altrex-field">
+                <span>Phone Number *</span>
+                <input
+                  type="text"
+                  className="altrex-input"
+                  placeholder="e.g. +91 9876543210"
+                  {...register("phone")}
+                />
+                {errors.phone && (
+                  <span className="altrex-field-error">
+                    {errors.phone.message}
+                  </span>
+                )}
+              </label>
+
+              <label className="altrex-field">
+                <span>Email Address</span>
+                <input
+                  type="email"
+                  className="altrex-input"
+                  placeholder="billing@company.com"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <span className="altrex-field-error">
+                    {errors.email.message}
+                  </span>
+                )}
+              </label>
+
+              <label className="altrex-field">
+                <span>Primary Contact Person</span>
+                <input
+                  type="text"
+                  className="altrex-input"
+                  placeholder="e.g. Jane Doe"
+                  {...register("contact_name")}
+                />
+              </label>
+
+              <label className="altrex-field">
+                <span>Website</span>
+                <input
+                  type="text"
+                  className="altrex-input"
+                  placeholder="https://example.com"
+                  {...register("website")}
+                />
+              </label>
+
+              <label className="altrex-field">
+                <span>GSTIN / Tax ID</span>
+                <input
+                  type="text"
+                  className="altrex-input"
+                  placeholder="24AAAAA0000A1Z5"
+                  {...register("gst_no")}
+                />
+              </label>
+
+              <label className="altrex-field">
+                <span>PAN Number</span>
+                <input
+                  type="text"
+                  className="altrex-input"
+                  placeholder="AAAAA0000A"
+                  {...register("pan_no")}
                 />
               </label>
             </div>
           </div>
 
-          {/* Keep Cancel and Save visible below the scrollable fields. */}
-          <div className="altrex-dialog-footer">
+          {/* Section 2: Financial Terms */}
+          <div
+            style={{
+              padding: 18,
+              border: "1px solid var(--altrex-border)",
+              borderRadius: 8,
+              background: "var(--altrex-surface)",
+            }}
+          >
+            <h4
+              style={{
+                margin: "0 0 14px",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--altrex-text)",
+              }}
+            >
+              Financial & Currency
+            </h4>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
+              }}
+            >
+              <label className="altrex-field">
+                <span>Currency</span>
+                <select
+                  className="altrex-input altrex-select"
+                  {...register("currency_id")}
+                >
+                  {currencies.map((c: any) => (
+                    <option
+                      key={c.id ?? c.currency_id}
+                      value={c.id ?? c.currency_id}
+                    >
+                      {c.currency_code ?? c.code ?? "INR"} (
+                      {c.currency_name ?? c.name ?? "Indian Rupee"})
+                    </option>
+                  ))}
+                  {currencies.length === 0 && (
+                    <option value={1}>INR (Indian Rupee)</option>
+                  )}
+                </select>
+              </label>
+
+              <label className="altrex-field">
+                <span>Opening Balance</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="altrex-input"
+                  placeholder="0.00"
+                  {...register("opening_balance")}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Section 3: Addresses Repeater */}
+          <AddressRepeater
+            control={control}
+            register={register}
+            setValue={setValue}
+            watch={watch}
+            errors={errors}
+          />
+
+          {/* Section 4: Contact Persons Repeater */}
+          <ContactPersonRepeater
+            control={control}
+            register={register}
+            errors={errors}
+          />
+
+          {/* Section 5: Remarks / Notes */}
+          <div
+            style={{
+              padding: 18,
+              border: "1px solid var(--altrex-border)",
+              borderRadius: 8,
+              background: "var(--altrex-surface)",
+            }}
+          >
+            <label className="altrex-field" style={{ margin: 0 }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>
+                Internal Notes & Remarks
+              </span>
+              <textarea
+                className="altrex-input"
+                rows={3}
+                placeholder="Add special notes, payment terms, or instructions..."
+                style={{ height: "auto", padding: 10 }}
+                {...register("notes")}
+              />
+            </label>
+          </div>
+
+          {/* Drawer Footer Actions */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 12,
+              marginTop: 12,
+              paddingTop: 16,
+              borderTop: "1px solid var(--altrex-border)",
+            }}
+          >
             <button
               type="button"
               onClick={onClose}

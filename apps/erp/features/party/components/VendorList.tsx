@@ -139,7 +139,7 @@ export function VendorList() {
                 ✕
               </button>
             </div>
-            <div className="altrex-dialog-body altrex-dialog-form-container">
+            <div className="altrex-dialog-body">
               <PartyForm
                 partyType="vendor"
                 initialValues={editingVendor || undefined}

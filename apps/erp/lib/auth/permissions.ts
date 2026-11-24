@@ -89,8 +89,11 @@ export function getPermissionSet(permissions: unknown): Set<string> {
 export function sessionHasPermission(
   permissions: unknown,
   permKey?: string,
+  isSuperAdmin?: boolean,
 ): boolean {
   if (!permKey) return true;
+  // Super-admins bypass all permission checks
+  if (isSuperAdmin) return true;
   const set = getPermissionSet(permissions);
   return set.has(permKey) || set.has("*") || set.has("all");
 }

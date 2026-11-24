@@ -197,8 +197,8 @@ export function AdjustmentFormDrawer({
           backgroundColor: "var(--altrex-bg-card, #ffffff)",
           color: "var(--altrex-text, #0f172a)",
           borderColor: "var(--altrex-border, #e2e8f0)",
-          maxWidth: "820px",
-          width: "90%",
+          maxWidth: "960px",
+          width: "95%",
         }}
       >
         <div
@@ -236,14 +236,15 @@ export function AdjustmentFormDrawer({
               display: "flex",
               flexDirection: "column",
               gap: "16px",
-              maxHeight: "75vh",
+              maxHeight: "80vh",
               overflowY: "auto",
+              overflowX: "hidden",
             }}
           >
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                 gap: "12px",
               }}
             >
@@ -377,258 +378,271 @@ export function AdjustmentFormDrawer({
                 </Button>
               </div>
 
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  border: "1px solid var(--altrex-border, #e2e8f0)",
-                  borderRadius: "6px",
-                  fontSize: "13px",
-                }}
-              >
-                <thead>
-                  <tr
-                    style={{
-                      backgroundColor: "var(--altrex-bg-subtle, #f1f5f9)",
-                      borderBottom: "1px solid var(--altrex-border, #e2e8f0)",
-                    }}
-                  >
-                    <th
+              <div style={{ width: "100%", overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    tableLayout: "fixed",
+                    borderCollapse: "collapse",
+                    border: "1px solid var(--altrex-border, #e2e8f0)",
+                    borderRadius: "6px",
+                    fontSize: "13px",
+                  }}
+                >
+                  <thead>
+                    <tr
                       style={{
-                        padding: "8px",
-                        textAlign: "left",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "30%",
+                        backgroundColor: "var(--altrex-bg-subtle, #f1f5f9)",
+                        borderBottom: "1px solid var(--altrex-border, #e2e8f0)",
                       }}
                     >
-                      Item
-                    </th>
-                    <th
-                      style={{
-                        padding: "8px",
-                        textAlign: "left",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "20%",
-                      }}
-                    >
-                      Batch (Optional)
-                    </th>
-                    <th
-                      style={{
-                        padding: "8px",
-                        textAlign: "left",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "20%",
-                      }}
-                    >
-                      Adjustment Type
-                    </th>
-                    <th
-                      style={{
-                        padding: "8px",
-                        textAlign: "left",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "15%",
-                      }}
-                    >
-                      Quantity
-                    </th>
-                    <th
-                      style={{
-                        padding: "8px",
-                        textAlign: "left",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "10%",
-                      }}
-                    >
-                      Unit
-                    </th>
-                    <th
-                      style={{
-                        padding: "8px",
-                        textAlign: "center",
-                        color: "var(--altrex-text, #0f172a)",
-                        width: "5%",
-                      }}
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lineItems.map((row, index) => {
-                    const itemBatches = batchesList.filter(
-                      (b: any) => String(b.item_id) === String(row.item_id),
-                    );
-
-                    return (
-                      <tr
-                        key={index}
+                      <th
                         style={{
-                          borderBottom:
-                            "1px solid var(--altrex-border, #e2e8f0)",
+                          padding: "8px",
+                          textAlign: "left",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "32%",
                         }}
                       >
-                        <td style={{ padding: "6px" }}>
-                          <select
-                            className="altrex-input"
-                            value={row.item_id}
-                            onChange={(e) =>
-                              handleUpdateRow(index, "item_id", e.target.value)
-                            }
-                            required
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              backgroundColor: "var(--altrex-bg, #ffffff)",
-                              color: "var(--altrex-text, #0f172a)",
-                              borderColor: "var(--altrex-border, #cbd5e1)",
-                            }}
-                          >
-                            <option value="">Select Item</option>
-                            {itemsList.map((item: any) => {
-                              const id =
-                                item.item_id ?? item.id ?? item.tbl_items_id;
-                              const name =
-                                item.item_name ?? item.name ?? `Item #${id}`;
-                              return (
-                                <option key={id} value={id}>
-                                  {name}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </td>
-                        <td style={{ padding: "6px" }}>
-                          <select
-                            className="altrex-input"
-                            value={row.batch_id || ""}
-                            onChange={(e) =>
-                              handleUpdateRow(
-                                index,
-                                "batch_id",
-                                e.target.value || null,
-                              )
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              backgroundColor: "var(--altrex-bg, #ffffff)",
-                              color: "var(--altrex-text, #0f172a)",
-                              borderColor: "var(--altrex-border, #cbd5e1)",
-                            }}
-                          >
-                            <option value="">All / No Batch</option>
-                            {itemBatches.map((b: any) => {
-                              const id = b.batch_id ?? b.id;
-                              return (
-                                <option key={id} value={id}>
-                                  {b.batch_no}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </td>
-                        <td style={{ padding: "6px" }}>
-                          <select
-                            className="altrex-input"
-                            value={row.adjustment_type}
-                            onChange={(e) =>
-                              handleUpdateRow(
-                                index,
-                                "adjustment_type",
-                                e.target.value as "increase" | "decrease",
-                              )
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              color:
-                                row.adjustment_type === "increase"
-                                  ? "#10b981"
-                                  : "#ef4444",
-                              fontWeight: 600,
-                              backgroundColor: "var(--altrex-bg, #ffffff)",
-                              borderColor: "var(--altrex-border, #cbd5e1)",
-                            }}
-                          >
-                            <option value="increase">+ Increase Stock</option>
-                            <option value="decrease">- Decrease Stock</option>
-                          </select>
-                        </td>
-                        <td style={{ padding: "6px" }}>
-                          <input
-                            type="number"
-                            step="any"
-                            min="0.0001"
-                            className="altrex-input"
-                            value={row.quantity}
-                            onChange={(e) =>
-                              handleUpdateRow(
-                                index,
-                                "quantity",
-                                Number.parseFloat(e.target.value) || 0,
-                              )
-                            }
-                            required
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              backgroundColor: "var(--altrex-bg, #ffffff)",
-                              color: "var(--altrex-text, #0f172a)",
-                              borderColor: "var(--altrex-border, #cbd5e1)",
-                            }}
-                          />
-                        </td>
-                        <td style={{ padding: "6px" }}>
-                          <select
-                            className="altrex-input"
-                            value={row.unit_id || ""}
-                            onChange={(e) =>
-                              handleUpdateRow(
-                                index,
-                                "unit_id",
-                                e.target.value || null,
-                              )
-                            }
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              backgroundColor: "var(--altrex-bg, #ffffff)",
-                              color: "var(--altrex-text, #0f172a)",
-                              borderColor: "var(--altrex-border, #cbd5e1)",
-                            }}
-                          >
-                            <option value="">NOS</option>
-                            {uomsList.map((u: any) => {
-                              const id = u.unit_id ?? u.id;
-                              const code =
-                                u.unit_code ?? u.unit_name ?? `Unit #${id}`;
-                              return (
-                                <option key={id} value={id}>
-                                  {code}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </td>
-                        <td style={{ padding: "6px", textAlign: "center" }}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleRemoveRow(index)}
-                            disabled={lineItems.length <= 1}
-                            style={{
-                              padding: "4px",
-                              color: "var(--altrex-danger-text, #ef4444)",
-                            }}
-                          >
-                            <Trash2 size={13} />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        Item
+                      </th>
+                      <th
+                        style={{
+                          padding: "8px",
+                          textAlign: "left",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "20%",
+                        }}
+                      >
+                        Batch (Optional)
+                      </th>
+                      <th
+                        style={{
+                          padding: "8px",
+                          textAlign: "left",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "18%",
+                        }}
+                      >
+                        Adjustment Type
+                      </th>
+                      <th
+                        style={{
+                          padding: "8px",
+                          textAlign: "left",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "13%",
+                        }}
+                      >
+                        Quantity
+                      </th>
+                      <th
+                        style={{
+                          padding: "8px",
+                          textAlign: "left",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "11%",
+                        }}
+                      >
+                        Unit
+                      </th>
+                      <th
+                        style={{
+                          padding: "8px",
+                          textAlign: "center",
+                          color: "var(--altrex-text, #0f172a)",
+                          width: "6%",
+                        }}
+                      ></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lineItems.map((row, index) => {
+                      const itemBatches = batchesList.filter(
+                        (b: any) => String(b.item_id) === String(row.item_id),
+                      );
+
+                      return (
+                        <tr
+                          key={index}
+                          style={{
+                            borderBottom:
+                              "1px solid var(--altrex-border, #e2e8f0)",
+                          }}
+                        >
+                          <td style={{ padding: "6px" }}>
+                            <select
+                              className="altrex-input"
+                              value={row.item_id}
+                              onChange={(e) =>
+                                handleUpdateRow(index, "item_id", e.target.value)
+                              }
+                              required
+                              style={{
+                                width: "100%",
+                                minWidth: 0,
+                                boxSizing: "border-box",
+                                padding: "6px 8px",
+                                backgroundColor: "var(--altrex-bg, #ffffff)",
+                                color: "var(--altrex-text, #0f172a)",
+                                borderColor: "var(--altrex-border, #cbd5e1)",
+                              }}
+                            >
+                              <option value="">Select Item</option>
+                              {itemsList.map((item: any) => {
+                                const id =
+                                  item.item_id ?? item.id ?? item.tbl_items_id;
+                                const name =
+                                  item.item_name ?? item.name ?? `Item #${id}`;
+                                return (
+                                  <option key={id} value={id}>
+                                    {name}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </td>
+                          <td style={{ padding: "6px" }}>
+                            <select
+                              className="altrex-input"
+                              value={row.batch_id || ""}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  index,
+                                  "batch_id",
+                                  e.target.value || null,
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                minWidth: 0,
+                                boxSizing: "border-box",
+                                padding: "6px 8px",
+                                backgroundColor: "var(--altrex-bg, #ffffff)",
+                                color: "var(--altrex-text, #0f172a)",
+                                borderColor: "var(--altrex-border, #cbd5e1)",
+                              }}
+                            >
+                              <option value="">All / No Batch</option>
+                              {itemBatches.map((b: any) => {
+                                const id = b.batch_id ?? b.id;
+                                return (
+                                  <option key={id} value={id}>
+                                    {b.batch_no}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </td>
+                          <td style={{ padding: "6px" }}>
+                            <select
+                              className="altrex-input"
+                              value={row.adjustment_type}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  index,
+                                  "adjustment_type",
+                                  e.target.value as "increase" | "decrease",
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                minWidth: 0,
+                                boxSizing: "border-box",
+                                padding: "6px 8px",
+                                color:
+                                  row.adjustment_type === "increase"
+                                    ? "#10b981"
+                                    : "#ef4444",
+                                fontWeight: 600,
+                                backgroundColor: "var(--altrex-bg, #ffffff)",
+                                borderColor: "var(--altrex-border, #cbd5e1)",
+                              }}
+                            >
+                              <option value="increase">+ Increase</option>
+                              <option value="decrease">- Decrease</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: "6px" }}>
+                            <input
+                              type="number"
+                              step="any"
+                              min="0.0001"
+                              className="altrex-input"
+                              value={row.quantity}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  index,
+                                  "quantity",
+                                  Number.parseFloat(e.target.value) || 0,
+                                )
+                              }
+                              required
+                              style={{
+                                width: "100%",
+                                minWidth: 0,
+                                boxSizing: "border-box",
+                                padding: "6px 8px",
+                                backgroundColor: "var(--altrex-bg, #ffffff)",
+                                color: "var(--altrex-text, #0f172a)",
+                                borderColor: "var(--altrex-border, #cbd5e1)",
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "6px" }}>
+                            <select
+                              className="altrex-input"
+                              value={row.unit_id || ""}
+                              onChange={(e) =>
+                                handleUpdateRow(
+                                  index,
+                                  "unit_id",
+                                  e.target.value || null,
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                minWidth: 0,
+                                boxSizing: "border-box",
+                                padding: "6px 8px",
+                                backgroundColor: "var(--altrex-bg, #ffffff)",
+                                color: "var(--altrex-text, #0f172a)",
+                                borderColor: "var(--altrex-border, #cbd5e1)",
+                              }}
+                            >
+                              <option value="">NOS</option>
+                              {uomsList.map((u: any) => {
+                                const id = u.unit_id ?? u.id;
+                                const code =
+                                  u.unit_code ?? u.unit_name ?? `Unit #${id}`;
+                                return (
+                                  <option key={id} value={id}>
+                                    {code}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </td>
+                          <td style={{ padding: "6px", textAlign: "center" }}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleRemoveRow(index)}
+                              disabled={lineItems.length <= 1}
+                              style={{
+                                padding: "4px",
+                                color: "var(--altrex-danger-text, #ef4444)",
+                              }}
+                            >
+                              <Trash2 size={13} />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <label className="altrex-field">

@@ -138,6 +138,20 @@ export const endpoints = {
     document: (id: string | number, documentId: string | number) =>
       `/api/projects/${id}/documents/${documentId}`,
   },
+  manpower: {
+    trades: "/api/manpower/trades",
+    logs: (projectId: string | number) => `/api/manpower/${projectId}/logs`,
+    log: (projectId: string | number, logId: string | number) =>
+      `/api/manpower/${projectId}/logs/${logId}`,
+  },
+  equipment: {
+    list: "/api/equipment",
+    detail: (id: string | number) => `/api/equipment/${id}`,
+    projectLogs: (projectId: string | number) =>
+      `/api/equipment/project/${projectId}/logs`,
+    projectLog: (projectId: string | number, logId: string | number) =>
+      `/api/equipment/project/${projectId}/logs/${logId}`,
+  },
   procurement: {
     requisitions: "/api/procurement/requisition",
     requisition: (id: string | number) => `/api/procurement/requisition/${id}`,
@@ -162,5 +176,156 @@ export const endpoints = {
     leadSources: "/api/crm/lead_sources",
     industries: "/api/crm/industries",
     followUps: "/api/crm/follow-ups",
+    enquiries: "/api/enquiry",
+    enquiry: (id: string | number) => `/api/enquiry/${id}`,
+    enquiryStatus: (id: string | number, status: string) =>
+      `/api/enquiry/${id}/status/${status}`,
+    enquiryLinkQuotation: (
+      id: string | number,
+      quotationId: string | number,
+    ) => `/api/enquiry/${id}/link-quotation/${quotationId}`,
+    enquiryActivities: (id: string | number) =>
+      `/api/enquiry/${id}/activities`,
+    enquiryDocuments: (id: string | number) =>
+      `/api/enquiry/${id}/documents`,
+    enquiryDocument: (id: string | number, docId: string | number) =>
+      `/api/enquiry/${id}/documents/${docId}`,
+  },
+  hrms: {
+    // Settings & Work locations
+    settings: "/api/hrms/settings",
+    workLocations: "/api/hrms/work-locations",
+    workLocation: (id: string | number) => `/api/hrms/work-locations/${id}`,
+
+    // Salary configuration
+    salaryComponents: "/api/hrms/salary-components",
+    salaryStructures: "/api/hrms/salary-structures",
+    salaryStructure: (id: string | number) =>
+      `/api/hrms/salary-structures/${id}`,
+    statutoryRules: "/api/hrms/statutory-rules",
+    statutoryRule: (id: string | number) => `/api/hrms/statutory-rules/${id}`,
+
+    // Leave configuration
+    leaveTypes: "/api/hrms/leave-types",
+    leaveType: (id: string | number) => `/api/hrms/leave-types/${id}`,
+
+    // Employees
+    employees: "/api/hrms/employees",
+    employee: (id: string | number) => `/api/hrms/employees/${id}`,
+    employeeSalary: (employeeId: string | number) =>
+      `/api/hrms/employees/${employeeId}/salary`,
+    employeeDocuments: (employeeId: string | number) =>
+      `/api/hrms/employees/${employeeId}/documents`,
+    document: (documentId: string | number) =>
+      `/api/hrms/documents/${documentId}`,
+    verifyDocument: (documentId: string | number) =>
+      `/api/hrms/documents/${documentId}/verify`,
+
+    // Employee Self-service
+    me: "/api/hrms/me",
+    meAttendance: "/api/hrms/me/attendance",
+    meLeave: "/api/hrms/me/leave",
+    mePayslips: "/api/hrms/me/payslips",
+    notifications: "/api/hrms/notifications",
+    notificationsRead: "/api/hrms/notifications/read",
+
+    // Tasks (Onboarding, Offboarding, General)
+    tasks: "/api/hrms/tasks",
+    task: (id: string | number) => `/api/hrms/tasks/${id}`,
+    onboardingTasks: "/api/hrms/tasks",
+    onboardingTask: (id: string | number) => `/api/hrms/tasks/${id}`,
+
+    // Project assignments
+    assignments: "/api/hrms/assignments",
+    assignment: (id: string | number) => `/api/hrms/assignments/${id}`,
+    assignmentClose: (id: string | number) =>
+      `/api/hrms/assignments/${id}/close`,
+    projectAssignments: "/api/hrms/assignments",
+    projectAssignmentClose: (id: string | number) =>
+      `/api/hrms/assignments/${id}/close`,
+
+    // Attendance
+    attendance: "/api/hrms/attendance",
+    attendanceMark: "/api/hrms/attendance/mark",
+    attendanceSummary: "/api/hrms/attendance/summary",
+    attendanceReprocess: "/api/hrms/attendance/reprocess",
+    attendanceAlerts: "/api/hrms/attendance/summary",
+
+    // Overtime
+    overtime: "/api/hrms/overtime",
+    overtimeReview: (id: string | number) =>
+      `/api/hrms/overtime/${id}/review`,
+    overtimeRequests: "/api/hrms/overtime",
+    overtimeRequestReview: (id: string | number) =>
+      `/api/hrms/overtime/${id}/review`,
+
+    // Leave requests & balances
+    leaveRequests: "/api/hrms/leave-requests",
+    leaveRequest: (id: string | number) => `/api/hrms/leave-requests/${id}`,
+    leaveRequestDecision: (id: string | number) =>
+      `/api/hrms/leave-requests/${id}/decision`,
+    leaveRequestCancel: (id: string | number) =>
+      `/api/hrms/leave-requests/${id}/cancel`,
+    leaveBalances: "/api/hrms/leave-balances",
+    leaveBalance: (employeeId: string | number) =>
+      `/api/hrms/leave-balances/${employeeId}`,
+    leaveLedger: (employeeId: string | number) =>
+      `/api/hrms/leave-balances/${employeeId}/ledger`,
+    leaveBalanceAdjust: "/api/hrms/leave-balances/adjust",
+
+    // Project labour & timesheets
+    projectLabourAttendance: (projectId: string | number) =>
+      `/api/hrms/projects/${projectId}/labour-attendance`,
+    projectLabourCost: (projectId: string | number) =>
+      `/api/hrms/projects/${projectId}/labour-cost`,
+    timesheets: "/api/hrms/timesheets",
+    timesheetReview: (id: string | number) =>
+      `/api/hrms/timesheets/${id}/review`,
+    projectTimesheets: "/api/hrms/timesheets",
+    projectTimesheetReview: (id: string | number) =>
+      `/api/hrms/timesheets/${id}/review`,
+
+    // Rosters & Deductions
+    rosters: "/api/hrms/rosters",
+    deductionRules: "/api/hrms/deduction-rules",
+    deductionRule: (id: string | number) => `/api/hrms/deduction-rules/${id}`,
+
+    // Payroll
+    payroll: "/api/hrms/payroll",
+    payrollDetail: (id: string | number) => `/api/hrms/payroll/${id}`,
+    payrollApprove: (id: string | number) =>
+      `/api/hrms/payroll/${id}/approve`,
+    payrollDelete: (id: string | number) =>
+      `/api/hrms/payroll/${id}/delete`,
+    payrollBankAdvice: (id: string | number) =>
+      `/api/hrms/payroll/${id}/bank-advice`,
+    payrollPayAll: (id: string | number) =>
+      `/api/hrms/payroll/${id}/pay-all`,
+    payslip: (itemId: string | number) => `/api/hrms/payslips/${itemId}`,
+    payslipPdf: (itemId: string | number) =>
+      `/api/hrms/payslips/${itemId}/pdf`,
+    payslipPayment: (itemId: string | number) =>
+      `/api/hrms/payslips/${itemId}/payments`,
+    paymentReverse: (paymentId: string | number) =>
+      `/api/hrms/payments/${paymentId}/reverse`,
+
+    // Payroll adjustments & loans
+    payrollAdjustments: "/api/hrms/payroll-adjustments",
+    loans: "/api/hrms/loans",
+
+    // Exits & settlements
+    exits: "/api/hrms/exits",
+    exitReview: (id: string | number) => `/api/hrms/exits/${id}/review`,
+    exitSettlementRecompute: (id: string | number) =>
+      `/api/hrms/exits/${id}/settlement/recompute`,
+    exitSettlementFinalize: (id: string | number) =>
+      `/api/hrms/exits/${id}/settlement/finalize`,
+    exitCancel: (id: string | number) => `/api/hrms/exits/${id}/cancel`,
+
+    // Analytics & automation
+    analytics: "/api/hrms/analytics",
+    automationRuns: "/api/hrms/automation/runs",
+    automationRun: "/api/hrms/automation/run",
   },
 } as const;
+

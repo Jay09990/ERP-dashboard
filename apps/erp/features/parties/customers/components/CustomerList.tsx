@@ -638,17 +638,19 @@ export function CustomerList() {
       </div>
 
       {/* Party Form Slide-Over Drawer */}
-      <PartyFormDrawer
-        partyType="customer"
-        party={selectedCustomer}
-        isOpen={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setSelectedCustomer(null);
-        }}
-        onSubmit={handleFormSubmit}
-        isSubmitting={isCreating || isUpdating}
-      />
+      {drawerOpen && (
+        <PartyFormDrawer
+          partyType="customer"
+          party={selectedCustomer}
+          isOpen={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false);
+            setSelectedCustomer(null);
+          }}
+          onSubmit={handleFormSubmit}
+          isSubmitting={isCreating || isUpdating}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteId && (

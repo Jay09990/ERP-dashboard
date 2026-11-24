@@ -36,6 +36,8 @@ type Section =
   | "boq"
   | "milestones"
   | "tasks"
+  | "manpower"
+  | "equipment"
   | "reports"
   | "documents";
 
@@ -54,23 +56,61 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     {
       name: "boq_type",
       label: "Type (material, service, labour)",
+      type: "select",
       required: true,
+      options: ["material", "service", "labour"].map((value) => ({
+        value,
+        label: value[0].toUpperCase() + value.slice(1),
+      })),
     },
     { name: "item_id", label: "Item", type: "reference" },
     { name: "description", label: "Description", required: true },
-    { name: "quantity", label: "Quantity", type: "number", required: true },
+    {
+      name: "quantity",
+      label: "Quantity",
+      type: "number",
+      min: 0.0001,
+      required: true,
+    },
     { name: "unit_id", label: "Unit", type: "reference" },
-    { name: "unit_rate", label: "Unit rate", type: "number", required: true },
-    { name: "consumed_quantity", label: "Consumed quantity", type: "number" },
+    {
+      name: "unit_rate",
+      label: "Unit rate",
+      type: "number",
+      min: 0,
+      required: true,
+    },
+    {
+      name: "consumed_quantity",
+      label: "Consumed quantity",
+      type: "number",
+      min: 0,
+    },
   ],
   milestones: [
     { name: "milestone_name", label: "Milestone", required: true },
-    { name: "due_date", label: "Due date", type: "date" },
+    { name: "due_date", label: "Due date", type: "date", required: true },
     { name: "completion_date", label: "Completion date", type: "date" },
-    { name: "payment_percent", label: "Payment percent", type: "number" },
-    { name: "payment_amount", label: "Payment amount", type: "number" },
-    { name: "sort_order", label: "Sort order", type: "number" },
-    { name: "status", label: "Status", placeholder: "pending" },
+    {
+      name: "payment_percent",
+      label: "Payment percent",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    { name: "payment_amount", label: "Payment amount", type: "number", min: 0 },
+    { name: "sort_order", label: "Sort order", type: "number", min: 1 },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["pending", "in_progress", "completed", "invoiced"].map(
+        (value) => ({
+          value,
+          label: value.replaceAll("_", " "),
+        }),
+      ),
+    },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
   tasks: [
@@ -79,30 +119,166 @@ const sectionFields: Partial<Record<Section, FieldDefinition[]>> = {
     { name: "assigned_to", label: "Assigned user", type: "reference" },
     { name: "start_date", label: "Start date", type: "date" },
     { name: "due_date", label: "Due date", type: "date" },
-    { name: "priority", label: "Priority", placeholder: "low, medium, high" },
-    { name: "progress_percent", label: "Progress (%)", type: "number" },
-    { name: "status", label: "Status", placeholder: "pending" },
+    {
+      name: "priority",
+      label: "Priority",
+      type: "select",
+      options: ["low", "medium", "high"].map((value) => ({
+        value,
+        label: value[0].toUpperCase() + value.slice(1),
+      })),
+    },
+    {
+      name: "progress_percent",
+      label: "Progress (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      options: ["pending", "in_progress", "completed", "cancelled"].map(
+        (value) => ({
+          value,
+          label: value.replaceAll("_", " "),
+        }),
+      ),
+    },
     { name: "remarks", label: "Remarks", type: "textarea" },
   ],
-  reports: [
+  manpower: [
     { name: "site_id", label: "Project site", type: "reference" },
+    { name: "log_date", label: "Work date", type: "date", required: true },
+    {
+      name: "trade_id",
+      label: "Labour trade",
+      type: "reference",
+      required: true,
+    },
+    {
+      name: "headcount",
+      label: "Headcount (workers)",
+      type: "number",
+      min: 1,
+      required: true,
+    },
+    { name: "regular_hours", label: "Regular hours", type: "number", min: 0 },
+    {
+      name: "rate_per_hour",
+      label: "Hourly rate (₹)",
+      type: "number",
+      min: 0,
+      required: true,
+    },
+    { name: "overtime_hours", label: "Overtime hours", type: "number", min: 0 },
+    {
+      name: "ot_rate_per_hour",
+      label: "OT rate/hr (₹)",
+      type: "number",
+      min: 0,
+    },
+    {
+      name: "subcontractor_id",
+      label: "Subcontractor",
+      type: "reference",
+    },
+    { name: "remarks", label: "Work remarks", type: "textarea" },
+  ],
+  equipment: [
+    {
+      name: "equipment_id",
+      label: "Equipment",
+      type: "reference",
+      required: true,
+    },
+    { name: "site_id", label: "Project site", type: "reference" },
+    { name: "log_date", label: "Usage date", type: "date", required: true },
+    {
+      name: "hours_used",
+      label: "Hours used",
+      type: "number",
+      min: 0.0001,
+      required: true,
+    },
+    {
+      name: "rate_per_hour",
+      label: "Rate per hour (₹)",
+      type: "number",
+      min: 0,
+      required: true,
+    },
+    { name: "fuel_cost", label: "Fuel cost (₹)", type: "number", min: 0 },
+    { name: "operator_name", label: "Operator name" },
+    { name: "remarks", label: "Usage notes", type: "textarea" },
+  ],
+  reports: [
+    {
+      name: "site_id",
+      label: "Project site",
+      type: "select",
+      valueType: "number",
+      placeholder: "Select project site",
+    },
     { name: "report_date", label: "Report date", type: "date", required: true },
-    { name: "weather", label: "Weather" },
-    { name: "manpower_count", label: "Manpower count", type: "number" },
-    { name: "equipment_used", label: "Equipment used", type: "textarea" },
-    { name: "work_completed", label: "Work completed", type: "textarea" },
-    { name: "material_used", label: "Material used", type: "textarea" },
-    { name: "material_shortage", label: "Material shortage", type: "textarea" },
-    { name: "work_planned_next", label: "Next planned work", type: "textarea" },
-    { name: "progress_percent", label: "Progress (%)", type: "number" },
-    { name: "issues", label: "Issues", type: "textarea" },
-    { name: "safety_issues", label: "Safety issues", type: "textarea" },
+    {
+      name: "weather",
+      label: "Weather",
+      type: "select",
+      placeholder: "Select weather",
+      options: ["Clear", "Sunny", "Cloudy", "Rainy", "Windy", "Stormy", "Other"].map(
+        (value) => ({ value, label: value }),
+      ),
+    },
+    {
+      name: "manpower_count",
+      label: "Manpower count",
+      type: "number",
+      min: 0,
+    },
+    {
+      name: "equipment_used",
+      label: "Equipment used",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "work_completed",
+      label: "Work completed",
+      type: "textarea",
+      rows: 2,
+      required: true,
+    },
+    { name: "material_used", label: "Material used", type: "textarea", rows: 2 },
+    {
+      name: "material_shortage",
+      label: "Material shortage",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "work_planned_next",
+      label: "Next planned work",
+      type: "textarea",
+      rows: 2,
+    },
+    {
+      name: "progress_percent",
+      label: "Progress (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+    },
+    { name: "issues", label: "Issues", type: "textarea", rows: 2 },
+    { name: "safety_issues", label: "Safety issues", type: "textarea", rows: 2 },
     {
       name: "client_instructions",
       label: "Client instructions",
       type: "textarea",
+      rows: 2,
     },
-    { name: "remarks", label: "Remarks", type: "textarea" },
+    { name: "remarks", label: "Remarks", type: "textarea", rows: 2 },
   ],
   documents: [
     { name: "site_id", label: "Project site", type: "reference" },
@@ -119,6 +295,8 @@ const sectionLabels: Record<Section, string> = {
   boq: "BOQ & budget",
   milestones: "Milestones",
   tasks: "Tasks",
+  manpower: "Manpower logs",
+  equipment: "Equipment logs",
   reports: "Daily progress",
   documents: "Documents",
 };
@@ -136,6 +314,8 @@ const idKeys: Partial<Record<Section, string[]>> = {
   boq: ["boq_item_id", "project_boq_item_id", "boq_id", "id"],
   milestones: ["milestone_id", "id"],
   tasks: ["task_id", "project_task_id", "id"],
+  manpower: ["manpower_log_id", "id"],
+  equipment: ["equipment_log_id", "id"],
   documents: ["document_id", "project_document_id", "id"],
 };
 
@@ -143,8 +323,12 @@ function childRows(value: unknown, keys: string[]): Record<string, unknown>[] {
   if (!value || typeof value !== "object" || Array.isArray(value)) return [];
   const record = value as Record<string, unknown>;
   for (const key of keys) {
-    if (Array.isArray(record[key])) {
-      return record[key].filter(
+    const matchedKey = Object.keys(record).find(
+      (recordKey) => recordKey.toLowerCase() === key.toLowerCase(),
+    );
+    const rows = matchedKey ? record[matchedKey] : undefined;
+    if (Array.isArray(rows)) {
+      return rows.filter(
         (item): item is Record<string, unknown> =>
           Boolean(item) && typeof item === "object" && !Array.isArray(item),
       );
@@ -159,6 +343,8 @@ function titleOf(record: Record<string, unknown>, section: Section) {
     boq: ["description", "item_name"],
     milestones: ["milestone_name"],
     tasks: ["task_name"],
+    manpower: ["trade_name", "log_date"],
+    equipment: ["equipment_name", "log_date"],
     reports: ["report_date"],
     documents: ["document_name", "file_name"],
   };
@@ -209,6 +395,16 @@ function displayLabel(key: string) {
     unit_rate: "Rate per unit",
     consumed_quantity: "Used quantity",
     manpower_count: "People on site",
+    trade_id: "Labour trade",
+    equipment_id: "Equipment reference",
+    subcontractor_id: "Subcontractor party",
+    hours_used: "Hours used",
+    regular_hours: "Regular hours",
+    overtime_hours: "Overtime hours",
+    rate_per_hour: "Hourly rate",
+    ot_rate_per_hour: "Overtime rate",
+    headcount: "Workers (headcount)",
+    fuel_cost: "Fuel cost",
   };
   return (
     knownLabels[key] ??
@@ -223,14 +419,23 @@ function displayDetailValue(key: string, value: unknown) {
       .replaceAll("_", " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
-  if (key.endsWith("_date") || key === "report_date") {
+  if (key.endsWith("_date") || key === "report_date" || key === "log_date") {
     const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
     return Number.isNaN(date.getTime())
       ? String(value)
       : mediumDateFormatter.format(date);
   }
   if (key.endsWith("_percent")) return `${value}%`;
-  if (["unit_rate", "payment_amount"].includes(key)) return currency(value);
+  if (
+    [
+      "unit_rate",
+      "payment_amount",
+      "rate_per_hour",
+      "ot_rate_per_hour",
+      "fuel_cost",
+    ].includes(key)
+  )
+    return currency(value);
   if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }
@@ -241,6 +446,16 @@ export function ProjectDetail({ id }: { id: string }) {
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const detailQuery = projectApi.useDetail(id);
   const financialsQuery = projectApi.useFinancials(id, section === "overview");
+  const manpowerQuery = projectApi.useManpowerLogs(
+    id,
+    undefined,
+    section === "manpower",
+  );
+  const equipmentQuery = projectApi.useEquipmentLogs(
+    id,
+    undefined,
+    section === "equipment",
+  );
   const dprQuery = projectApi.useDprList(id, section === "reports");
   const documentsQuery = projectApi.useDocuments(id, section === "documents");
   const lookups = useProjectChildLookups(dialogOpen);
@@ -251,6 +466,16 @@ export function ProjectDetail({ id }: { id: string }) {
   const financials = useMemo(
     () => extractRecord<ProjectFinancials>(financialsQuery.data),
     [financialsQuery.data],
+  );
+  const manpowerLogs = useMemo(
+    () =>
+      extractRecords<Record<string, unknown>>(manpowerQuery.data),
+    [manpowerQuery.data],
+  );
+  const equipmentLogs = useMemo(
+    () =>
+      extractRecords<Record<string, unknown>>(equipmentQuery.data),
+    [equipmentQuery.data],
   );
   const reports = useMemo(
     () => extractRecords<DailyProgressReport>(dprQuery.data),
@@ -272,6 +497,12 @@ export function ProjectDetail({ id }: { id: string }) {
   const createTask = projectApi.useCreateTask();
   const updateTask = projectApi.useUpdateTask();
   const deleteTask = projectApi.useDeleteTask();
+  const createManpower = projectApi.useCreateManpowerLog();
+  const updateManpower = projectApi.useUpdateManpowerLog();
+  const deleteManpower = projectApi.useDeleteManpowerLog();
+  const createEquipmentLog = projectApi.useCreateEquipmentLog();
+  const updateEquipmentLog = projectApi.useUpdateEquipmentLog();
+  const deleteEquipmentLog = projectApi.useDeleteEquipmentLog();
   const createDpr = projectApi.useCreateDpr();
   const createDocument = projectApi.useCreateDocument();
   const deleteDocument = projectApi.useDeleteDocument();
@@ -295,6 +526,14 @@ export function ProjectDetail({ id }: { id: string }) {
   }
 
   const projectRecord = project as Record<string, unknown>;
+  const projectCustomer =
+    project.party_name ??
+    (project.party_id != null
+      ? `Customer #${project.party_id}`
+      : "Customer not provided");
+  const projectStatus = project.status
+    ? String(project.status).replaceAll("_", " ")
+    : "Status unavailable";
   const siteOptions: ReferenceOption[] = childRows(
     projectRecord,
     sectionKeys.sites ?? [],
@@ -308,6 +547,12 @@ export function ProjectDetail({ id }: { id: string }) {
   });
   const fieldOptions = { ...lookups.options, site_id: siteOptions };
   const rowsFor = (target: Section) => {
+    if (target === "manpower") {
+      return manpowerLogs;
+    }
+    if (target === "equipment") {
+      return equipmentLogs;
+    }
     if (target === "reports") {
       return reports as unknown as Record<string, unknown>[];
     }
@@ -350,6 +595,20 @@ export function ProjectDetail({ id }: { id: string }) {
           createTask.mutate({ id, body: values }, callbacks);
         }
         break;
+      case "manpower":
+        if (childId != null) {
+          updateManpower.mutate({ id, childId, body: values }, callbacks);
+        } else {
+          createManpower.mutate({ id, body: values }, callbacks);
+        }
+        break;
+      case "equipment":
+        if (childId != null) {
+          updateEquipmentLog.mutate({ id, childId, body: values }, callbacks);
+        } else {
+          createEquipmentLog.mutate({ id, body: values }, callbacks);
+        }
+        break;
       case "reports":
         createDpr.mutate({ id, body: values }, callbacks);
         break;
@@ -369,6 +628,10 @@ export function ProjectDetail({ id }: { id: string }) {
     updateMilestone,
     createTask,
     updateTask,
+    createManpower,
+    updateManpower,
+    createEquipmentLog,
+    updateEquipmentLog,
     createDpr,
     createDocument,
   ].some((mutation) => mutation.isPending);
@@ -384,6 +647,12 @@ export function ProjectDetail({ id }: { id: string }) {
     createTask.error,
     updateTask.error,
     deleteTask.error,
+    createManpower.error,
+    updateManpower.error,
+    deleteManpower.error,
+    createEquipmentLog.error,
+    updateEquipmentLog.error,
+    deleteEquipmentLog.error,
     createDpr.error,
     createDocument.error,
     deleteDocument.error,
@@ -397,15 +666,19 @@ export function ProjectDetail({ id }: { id: string }) {
     if (section === "boq") deleteBoq.mutate({ id, childId });
     if (section === "milestones") deleteMilestone.mutate({ id, childId });
     if (section === "tasks") deleteTask.mutate({ id, childId });
+    if (section === "manpower") deleteManpower.mutate({ id, childId });
+    if (section === "equipment") deleteEquipmentLog.mutate({ id, childId });
     if (section === "documents") deleteDocument.mutate({ id, childId });
   };
 
-  const editable = ["boq", "milestones", "tasks"].includes(section);
+  const editable = ["boq", "milestones", "tasks", "manpower", "equipment"].includes(section);
   const deletable = [
     "sites",
     "boq",
     "milestones",
     "tasks",
+    "manpower",
+    "equipment",
     "documents",
   ].includes(section);
   const allowCreate = sectionFields[section] != null;
@@ -428,10 +701,7 @@ export function ProjectDetail({ id }: { id: string }) {
             </span>
             <h1>{project.project_name}</h1>
             <p>
-              {project.party_name ?? "Customer not provided"} ·{" "}
-              {String(project.status)
-                .replaceAll("_", " ")
-                .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+              {projectCustomer} · {projectStatus}
             </p>
           </div>
         </div>
@@ -465,12 +735,7 @@ export function ProjectDetail({ id }: { id: string }) {
       {section === "overview" ? (
         <>
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 12,
-              marginBottom: 16,
-            }}
+            className="project-financial-grid"
           >
             {[
               [
@@ -502,13 +767,7 @@ export function ProjectDetail({ id }: { id: string }) {
           )}
           <section className="altrex-card">
             <h2>Project summary</h2>
-            <dl
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "10px 24px",
-              }}
-            >
+            <dl className="project-summary-grid">
               <div>
                 <dt>Location</dt>
                 <dd>{project.project_location || "—"}</dd>
@@ -546,11 +805,7 @@ export function ProjectDetail({ id }: { id: string }) {
               </div>
               <div>
                 <dt>Sales order</dt>
-                <dd>
-                  {project.sales_order_id == null
-                    ? "—"
-                    : `Sales order #${project.sales_order_id}`}
-                </dd>
+                <dd>{project.sales_order_id ?? "—"}</dd>
               </div>
             </dl>
             {project.description && <p>{project.description}</p>}
@@ -596,10 +851,14 @@ export function ProjectDetail({ id }: { id: string }) {
               ))}
             </div>
           )}
-          {["reports", "documents"].some((key) => key === section) &&
+          {["reports", "documents", "manpower", "equipment"].some((key) => key === section) &&
             (section === "reports"
               ? dprQuery.isLoading
-              : documentsQuery.isLoading) && (
+              : section === "documents"
+                ? documentsQuery.isLoading
+                : section === "manpower"
+                  ? manpowerQuery.isLoading
+                  : equipmentQuery.isLoading) && (
               <div className="altrex-table-state">
                 Loading {sectionLabels[section].toLowerCase()}...
               </div>
@@ -610,13 +869,95 @@ export function ProjectDetail({ id }: { id: string }) {
           {section === "documents" && documentsQuery.error && (
             <MutationError error={documentsQuery.error} />
           )}
+          {section === "manpower" && manpowerQuery.error && (
+            <MutationError error={manpowerQuery.error} />
+          )}
+          {section === "equipment" && equipmentQuery.error && (
+            <MutationError error={equipmentQuery.error} />
+          )}
+          {section === "manpower" && rows.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+                marginBottom: 12,
+              }}
+            >
+              <div className="altrex-stat-card">
+                <strong>Total Logged Labour Cost</strong>
+                <div>
+                  {currency(
+                    rows.reduce((sum, r) => {
+                      const hc = Number(r.headcount ?? 1);
+                      const rh = Number(r.regular_hours ?? 0);
+                      const oh = Number(r.overtime_hours ?? 0);
+                      const rate = Number(r.rate_per_hour ?? 0);
+                      const otRate = Number(
+                        r.ot_rate_per_hour ?? rate * 1.5,
+                      );
+                      return sum + hc * rh * rate + hc * oh * otRate;
+                    }, 0),
+                  )}
+                </div>
+              </div>
+              <div className="altrex-stat-card">
+                <strong>Total Worker Shifts</strong>
+                <div>
+                  {rows.reduce(
+                    (sum, r) => sum + Number(r.headcount ?? 1),
+                    0,
+                  )}{" "}
+                  workers
+                </div>
+              </div>
+            </div>
+          )}
+          {section === "equipment" && rows.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+                marginBottom: 12,
+              }}
+            >
+              <div className="altrex-stat-card">
+                <strong>Total Equipment Cost</strong>
+                <div>
+                  {currency(
+                    rows.reduce((sum, r) => {
+                      const h = Number(r.hours_used ?? 0);
+                      const rate = Number(r.rate_per_hour ?? 0);
+                      const fuel = Number(r.fuel_cost ?? 0);
+                      return sum + h * rate + fuel;
+                    }, 0),
+                  )}
+                </div>
+              </div>
+              <div className="altrex-stat-card">
+                <strong>Total Hours Logged</strong>
+                <div>
+                  {rows.reduce(
+                    (sum, r) => sum + Number(r.hours_used ?? 0),
+                    0,
+                  )}{" "}
+                  hrs
+                </div>
+              </div>
+            </div>
+          )}
           <div className="altrex-table-wrap">
             <table className="altrex-table">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Details</th>
-                  <th>Status / Amount</th>
+                  <th>
+                    {section === "manpower" || section === "equipment"
+                      ? "Computed Cost"
+                      : "Status / Amount"}
+                  </th>
                   {(editable || deletable) && <th aria-label="Actions" />}
                 </tr>
               </thead>
@@ -627,9 +968,6 @@ export function ProjectDetail({ id }: { id: string }) {
                     .filter(
                       ([key, value]) =>
                         !idKeys[section]?.includes(key) &&
-                        key !== "id" &&
-                        key !== "created_at" &&
-                        key !== "updated_at" &&
                         value !== null &&
                         typeof value !== "object",
                     )
@@ -642,18 +980,35 @@ export function ProjectDetail({ id }: { id: string }) {
                       <td>
                         {displayEntries.map(([key, value]) => (
                           <span key={key} style={{ display: "block" }}>
-                            {displayLabel(key)}:{" "}
-                            {displayDetailValue(key, value)}
+                            {key.replaceAll("_", " ")}: {String(value)}
                           </span>
                         ))}
                       </td>
                       <td>
-                        {String(
-                          record.status ??
-                            record.payment_amount ??
-                            record.quantity ??
-                            "—",
-                        )}
+                        {section === "manpower"
+                          ? currency(
+                              Number(record.headcount ?? 1) *
+                                Number(record.regular_hours ?? 0) *
+                                Number(record.rate_per_hour ?? 0) +
+                                Number(record.headcount ?? 1) *
+                                  Number(record.overtime_hours ?? 0) *
+                                  Number(
+                                    record.ot_rate_per_hour ??
+                                      Number(record.rate_per_hour ?? 0) * 1.5,
+                                  ),
+                            )
+                          : section === "equipment"
+                            ? currency(
+                                Number(record.hours_used ?? 0) *
+                                  Number(record.rate_per_hour ?? 0) +
+                                  Number(record.fuel_cost ?? 0),
+                              )
+                            : String(
+                                record.status ??
+                                  record.payment_amount ??
+                                  record.quantity ??
+                                  "—",
+                              )}
                       </td>
                       {(editable || deletable) && (
                         <td>
@@ -705,6 +1060,7 @@ export function ProjectDetail({ id }: { id: string }) {
         <EntityFormDialog
           title={`${editing ? "Update" : "Add"} ${sectionLabels[section]}`}
           fields={activeFields}
+          dialogClassName={section === "reports" ? "project-dpr-dialog" : ""}
           fieldOptions={fieldOptions}
           lookupLoading={lookups.isLoading}
           lookupError={lookups.error}

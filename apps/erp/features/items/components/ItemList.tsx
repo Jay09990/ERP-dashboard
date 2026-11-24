@@ -396,24 +396,13 @@ export function ItemList() {
             sales/purchase pricing rates.
           </p>
         </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Button
-            variant="outline"
-            onClick={exportCsv}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Button variant="outline" onClick={exportCsv}>
             <Download size={15} />
             Export CSV
           </Button>
           <Link href="/items/categories">
-            <Button
-              variant="outline"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
+            <Button variant="outline">
               <Layers size={15} />
               Categories
             </Button>
@@ -423,7 +412,6 @@ export function ItemList() {
               setActiveItem(null);
               setIsOpenDrawer(true);
             }}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
             <Plus size={16} />
             Add New Item

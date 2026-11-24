@@ -26,6 +26,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "@altrex/ui",
+    ],
+  },
   async headers() {
     return [
       {
